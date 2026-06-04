@@ -1,0 +1,31 @@
+# Ignore all folders and files in the root of the NEW directory
+
+# Folders
+.claude/
+RENT_CRON/
+scratch/
+scripts/
+usermanual_all/
+node_modules/
+.next/
+
+# Files
+.DS_Store
+package-lock.json
+.env
+.env.local
+.env.local.example
+.env.production
+CLAUDE.md
+USER_MANUAL.md
+default admin creation.md
+easyfaberp email template.html
+ecosystem.config.js
+ecosystem.highwayguard.config.js
+k6_load_test_guide.md.resolved
+rento email template.html
+rento.sql
+rentoautomation.bat
+rentoproduction.sql
+web.config
+website design and development email template.html

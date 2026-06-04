@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rent ERP — Complete System Manual v2</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4fa;color:#1a1a2e;line-height:1.7}
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;top:0;left:0;width:290px;height:100vh;background:linear-gradient(170deg,#0b1f4a 0%,#1a3f7a 100%);overflow-y:auto;padding:0 0 40px;z-index:200;box-shadow:4px 0 20px rgba(0,0,0,.25)}
+.sidebar-header{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:8px}
+.sidebar-header .logo{font-size:1.15rem;font-weight:700;color:#fff;letter-spacing:.02em}
+.sidebar-header .logo span{color:#5dade2}
+.sidebar-header .version{font-size:.7rem;color:rgba(255,255,255,.5);margin-top:4px;letter-spacing:.08em;text-transform:uppercase}
+.sidebar .section-label{color:rgba(255,255,255,.35);font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;padding:14px 20px 4px;font-weight:700}
+.sidebar a{display:block;color:rgba(255,255,255,.72);text-decoration:none;padding:7px 20px 7px 24px;font-size:.8rem;transition:all .18s;border-left:3px solid transparent;line-height:1.4}
+.sidebar a:hover{background:rgba(255,255,255,.09);color:#fff;border-left-color:#5dade2}
+.sidebar a.active{background:rgba(93,173,226,.15);color:#5dade2;border-left-color:#5dade2;font-weight:600}
+/* ── MAIN ── */
+.main{margin-left:290px;min-height:100vh}
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,#0b1f4a 0%,#1a5296 60%,#0d7ac0 100%);color:#fff;padding:64px 64px 56px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;right:-80px;top:-80px;width:380px;height:380px;background:rgba(255,255,255,.04);border-radius:50%}
+.hero::after{content:'';position:absolute;left:30%;bottom:-40px;width:200px;height:200px;background:rgba(93,173,226,.08);border-radius:50%}
+.hero h1{font-size:2.6rem;font-weight:800;letter-spacing:-.02em;margin-bottom:12px;position:relative}
+.hero .tagline{font-size:1rem;opacity:.82;max-width:600px;line-height:1.75;position:relative}
+.hero-badges{margin-top:24px;display:flex;flex-wrap:wrap;gap:8px;position:relative}
+.hero-badge{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 16px;font-size:.73rem;font-weight:600;letter-spacing:.04em}
+/* ── CONTENT AREA ── */
+.content{padding:44px 56px 80px}
+/* ── CHAPTER CARD ── */
+.chapter{background:#fff;border-radius:16px;box-shadow:0 2px 16px rgba(15,44,94,.07);padding:44px 48px;margin-bottom:36px;border:1px solid #e2eaf7}
+.chapter-title{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.chapter-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0b1f4a,#1a5296);color:#fff;font-size:.85rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chapter h2{font-size:1.55rem;font-weight:700;color:#0b1f4a}
+.chapter .subtitle{color:#6b7a99;font-size:.87rem;margin-bottom:28px;padding-bottom:18px;border-bottom:2px solid #eef1f9;line-height:1.65}
+.chapter h3{font-size:1.05rem;font-weight:700;color:#1a3f7a;margin:28px 0 10px;padding-left:12px;border-left:3px solid #5dade2}
+.chapter h4{font-size:.92rem;font-weight:700;color:#2c5aa0;margin:18px 0 8px}
+.chapter p{color:#3a3a4a;font-size:.875rem;line-height:1.78;margin-bottom:10px}
+.chapter ul,.chapter ol{margin:6px 0 14px 22px;color:#3a3a4a;font-size:.875rem}
+.chapter ul li,.chapter ol li{margin-bottom:6px;line-height:1.68}
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;margin:16px 0;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+table{width:100%;border-collapse:collapse;font-size:.825rem}
+thead th{background:#0b1f4a;color:#fff;padding:11px 14px;text-align:left;font-weight:600;font-size:.8rem}
+thead th:first-child{border-radius:10px 0 0 0}
+thead th:last-child{border-radius:0 10px 0 0}
+tbody tr:nth-child(even){background:#f5f8ff}
+tbody tr:hover{background:#edf3ff}
+tbody td{padding:10px 14px;border-bottom:1px solid #e8edf5;color:#2a2a3a;vertical-align:top;line-height:1.6}
+/* ── CALLOUTS ── */
+.callout{border-left:4px solid #1a6fb5;background:#e8f4fd;border-radius:0 10px 10px 0;padding:14px 18px;margin:18px 0;font-size:.855rem;color:#0d3a6e;line-height:1.7}
+.callout strong{display:block;margin-bottom:4px;font-size:.82rem;text-transform:uppercase;letter-spacing:.06em}
+.callout.warn{border-color:#e65100;background:#fff3e0;color:#7b3800}
+.callout.success{border-color:#2e7d32;background:#e8f5e9;color:#1b4a1e}
+.callout.danger{border-color:#c62828;background:#ffebee;color:#7b0000}
+.callout.purple{border-color:#7b1fa2;background:#f3e5f5;color:#4a0072}
+/* ── CODE BLOCKS ── */
+.code-block{background:#1e2235;border-radius:10px;padding:18px 22px;margin:16px 0;font-family:'Consolas','Courier New',monospace;font-size:.82rem;color:#e2e8f0;line-height:1.9;overflow-x:auto;border:1px solid #2d3655}
+.code-block .comment{color:#6b7a99}
+.code-block .value{color:#79c0ff}
+.code-block .key{color:#ffa657}
+.code-block .result{color:#56d364;font-weight:700}
+/* ── FLOW STEPS ── */
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:0;margin:18px 0}
+.flow-step{background:#e8f0fd;border:1.5px solid #90b4e8;border-radius:8px;padding:8px 16px;font-size:.8rem;color:#0d3a7a;font-weight:600;white-space:nowrap}
+.flow-arrow{color:#5dade2;font-weight:700;font-size:1.2rem;padding:0 6px}
+/* ── FIELD CARDS ── */
+.fields-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:14px 0}
+.field-card{background:#f8faff;border:1.5px solid #d4e0f5;border-radius:10px;padding:12px 16px}
+.field-card .fname{font-size:.8rem;font-weight:700;color:#1a3a7a;margin-bottom:4px}
+.field-card .fdesc{font-size:.75rem;color:#5a6a88;line-height:1.55}
+.field-card .ftag{font-size:.68rem;background:#dde9fb;color:#0d3a7a;border-radius:4px;padding:2px 7px;margin-top:6px;display:inline-block;font-weight:600}
+.field-card .ftag.required{background:#fce4ec;color:#880e4f}
+.field-card .ftag.auto{background:#e8f5e9;color:#1b5e20}
+/* ── BADGES ── */
+.badge{display:inline-block;border-radius:12px;padding:2px 10px;font-size:.72rem;font-weight:700;white-space:nowrap}
+.badge-green{background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7}
+.badge-red{background:#ffebee;color:#b71c1c;border:1px solid #ef9a9a}
+.badge-blue{background:#e3f2fd;color:#0d47a1;border:1px solid #90caf9}
+.badge-amber{background:#fff8e1;color:#e65100;border:1px solid #ffcc80}
+.badge-purple{background:#f3e5f5;color:#6a1b9a;border:1px solid #ce93d8}
+.badge-gray{background:#f5f5f5;color:#424242;border:1px solid #bdbdbd}
+/* ── PIPELINE DIAGRAM ── */
+.pipeline{display:flex;flex-direction:column;gap:0;margin:20px 0;align-items:flex-start}
+.pipeline-item{display:flex;align-items:stretch;gap:0}
+.pipeline-connector{display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0}
+.pipeline-dot{width:14px;height:14px;border-radius:50%;background:#1a5296;border:2.5px solid #5dade2;flex-shrink:0;margin-top:14px}
+.pipeline-line{width:2px;background:linear-gradient(to bottom,#5dade2,#2980b9);flex-grow:1;margin:0 auto}
+.pipeline-content{background:#f0f6ff;border:1.5px solid #c3d8f5;border-radius:10px;padding:12px 18px;margin:6px 0 6px 8px;flex-grow:1;min-width:0}
+.pipeline-content .plabel{font-size:.78rem;font-weight:700;color:#0d3a7a;margin-bottom:2px}
+.pipeline-content .pdesc{font-size:.76rem;color:#4a5a7a;line-height:1.55}
+/* ── SCENARIO / Q&A ── */
+.scenario{background:#fff;border:1.5px solid #d4e0f5;border-radius:12px;padding:26px 30px;margin-bottom:20px;position:relative}
+.scenario::before{content:'Q';position:absolute;top:20px;left:-14px;width:28px;height:28px;background:#1a5296;color:#fff;border-radius:50%;font-size:.82rem;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(26,82,150,.3)}
+.scenario .question{font-size:.92rem;font-weight:700;color:#0b1f4a;margin-bottom:14px;line-height:1.55}
+.scenario .answer{font-size:.87rem;color:#3a3a4a;line-height:1.75}
+.scenario .answer ol{margin:8px 0 4px 20px}
+.scenario .answer ol li{margin-bottom:5px}
+/* ── STEP LIST ── */
+.steps{counter-reset:step;margin:14px 0}
+.steps .step{counter-increment:step;display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+.steps .step::before{content:counter(step);min-width:26px;height:26px;border-radius:50%;background:#1a5296;color:#fff;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.steps .step-content{font-size:.875rem;color:#3a3a4a;line-height:1.7}
+/* ── STATUS TRANSITIONS ── */
+.status-flow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:12px 0}
+.status-node{padding:5px 14px;border-radius:20px;font-size:.77rem;font-weight:700}
+.status-arrow{color:#94a3b8;font-size:1.1rem;font-weight:700}
+/* ── FORMULA BOX ── */
+.formula{background:#f0f4ff;border:1.5px solid #b8ccf0;border-radius:10px;padding:16px 20px;margin:14px 0}
+.formula .label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#1a5296;margin-bottom:8px}
+.formula pre{font-family:'Consolas','Courier New',monospace;font-size:.83rem;color:#1a1a2e;line-height:1.9;white-space:pre-wrap}
+/* ── PRINT ── */
+@media print{.sidebar{display:none}.main{margin-left:0}.hero{padding:30px 40px}.content{padding:20px 40px}.chapter{box-shadow:none;border:1px solid #ccc;break-inside:avoid}}
+/* ── SCROLLBAR ── */
+.sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-track{background:transparent}.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:2px}
+/* ── EXPIRY BADGE COLORS ── */
+.bg-red{background:#dc2626}
+.bg-orange{background:#ea580c}
+.bg-yellow{background:#ca8a04}
+.bg-blue{background:#2563eb}
+.bg-green{background:#16a34a}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════════ -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">Rent<span>ERP</span></div>
+    <div class="version">User Manual · v4 (User Edition)</div>
+  </div>
+  <div class="section-label">Foundation</div>
+  <a href="#ch1">1. System Overview & Flow</a>
+  <a href="#ch2">2. Landing Dashboard</a>
+  <a href="#ch3">3. System Settings</a>
+  <div class="section-label">Master Data</div>
+  <a href="#ch4">4. Master Config Grids</a>
+  <a href="#ch5">5. Master Data Portals</a>
+  <div class="section-label">Operations</div>
+  <a href="#ch6">6. Assignments &amp; Portals</a>
+  <a href="#ch7">7. Daily Time Logs Listing</a>
+  <a href="#ch8">8. Timesheets &amp; Billing</a>
+  <a href="#ch9">9. Invoices &amp; Payments</a>
+  <div class="section-label">Finance &amp; Asset</div>
+  <a href="#ch10">10. Expense Tracking</a>
+  <a href="#ch11">11. Vehicle Maintenance</a>
+  <div class="section-label">Insights</div>
+  <a href="#ch12">12. Reports &amp; Insights</a>
+  <div class="section-label">Automation</div>
+  <a href="#ch13">13. Daily Automation &amp; Emails</a>
+  <div class="section-label">Administration</div>
+  <a href="#ch14">14. Users, Roles &amp; Matrix</a>
+  <div class="section-label">Reference</div>
+  <a href="#ch15">15. Scenario Library — FAQ</a>
+  <div class="section-label">Admin Tools</div>
+  <a href="#ch16">16. Backup, Calendar &amp; Admin Tools</a>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════════ -->
+<div class="main">
+
+<div class="hero">
+  <h1>Rent ERP — System User Manual</h1>
+  <p class="tagline">A comprehensive, end-user guide to navigating the RentERP application, managing fleet assets, operator schedules, daily log overrides, billing processes, and system configurations.</p>
+  <div class="hero-badges">
+    <span class="hero-badge">Version 4.0 (End-User Edition)</span>
+    <span class="hero-badge">17 User Chapters</span>
+    <span class="hero-badge">Billing Guides</span>
+    <span class="hero-badge">Real Scenarios</span>
+    <span class="hero-badge">May 2026</span>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 1 — SYSTEM OVERVIEW
+══════════════════════════════════════════ -->
+
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 1 — 1 
+══════════════════════════════════════════ -->
+
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 1 — 1 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch1">
+  <div class="chapter-title">
+    <div class="chapter-num">1</div>
+    <h2>System Overview &amp; Core Operational Pipeline</h2>
+  </div>
+  <p class="subtitle">An introduction to RentERP's operational core and how data flows through the fleet management cycle.</p>
+
+  <h3>1.1 The Operational Pipeline</h3>
+  <p>RentERP is designed to streamline vehicle and equipment rental workflows. The system maps your physical fleet operations directly to billing workflows through a simple, four-step pipeline:</p>
+
+  <div class="pipeline">
+    <div class="step">
+      <div class="step-num">1</div>
+      <strong>Create Master Records</strong>
+      <p>Configure active vehicles, operator details, customers, and project records in the database.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <strong>Deploy Assignments</strong>
+      <p>Schedule resources to projects by creating vehicle, operator, material, or detour blocks.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <strong>Log Daily Work (DTLs)</strong>
+      <p>Record working hours, holiday flags, and shift overrides for each deployed resource.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <strong>Generate &amp; Bill</strong>
+      <p>Compile daily logs into approved timesheets and generate customer-facing invoices in one click.</p>
+    </div>
+  </div>
+
+  <div class="callout danger">
+    <strong>Immutable Rule</strong>
+    This pipeline is enforced by the system. You cannot create an invoice without a timesheet. You cannot create a timesheet without DTLs. DTLs cannot exist without an assignment block. The DTL is the single source of truth — every report, every utilization metric, every cost calculation traces back to it. Never collapse DTLs into summaries.
+  </div>
+
+  <h3>1.2 Resource Types</h3>
+  <p>The system supports four distinct operational resources, each with custom billing and rate models:</p>
+  <ul>
+    <li><strong>Vehicles:</strong> Mobile assets (trucks, SUVs) or machinery (excavators, cranes) billed at daily or hourly rates.</li>
+    <li><strong>Operators:</strong> Drivers or crew members deployed standalone or linked directly to vehicles.</li>
+    <li><strong>Materials:</strong> Inventory items (barriers, generators) billed by quantity deployed per day.</li>
+    <li><strong>Labour:</strong> General crew roles (helpers, riggers) billed as standard day shifts.</li>
+  </ul>
+
+  <h3>1.3 Assignment Block Types</h3>
+  <p>When deploying resources, coordinators organize them in four block types:
+  <ul>
+    <li><strong>VEHICLE Block:</strong> Schedules a machine to a project. Can be marked "With Operator" to automatically request operator rates, or "Without Operator" (dry hire).</li>
+    <li><strong>OPERATOR Block:</strong> Standalone crew deployment (e.g., placing an operator to drive a customer-owned vehicle).</li>
+    <li><strong>MATERIAL Block:</strong> Deploys a specific quantity of materials (e.g., deploying 50 safety blocks).</li>
+    <li><strong>LABOUR Block:</strong> Deploys a specific headcount of crew roles.</li>
+  </ul>
+  </p>
+
+  <div class="callout">
+    <strong>Key Principle — DETOUR blocks</strong>
+    A DETOUR block is purely a grouping mechanism. It never generates a daily time log directly. When the scheduler runs, it skips DETOUR blocks entirely. Each child VEHICLE / OPERATOR / MATERIAL / LABOUR block under the detour generates its own individual DTL.
+  </div>
+
+</div><!-- /chapter 1 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 2 — 2 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch2">
+<div class="chapter-title">
+    <div class="chapter-num">2</div>
+    <h2>Landing Dashboard, Quick Actions &amp; Expiry Alerts</h2>
+  </div>
+  <p class="subtitle">An overview of the central mission-control screen where system status, live clock, KPIs, quick shortcuts, and document expiration snapshots are displayed.</p>
+
+  <h3>2.1 Core KPI Metric Cards</h3>
+  <p>The landing dashboard loads a real-time summary of the system's operational and financial status. These are powered by cached aggregate database queries to ensure instantaneous loading:</p>
+  <ul>
+    <li><strong>Total Active Vehicles:</strong> Counts all vehicles whose status is set to <code>ACTIVE</code>. Provides a direct link to the filtered Vehicles List.</li>
+    <li><strong>Active Assignments:</strong> Shows the number of vehicle/operator deployment blocks currently running on their calendar schedule.</li>
+    <li><strong>Pending Timesheets:</strong> Summarizes the number of timesheets currently in <code>DRAFT</code> or <code>SUBMITTED</code> status awaiting customer billing approval.</li>
+    <li><strong>Unpaid Invoices:</strong> Displays the count and total monetary value of invoices in <code>SENT</code> or <code>PARTIALLY_PAID</code> status, keeping outstanding Accounts Receivable (AR) highly visible.</li>
+  </ul>
+
+  <h3>2.2 The Interactive Dashboard Clock</h3>
+  <p>A live-updating micro-widget in the header bar of the dashboard displays the active tenant's local time (configured in Settings → Localization). Since background DTL logs are generated according to this localized timezone, this clock helps operators instantly verify the exact hour boundary for scheduler runs and manual log creations.</p>
+
+  <h3>2.3 Quick Action Center</h3>
+  <p>To reduce click paths and improve operator throughput, the dashboard features a floating "Quick Actions" dashboard panel containing direct links to key creation dialogs:</p>
+  <ul>
+    <li><strong>Create Assignment:</strong> Launches the assignment generation flow directly from the dashboard, pre-selecting the current date.</li>
+    <li><strong>Generate Timesheet:</strong> Prompts the operator for Customer, Project, and Billing Period, taking them directly to the timesheet editor.</li>
+    <li><strong>Log Vehicle Maintenance:</strong> Pre-populates the vehicle selection dropdown and lets administrators quickly schedule corrective or breakdown repairs.</li>
+  </ul>
+
+  <h3>2.4 Expiry Alerts &amp; Missing Documents Snapshot</h3>
+  <p>An intelligence widget automatically scans all active vehicles and operators to surface compliance risks. The expiry panel on the dashboard categorises all tracked items into three urgency tiers:</p>
+  <div class="formula-box">
+    <strong>Document Expiry Tiers:</strong>
+    <br>
+    <ul>
+      <li><span class="status-badge bg-red" style="color:white;padding:2px 6px;border-radius:4px;">EXPIRED</span>: Expiration date is in the past. Immediate action required.</li>
+      <li><span class="status-badge bg-orange" style="color:white;padding:2px 6px;border-radius:4px;">URGENT (≤ 7 days)</span>: Expiry occurs within the next 7 days. High-priority alert.</li>
+      <li><span class="status-badge bg-blue" style="color:white;padding:2px 6px;border-radius:4px;">UPCOMING (&gt; 7 days)</span>: Expiry is approaching but not yet critical. Visible for advance planning.</li>
+    </ul>
+  </div>
+  <p><strong>Documents tracked per vehicle:</strong> Registration, Insurance.</p>
+  <p><strong>Documents tracked per operator:</strong> Visa, Driving Licence, Emirates ID, Medical Certificate.</p>
+  <div class="callout warn">
+    <strong>Panel Only Appears When Enabled</strong>
+    The expiry panel respects the <code>enableExpiryNotifications</code> toggle in Notification Settings. If disabled, the panel returns <code>active: false</code> and no items are shown on the dashboard.
+  </div>
+</div><!-- /chapter 2 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 3 — 3 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch3">
+  <div class="chapter-title">
+    <div class="chapter-num">3</div>
+    <h2>System Settings &amp; Customizations</h2>
+  </div>
+  <p class="subtitle">A detailed user guide on how to configure your company profile, white-label branding, localized preferences, email servers, and operational billing rules.</p>
+
+  <h3>3.1 Company Settings</h3>
+  <p>Inside Settings → Company, administrators define the primary identity of their tenant organization. This profiles your legal name, physical address, phone contact, tax registration numbers, and official customer-facing email address. These details are dynamically loaded onto invoice headers and email footers.</p>
+
+  <div class="callout success">
+    <strong>Example — how Full Day Hours flows through everything</strong>
+    If Full Day Hours = 8 and a vehicle block has plannedOvertimeHours = 2:<br/>
+    • DTL is created with workedHours = 10, regularHours = 8, overtimeHours = 2<br/>
+    • A DAILY-rate vehicle at AED 400/day converts to AED 50/hour (400 ÷ 8)<br/>
+    • Overtime: 2 hrs × AED 50 × 1.5 multiplier = AED 150 extra on the timesheet line
+  </div>
+
+  <h3>3.2 Branding Settings (White-Labeling)</h3>
+  <p>To deliver a personalized experience for your team and clients, the system supports custom white-label branding:
+  <ul>
+    <li><strong>Dashboard Logo:</strong> Upload a high-resolution logo (PNG or SVG) to replace the default app icon in the sidebar and header.</li>
+    <li><strong>Brand Color Palette:</strong> Select your organization's primary color. The system dynamically updates navigation borders, active buttons, selection highlights, and email themes to match your brand style.</li>
+    <li><strong>Company Slogan:</strong> Displays as a small subtitle under your company name in the sidebar.</li>
+  </ul>
+  </p>
+
+  <h3>3.3 Localization Settings</h3>
+  <p>Align the application with your regional requirements:
+  <ul>
+    <li><strong>Timezone:</strong> Select your local timezone. This controls the active clock on the dashboard and guarantees that auto-generated time logs are stamped accurately relative to your local work hours.</li>
+    <li><strong>Date Format:</strong> Choose how dates appear across grids and documents (e.g. <code>DD/MM/YYYY</code> or <code>MMM DD, YYYY</code>).</li>
+    <li><strong>Distance &amp; Volume Metrics:</strong> Toggle default metrics (e.g. Kilometers vs Miles; Liters vs Gallons) for fuel logs and vehicle odometer tracking.</li>
+  </ul>
+  </p>
+
+  <h3>3.4 Email &amp; Notification Settings</h3>
+  <p>Configure communications in one central screen:
+  <ul>
+    <li><strong>Email Server (SMTP):</strong> Enter your official email host, port, username, and password. The system uses these settings to automatically dispatch digital timesheets, invoice notifications, and daily expiry reminders.</li>
+    <li><strong>Notification Toggles:</strong> Choose which alerts to enable. You can toggle off-hours notifications, enable dashboard-only alerts, or configure email dispatches for document expirations.</li>
+  </ul>
+  </p>
+
+  <div class="callout">A "Test Connection" button sends a test email to verify the SMTP configuration before going live.</div>
+  <div class="callout warn">If SMTP is not configured and the system tries to send an email, the email operation fails gracefully. The underlying record (assignment, timesheet, invoice) is still saved successfully. Only the email send fails. The failure is logged but does not block the main operation.</div>
+
+  <h3>3.5 Billing &amp; Invoice Settings</h3>
+  <p>Define standard business rules applied to all client accounts:
+  <ul>
+    <li><strong>Grace Period Thresholds:</strong> Define a buffer (e.g., 15 minutes) for worked shifts before overtime rates are calculated.</li>
+    <li><strong>Overage Rounding Rules:</strong> Set whether logged fractions of an hour round up, round down, or round to the nearest quarter-hour for billing.</li>
+    <li><strong>Default Payment Terms:</strong> Set the system-wide billing default (e.g., Cash on Delivery, Net 30, Net 60) for new customer records.</li>
+  </ul>
+  </p>
+
+  <h3>3.6 Security &amp; Safety Parameters</h3>
+  <p>Protect your system from unauthorized access:
+  <ul>
+    <li><strong>Password Strength:</strong> Select standard, medium, or high requirements for employee login passwords.</li>
+    <li><strong>Account Lockout Limits:</strong> Specify the number of failed attempts allowed before a user account is locked out, helping block automated entry attempts.</li>
+    <li><strong>Automatic Session Timeout:</strong> Set inactivity limits to automatically log out users if a computer is left unattended on site.</li>
+  </ul>
+  </p>
+</div><!-- /chapter 3 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 4 — 4 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch4">
+  <div class="chapter-title">
+    <div class="chapter-num">4</div>
+    <h2>Master Configuration Grids</h2>
+  </div>
+  <p class="subtitle">How to set up baseline dictionaries and grids to standardize fleet management drop-down options.</p>
+
+  <p>The Master Config panel serves as the primary system dictionary. Standardizing these categories prevents free-form typing errors and ensures all records (like operator cards or vehicle registration plates) are classified correctly:</p>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Master Category</th>
+          <th>Configuration Actions</th>
+          <th>User Guide</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Vehicle Types</strong></td>
+          <td>Define vehicle classifications (e.g., Sedan, SUV, Bus, Truck, Crane).</td>
+          <td>Create types by specifying a code (e.g., <code>CRN</code>), name (e.g., <code>Mobile Crane</code>), and description. Used to categorize assets in fleet sheets.</td>
+        </tr>
+        <tr>
+          <td><strong>Vehicle Brands &amp; Models</strong></td>
+          <td>Enter fleet manufacturers (Toyota, Komatsu, Volvo) and models (D8R, Land Cruiser).</td>
+          <td>Always add the manufacturer Brand first. Once the brand is defined, add models and link them to the brand to populate dropdown selectors.</td>
+        </tr>
+        <tr>
+          <td><strong>License Kinds</strong></td>
+          <td>Establish driving permit requirements (Light Vehicle, Heavy Truck, Forklift).</td>
+          <td>Operators are matched to vehicle blocks based on this license list, preventing operators from being assigned to vehicles they are not licensed to drive.</td>
+        </tr>
+        <tr>
+          <td><strong>Nationalities</strong></td>
+          <td>Add standard nationalities for crew profiles.</td>
+          <td>Maintains ISO country lists used under operator profiles for legal visa schedules.</td>
+        </tr>
+        <tr>
+          <td><strong>Maintenance &amp; Service Categories</strong></td>
+          <td>Establish workshop service types (Preventive, Corrective, Breakdown, Tire Change).</td>
+          <td>Used to categorize service logs in the workshop, allowing managers to track and analyze unexpected breakdown trends.</td>
+        </tr>
+        <tr>
+          <td><strong>Expense Categories</strong></td>
+          <td>Define standard expense types (Fuel, Toll, Insurance, Fines).</td>
+          <td>Categorizes Salik, toll gates, fuel logs, and miscellaneous costs logged against vehicles.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>4.2 Master Config Tabbed Portals</h3>
+  <p>The Master Config panel (Settings → Master Config) is organized into four primary tabbed views, each dedicated to standardizing dictionary entries for a core operational module:</p>
+
+  <h4>4.2.1 Vehicle Config Portal</h4>
+  <p>Standardizes fleet and equipment attributes to maintain absolute relational consistency across all vehicles. It includes five sub-tabs:
+  <ul>
+    <li><strong>Vehicle Types:</strong> Standardizes equipment categories (e.g. Sedan, SUV, Bus, Truck, Crane). Each type uses a unique code and custom descriptor to guide billing models.</li>
+    <li><strong>Brands:</strong> Tracks fleet manufacturers (e.g., Toyota, Caterpillar, Komatsu, Volvo) to prevent duplicate or mismatched manufacturer records.</li>
+    <li><strong>Models:</strong> Manages specific machine models (e.g., D8R, Land Cruiser) and links them to their parent Brand.</li>
+    <li><strong>Registration Authorities:</strong> Standardizes licensing authorities (e.g., RTA, Abu Dhabi Municipality) responsible for license plate registrations.</li>
+    <li><strong>Document Types:</strong> Defines the legal compliance files required for each vehicle (e.g., Mulkiya, Insurance Policy, UAE Pass Permits).</li>
+  </ul>
+  </p>
+
+  <h4>4.2.2 Operator Config Portal</h4>
+  <p>Maintains personnel compliance and scheduling logic through four sub-tabs:
+  <ul>
+    <li><strong>Work Types:</strong> Standardizes operator duty classifications (e.g., Shift Duty, Traffic Control, Standby). Work types can be toggled as non-billable to track operational hours without charging the customer.</li>
+    <li><strong>License Types:</strong> Standardizes crew licenses (e.g., Light Vehicle, Heavy Truck, Forklift), enabling automated checks that prevent drivers from being assigned to vehicles they are not qualified to operate.</li>
+    <li><strong>Nationalities:</strong> Standardizes crew country origins, which helps coordinators manage visa compliance and legal site regulations.</li>
+    <li><strong>Document Types:</strong> Defines required files for operator compliance checks (e.g., Visa card, Passport, Medical check).</li>
+  </ul>
+  </p>
+
+  <h4>4.2.3 Maintenance Config Portal</h4>
+  <p>Defines service categories (e.g., Preventive Service, Corrective Repair, Breakdown Repair, Tire Change) to track asset downtime and workshop costs cleanly.</p>
+
+  <h4>4.2.4 Expense Config Portal</h4>
+  <p>Defines cost categories (e.g., Fuel log, Salik/Toll gate, Traffic Fine, Insurance Policy) used to allocate operational costs to specific vehicles.</p>
+</div><!-- /chapter 4 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 5 — 5 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch5">
+  <div class="chapter-title">
+    <div class="chapter-num">5</div>
+    <h2>Master Data Portals</h2>
+  </div>
+  <p class="subtitle">A guide to the primary records of the application: Vehicles, Operators, Customers, Projects, Materials, and Labours.</p>
+
+  <h3>5.1 Fleet Vehicle Portal (`/vehicles`)</h3>
+  <p>The Fleet Vehicle listing lets you search and manage your rental equipment assets. Clicking any Vehicle plate number launches the <strong>Vehicle Details Portal</strong>, featuring five core tabs:
+  <ul>
+    <li><strong>Profile:</strong> View and edit model, brand, engine type, plate code, registration dates, and insurance policies.</li>
+    <li><strong>Deployment History:</strong> View past projects and customers where this asset was deployed, including lifetime revenue.</li>
+    <li><strong>Documents Checklist:</strong> Tracks physical scans of registration cards (Mulkiya) and local municipal permits.</li>
+    <li><strong>Maintenance History:</strong> Lists all breakdowns, parts replaced, and preventive maintenance logs.</li>
+    <li><strong>Expenses:</strong> Aggregates toll logs and fuel expenses charged to this plate.</li>
+  </ul>
+  </p>
+
+  <h4>Vehicle Details Portal Tabs</h4>
+  <p>Clicking any Vehicle code launches the <strong>Vehicle Details Portal</strong>, featuring six tabs:
+  <ul>
+    <li><strong>Profile:</strong> View and edit registration, chassis number, brand, model, insurance company, and license plate details.</li>
+    <li><strong>Assignments History:</strong> Chronological list of all projects and customers this vehicle has been deployed to, including total hours and revenue generated.</li>
+    <li><strong>Documents:</strong> Scans of the registration (Mulkiya), permits, and commercial licenses, with individual warning alerts for expiration.</li>
+    <li><strong>Maintenance Log:</strong> Historical list of preventive services, breakdowns, parts replaced, and maintenance costs.</li>
+    <li><strong>Fuel &amp; Expenses:</strong> Tracks all Salik tolls, fuel logs, and miscellaneous expenses mapped to this vehicle.</li>
+    <li><strong>GPS tracking:</strong> Real-time link to coordinate mapping of the asset (if telematics integration is active).</li>
+  </ul>
+  </p>
+
+  <div class="callout success">
+    <strong>Step-by-Step Management:</strong>
+    <ul>
+      <li><strong>Add a Vehicle:</strong> Go to <code>/vehicles</code>, click the <strong>"New Vehicle"</strong> button, fill in the Registration Number, select Type/Brand/Model, specify Ownership, Base Rent, Default Billing Cycle, and Daily Internal Cost, then click <strong>"Create Vehicle"</strong>.</li>
+      <li><strong>View &amp; Audit:</strong> Click any vehicle plate number in the list to open its multi-tabbed Profile details (viewing Profile, Deployment History, Documents, Maintenance, and active Expenses).</li>
+      <li><strong>Edit:</strong> In the details page, click the <strong>"Edit Profile"</strong> button to update rates or attributes.</li>
+      <li><strong>Deactivate / Delete:</strong> Click the trash icon on the vehicle row or the <strong>"Delete"</strong> button in the detail view. Note: The system will run a referential integrity check. If the vehicle has active assignments or daily logs, deletion is blocked to protect billing data, and deactivation (setting to INACTIVE) is recommended instead.</li>
+    </ul>
+  </div>
+
+  <h3>5.2 Operator Profile Portal (`/operators`)</h3>
+  <p>Manage your drivers, operators, and site crew records. Inside each Operator file:
+  <ul>
+    <li><strong>Profile:</strong> Enter basic credentials, mobile number, basic pay rates, and bank details.</li>
+    <li><strong>Compliance Schedules:</strong> Monitor visa statuses, medical checks, and Emirates ID expiry dates.</li>
+    <li><strong>Qualifications:</strong> Upload scans of operator driving permits and heavy machinery licenses.</li>
+  </ul>
+  </p>
+
+  <div class="callout">
+    An operator with status INACTIVE or BLOCKED cannot be assigned to new blocks. If an operator is already on an active assignment and their status changes, the existing assignment continues generating DTLs — only new assignments are blocked.
+  </div>
+
+  <h4>Operators Visa &amp; Compliance Schedules</h4>
+  <p>Under Operators → Profile, the system features a specialized tab tracking legal compliance for multinational crews. The <strong>Visa &amp; Compliance Schedule</strong> includes:
+  <ul>
+    <li><strong>Labor Card Expiration:</strong> Tracks ministry card schedules and issue dates.</li>
+    <li><strong>Emirates ID Expiry:</strong> Alerts the crew coordinator 90 days before physical card expirations.</li>
+    <li><strong>Medical Test Schedules:</strong> Logs date of last medical test and schedules the next renewal, preventing illegal deployments.</li>
+  </ul>
+  </p>
+
+  <div class="callout success">
+    <strong>Step-by-Step Management:</strong>
+    <ul>
+      <li><strong>Add an Operator:</strong> Go to <code>/operators</code>, click <strong>"New Operator"</strong>, fill in operator name, contact number, default Work Type, Hourly rate, Daily Internal cost, and passport/visa/license detail fields, and click <strong>"Create Operator"</strong>.</li>
+      <li><strong>View &amp; Audit:</strong> Click the operator's name in the grid to open their details portal (viewing profile fields, upload checklists, and historical license compliance details).</li>
+      <li><strong>Edit:</strong> Click the <strong>"Edit Profile"</strong> button inside the operator details view to update salary rates, statuses, or contact details.</li>
+      <li><strong>Delete / Block:</strong> Use the <strong>"Delete"</strong> button to permanently remove if there are no historical logs. For active crew with logged time, update the status to <code>INACTIVE</code> or <code>BLOCKED</code> to restrict new assignments.</li>
+    </ul>
+  </div>
+
+  <h3>5.3 Customer &amp; Project Portals</h3>
+  <p>Manage sales pipelines and job sites:
+  <ul>
+    <li><strong>Customers (`/customers`):</strong> Stores billing addresses, legal tax registration details, payment terms, and outstanding balances aging matrix.</li>
+    <li><strong>Projects (`/projects`):</strong> Maps active deployments to physical project addresses. Projects support <strong>LPO (Local Purchase Order)</strong> limits, alerting billing coordinators when a project's invoice history consumes over 90% of the LPO contract value.</li>
+  </ul>
+  </p>
+
+  <h4>Customer Outstanding Balances Tab</h4>
+  <p>Inside the Customer Portal, the <strong>Aging Accounts Receivable (AR) Matrix</strong> groups invoice balances by aging categories to help collection officers:
+  <div class="formula-box">
+    <strong>Aging Categories:</strong>
+    <br>
+    <code>Current (0–30 days)</code> &nbsp;|&nbsp; 
+    <code>Overdue (31–60 days)</code> &nbsp;|&nbsp; 
+    <code>Critical (61–90 days)</code> &nbsp;|&nbsp; 
+    <code>Collections (91+ days)</code>
+  </div>
+  The tab also logs the customer's payment term (e.g., Net 30, Net 60) and credit limit, flashing an alert if the sum of outstanding draft + sent invoices exceeds their total authorized credit threshold.
+  </p>
+
+  <h4>Project LPO Integrations Tab</h4>
+  <p>To prevent over-billing, projects support direct integration with <strong>Local Purchase Orders (LPOs)</strong>. The LPO integration panel logs:
+  <ul>
+    <li><strong>LPO Number &amp; Amount:</strong> The legally contracted billing limit.</li>
+    <li><strong>LPO Consumption Progress:</strong> A dynamic bar showing:
+      <br>
+      <code>LPO Consumption % = (Invoiced Amount + Draft Timesheet Amount) / LPO Total Limit * 100</code>
+    </li>
+    <li><strong>Near-Limit Lock:</strong> Flashes a warning at 90% consumption and automatically flags timesheet generation if it would exceed 100% of the LPO contract value.</li>
+  </ul>
+  </p>
+
+  <div class="callout success">
+    <strong>Customer Step-by-Step Management:</strong>
+    <ul>
+      <li><strong>Add a Customer:</strong> Navigate to <code>/customers</code>, click <strong>"New Customer"</strong>, fill in the company name, tax/TRN registration details, payment terms, and contact list, then click <strong>"Create Customer"</strong>.</li>
+      <li><strong>View &amp; Audit:</strong> Click on any customer's name in the registry to inspect active projects, payment terms history, and pending billing metrics.</li>
+      <li><strong>Edit:</strong> Click the edit icon next to their profile to update addresses or TRN information.</li>
+      <li><strong>Deactivate / Delete:</strong> Click the delete icon. If active timesheets or assignments exist, the system blocks deletion and instead requires deactivation by toggling the status to <code>INACTIVE</code>.</li>
+    </ul>
+  </div>
+
+  <div class="callout success">
+    <strong>Project Step-by-Step Management:</strong>
+    <ul>
+      <li><strong>Add a Project:</strong> Go to <code>/projects</code>, click <strong>"New Project"</strong>, select the parent Customer, enter a unique Project Name, LPO Number, LPO contract amount limit, start/end dates, and select a Default Billing Cycle, then click <strong>"Create Project"</strong>.</li>
+      <li><strong>View &amp; Audit:</strong> Click any project row to inspect its active assignment blocks, consumed LPO percentages, and related time logs.</li>
+      <li><strong>Edit:</strong> Click the edit icon to adjust the LPO budget or toggle active states.</li>
+      <li><strong>Deactivate:</strong> Set status to <code>COMPLETED</code> or <code>INACTIVE</code> to close the project to new site assignments.</li>
+    </ul>
+  </div>
+
+  <h3>5.4 Materials (`/materials`) &amp; Labours (`/labours`)</h3>
+  <p>Track general resources deployed on site:
+  <ul>
+    <li><strong>Materials Portal:</strong> A catalog of mobile assets (safety barriers, water tanks) billed on a daily quantity basis. Tracks total inventory size vs quantity currently deployed.</li>
+    <li><strong>Labour Portal:</strong> Tracks day-rate crew categories (helpers, riggers, foremen).</li>
+  </ul>
+  </p>
+
+  <div class="callout success">
+    <strong>Example — Material Availability</strong>
+    Total Quantity = 10 cones. Assignment A already uses 6 cones on Tuesday.<br/>
+    You try to add Assignment B with 4 cones on Tuesday: <span class="badge badge-green">ALLOWED</span> (6+4=10 ≤ 10)<br/>
+    You try to add Assignment B with 5 cones on Tuesday: <span class="badge badge-red">BLOCKED</span> (6+5=11 &gt; 10)
+  </div>
+
+  <div class="callout success">
+    <strong>Material Step-by-Step Management:</strong>
+    <ul>
+      <li><strong>Add a Material:</strong> Go to <code>/materials</code>, click <strong>"New Material"</strong>, define the material name, unit type, Total Quantity in stock, and the Daily Cost per unit, then click <strong>"Create Material"</strong>.</li>
+      <li><strong>View &amp; Edit:</strong> Select the material in the catalog to view current deployment quantities and edit price details.</li>
+      <li><strong>Delete:</strong> Only allowed if the material has never been deployed to a job site. Otherwise, it must be set to <code>INACTIVE</code> to protect billing history.</li>
+    </ul>
+  </div>
+
+  <div class="callout success">
+    <strong>Labour Step-by-Step Management:</strong>
+    <ul>
+      <li><strong>Add a Labour Type:</strong> Navigate to <code>/labours</code>, click <strong>"New Labour Type"</strong>, enter the labour classification (e.g. Helper, Rigger, Operator Class B), specify the daily cost, and click <strong>"Create Labour"</strong>.</li>
+      <li><strong>View &amp; Edit:</strong> Access via <code>/labours</code> list, select edit, and save changes to rates or names.</li>
+      <li><strong>Delete:</strong> Allowed if unused; otherwise set status to <code>INACTIVE</code>.</li>
+    </ul>
+  </div>
+
+  <h3>5.5 Detour Templates Portal (`/detour-services`)</h3>
+  <p>Detour Services are preconfigured deployment templates used in traffic management. They allow dispatchers to instantly deploy a standard set of resources with a single action, rather than manually adding each vehicle, operator, material, and labour block one by one.</p>
+  
+  <h4>Detour Template Structure</h4>
+  <p>A template defines the standard composition of a detour setup. Once configured, it can be reused across any assignment.</p>
+  <div class="fields-grid">
+    <div class="field-card"><div class="fname">Template Name</div><div class="fdesc">E.g., "2-Lane Closure", "Rolling Road Closure", "Lane Merge Setup"</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">Vehicle Count</div><div class="fdesc">How many vehicles this template requires. Specific vehicles are assigned when adding to an assignment.</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">Operator Count</div><div class="fdesc">Standalone operators in addition to vehicle-attached operators</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">Bundle Cost Enabled</div><div class="fdesc">If ON, the template has a fixed daily bundle price instead of per-resource billing</div><div class="ftag">Optional</div></div>
+    <div class="field-card"><div class="fname">Bundle Cost Per Day</div><div class="fdesc">The flat daily rate for the entire detour when bundle pricing is on</div><div class="ftag">Optional</div></div>
+    <div class="field-card"><div class="fname">Requirements</div><div class="fdesc">Specific materials and labour types with quantities (e.g., 10 cones + 2 flagmen)</div><div class="ftag">Optional</div></div>
+  </div>
+
+  <div class="callout success">
+    <strong>Example Template: "2-Lane Detour"</strong>
+    Vehicles: 2 | Operators: 2 (standalone)<br>
+    Requirements: 10 Traffic Cones (Material) + 2 Flagmen (Labour)
+  </div>
+
+  <div class="callout success">
+    <strong>Step-by-Step Management:</strong>
+    <ul>
+      <li><strong>Add a Detour Template:</strong> Go to <code>/detour-services</code>, click the <strong>"New Detour Template"</strong> button, fill in the template name, code prefix (e.g., <code>DET-</code>), and click <strong>"Save Template"</strong>. Then, add specific resource requirements to the bundle (e.g., 1 heavy truck, 1 operator, 50 traffic cones).</li>
+      <li><strong>View &amp; Edit:</strong> Click the template name in the registry to inspect the bundled requirements list and add/remove resources or change template attributes.</li>
+      <li><strong>Delete:</strong> Allowed if the template is not currently deployed in any active assignment.</li>
+    </ul>
+  </div>
+</div><!-- /chapter 5 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 6 — 6 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch6">
+<div class="chapter-title">
+    <div class="chapter-num">6</div>
+    <h2>Assignments &amp; Portals</h2>
+  </div>
+  <p class="subtitle">An assignment is the central operational record in RentERP. It represents one deployment contract: a customer (or internal job), a date range, and a set of resources. All downstream data — time logs, timesheets, invoices — traces back to an assignment.</p>
+
+  <h3>6.1 Assignment Header Fields</h3>
+  <div class="fields-grid">
+    <div class="field-card"><div class="fname">Customer</div><div class="fdesc">The billing party. Required for non-internal assignments.</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">Project</div><div class="fdesc">Links to a specific project under the customer. Enables per-project timesheets. Required if a customer is selected.</div><div class="ftag required">Required *</div></div>
+    <div class="field-card"><div class="fname">Start / End Date</div><div class="fdesc">The overall period of the assignment. Individual blocks can have sub-ranges within this.</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">Billing Cycle</div><div class="fdesc">DAILY, HOURLY, or MONTHLY — affects how costs are calculated on the timesheet.</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">Is Internal</div><div class="fdesc">If checked, customer is not required. Internal jobs are tracked but not invoiced externally.</div><div class="ftag">Optional</div></div>
+    <div class="field-card"><div class="fname">Enable Auto Time Logs</div><div class="fdesc">If ON, the scheduler generates DTLs automatically each day for all blocks in this assignment.</div><div class="ftag">Default: ON</div></div>
+    <div class="field-card"><div class="fname">Assignment Code</div><div class="fdesc">Auto-generated sequential code (e.g. ASG-1001). Atomic — no duplicates possible.</div><div class="ftag auto">Auto-generated</div></div>
+    <div class="field-card"><div class="fname">Status</div><div class="fdesc">ACTIVE while running. Auto-set to COMPLETED when end date passes.</div><div class="ftag auto">Auto-managed</div></div>
+  </div>
+
+  <h3>6.2 Deployment Blocks</h3>
+  <p>Every resource in an assignment is a "block." A single assignment can have multiple blocks — e.g., 3 vehicle blocks + 2 material blocks + 1 operator block. Each block has its own date range (a sub-range within the assignment dates).</p>
+
+  <h4>VEHICLE Block Fields</h4>
+  <p>Specify the active vehicle, deployment start/end dates, base daily/hourly billing rates, overtime rules, operator requirements (with operator/dry hire), and whether weekends are included for time log auto-generation.</p>
+
+  <h4>MATERIAL Block Fields</h4>
+  <p>Specify the material item, deployment start/end dates, quantity deployed, and daily rate per unit.</p>
+  <p>Materials do not generate hours — they generate quantity-based DTLs (one per day with quantity = block.quantity).</p>
+
+  <h4>DETOUR Block Fields</h4>
+  <p>Allows deploying specialized bundled detour templates to assignments, pulling default crew and rates automatically.</p>
+  <div class="callout">
+    When you add a DETOUR block, the system automatically creates child blocks for each resource in the template. A "2-Lane Detour" template requiring 2 vehicles, 2 operators, 10 cones, and 2 flagmen will create 6 child blocks instantly. You then assign the specific vehicles and operators.
+  </div>
+  <h3>Adding a Detour Block to an Assignment</h3>
+  <p>When you add a DETOUR block and select a template:</p>
+  <div class="steps">
+    <div class="step"><div class="step-content">System creates the parent DETOUR block referencing the selected template</div></div>
+    <div class="step"><div class="step-content">System automatically creates child blocks for each resource in the template: 2 VEHICLE blocks, 2 OPERATOR blocks, 1 MATERIAL block (10 cones), 1 LABOUR block (2 flagmen)</div></div>
+    <div class="step"><div class="step-content">You assign the specific vehicles and operators to the child blocks</div></div>
+    <div class="step"><div class="step-content">All child blocks reference the parent DETOUR block via <code>detourBlockId</code></div></div>
+    <div class="step"><div class="step-content">Availability checks run on each child resource independently</div></div>
+  </div>
+
+
+  <h3>6.3 Availability Checks</h3>
+  <p>To prevent conflicts, the system automatically checks resource availability before finalizing an assignment block:</p>
+  <ul>
+    <li><strong>Resource Calendar Schedule:</strong> The system verifies that the selected Vehicle and Operator are not deployed on any overlapping active assignments for the proposed date range.</li>
+    <li><strong>Quantity Capacity:</strong> For Materials and Labours, the system checks that the proposed deployment quantity does not exceed the remaining warehouse stock (Total Catalog Inventory minus currently deployed quantity).</li>
+  </ul>
+
+  <div class="callout warn">
+    <strong>Why Not Simple Date Range Overlap?</strong>
+    A vehicle deployed Mon–Fri only is still available on weekends — date range overlap would incorrectly block it. The system generates the exact list of working days for the proposed block (respecting weekend exclusions) and checks each specific date.
+  </div>
+  <div class="callout success">
+    <strong>Scenario A — Weekend Exclusion</strong>
+    Vehicle A is deployed Mon–Fri (weekends excluded) from June 1–30. You try to deploy Vehicle A on a Saturday in June.<br/>
+    Result: <span class="badge badge-green">ALLOWED</span> — The first block excludes weekends, so the vehicle is genuinely free on Saturdays.
+  </div>
+  <div class="callout danger">
+    <strong>Scenario B — Full Week Conflict</strong>
+    Vehicle A is deployed All Days from June 1–30. You try to add it anywhere in June.<br/>
+    Result: <span class="badge badge-red">BLOCKED</span> — Every calendar day in June is occupied.
+  </div>
+
+  <h3>6.4 Assignment Statuses</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Status</th><th>Meaning</th><th>DTLs Generated?</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-green">ACTIVE</span></td><td>Currently running. Scheduler processes this assignment each tick.</td><td>Yes</td></tr>
+      <tr><td><span class="badge badge-gray">COMPLETED</span></td><td>Finished. End date has passed or manually completed. No new DTLs.</td><td>No</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Auto-completion:</strong> The scheduler automatically marks assignments as COMPLETED if their <code>endDate</code> is in the past. This runs on every scheduler tick.</p>
+
+  <h3>6.5 Block Statuses</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Status</th><th>Meaning</th><th>DTLs Generated?</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-green">ACTIVE</span></td><td>The block is live and within its date range.</td><td>Yes</td></tr>
+      <tr><td><span class="badge badge-gray">COMPLETED</span></td><td>The block's end date has passed. Set automatically by the scheduler.</td><td>No</td></tr>
+      <tr><td><span class="badge badge-red">STOPPED</span></td><td>Manually stopped before end date. Records endedAt timestamp.</td><td>No</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>6.6 Mid-Assignment Vehicle Replacement</h3>
+  <p>When a vehicle breaks down or needs to be replaced mid-assignment, use the <strong>"Replace Vehicle"</strong> action on the block:</p>
+  <div class="steps">
+    <div class="step"><div class="step-content">The current VEHICLE block is stopped: status → STOPPED, endedAt = today</div></div>
+    <div class="step"><div class="step-content">A new VEHICLE block is created starting tomorrow with the replacement vehicle</div></div>
+    <div class="step"><div class="step-content">DTLs 1 through today remain linked to the original vehicle block (preserved, immutable)</div></div>
+    <div class="step"><div class="step-content">DTLs from tomorrow onward are generated for the replacement vehicle block</div></div>
+    <div class="step"><div class="step-content">The timesheet for this period will show two lines for the same period — one per vehicle</div></div>
+  </div>
+  <p>The same "Change Operator" action applies when an operator needs to be replaced on a VEHICLE block.</p>
+
+  <h3>6.7 Internal Assignments</h3>
+  <p>An assignment marked <code>isInternal = true</code> does not require a customer. Used for company vehicles deployed for the company's own operations (e.g., office runs, site visits with company vehicles).</p>
+  <ul>
+    <li>Generate DTLs normally — all automation works the same</li>
+    <li>Excluded from customer-facing timesheet generation by default</li>
+    <li>Do not produce invoices</li>
+    <li>Appear in utilization and internal cost reports</li>
+  </ul>
+</div><!-- /chapter 6 -->
+  
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 7 — 7 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch7">
+  <div class="chapter-title">
+    <div class="chapter-num">7</div>
+    <h2>Daily Time Logs Listing Portal</h2>
+  </div>
+  <p class="subtitle">A guide to the centralized registry where all daily times are logged and reviewed.</p>
+
+  <h3>7.1 Finding and Filtering Time Logs</h3>
+  <p>The centralized time log portal (located under `/time-logs`) stores every daily work hour. Coordinators can easily review operational activity using these key filter tools:
+  <ul>
+    <li><strong>Calendar Date Range:</strong> Limit records to a single day, week, month, or custom period.</li>
+    <li><strong>Client &amp; Project Selector:</strong> Isolate work logs for a particular job site or customer.</li>
+    <li><strong>Resource &amp; Operator Filters:</strong> Filter to view activity for a specific operator or license plate.</li>
+    <li><strong>Search Box:</strong> Instantly search by driver name, license plate number, or coordinator remarks.</li>
+  </ul>
+  </p>
+
+  <h3>7.2 Auto vs. Manual Logs</h3>
+  <p>The system displays the source of each DTL:
+  <ul>
+    <li><strong>Auto:</strong> The background scheduler generated this log at midnight based on the active assignment block settings.</li>
+    <li><strong>Manual:</strong> Created manually by a coordinator using the "New Log" button to record an override or custom weekend deployment.</li>
+  </ul>
+  </p>
+
+  <h3>7.3 Hours Calculation During Auto-Generation</h3>
+  <p>When the scheduler auto-generates a DTL, it calculates the hours breakdown based on the block configuration and company settings:</p>
+  <div class="callout success">
+    <strong>Example 1 — Standard Weekday, plannedOT = 2, fullDayHours = 8</strong>
+    workedHours = 8 + 2 = <strong>10</strong> | regularHours = <strong>8</strong> | overtimeHours = <strong>2</strong> | holidayHours = 0
+  </div>
+  <div class="callout success">
+    <strong>Example 2 — Weekend Day (Friday), same block, includeWeekends = ON</strong>
+    workedHours = <strong>10</strong> | regularHours = <strong>0</strong> | overtimeHours = <strong>10</strong> (all hours overtime on weekends)
+  </div>
+  <div class="callout success">
+    <strong>Example 3 — Material Block (10 cones deployed)</strong>
+    quantity = <strong>10</strong> | workedHours = 0 | regularHours = 0 | overtimeHours = 0
+  </div>
+
+  <h3>7.4 Standard Workday Flags &amp; Multipliers</h3>
+  <p>Each time log features simple visual badges summarizing operational variables:
+  <ul>
+    <li><span class="status-badge" style="color:white;padding:2px 6px;border-radius:4px;background:#64748b;">W</span> <strong>Weekend:</strong> Normal weekend day as defined in Company Settings. All worked hours on weekends are calculated as overtime hours.</li>
+    <li><span class="status-badge bg-blue" style="color:white;padding:2px 6px;border-radius:4px;">H</span> <strong>Holiday:</strong> Special holiday indicator toggled manually when creating or editing a log. Automatically applies the special holiday rate multiplier (e.g. 1.5x or 2.0x) to all logged hours.</li>
+    <li><strong>Recording Absence or Leave:</strong> If an operator is absent or on authorized leave on a scheduled day, the system does not use special badges. Instead, coordinators manually edit the Daily Time Log's worked hours to <code>0.00</code> and record details (such as "Absent" or "Medical/Annual Leave") in the <strong>Remarks</strong> field, which successfully zeroes out regular worked hours and customer costs for that day.</li>
+  </ul>
+  </p>
+
+  <h3>7.5 Editing a DTL</h3>
+  <p>Any DTL can be manually edited (via inline editing in the grid or the full edit form) to correct hours, flag a holiday, change the work type, or add remarks.</p>
+  <div class="callout warn">Editing a DTL does NOT automatically update any existing timesheet. You must regenerate the timesheet after editing DTLs to get the updated amounts.</div>
+
+  <h3>7.6 The Snapshot Mechanism</h3>
+  <p>When a DTL is created, it captures a <strong>snapshot</strong> of all rate data at that moment. The snapshot is immutable — subsequent rate changes have no effect on historical DTLs.</p>
+  <div class="callout success">
+    <strong>Why This Matters — Rate Change Scenario</strong>
+    A vehicle's cost is AED 400/day in January. In February, it changes to AED 450/day. DTLs created in January still show AED 400. When you run a January profitability report in March, you see the correct January cost — not the current rate. Without snapshots, every historical report would be wrong the moment any rate changes.
+  </div>
+  <div class="callout success">
+    <strong>Why This Matters — Name Change Scenario</strong>
+    Operator "John Smith" changes his name in the system. All DTLs created before the change still read "John Smith" (snapshot). This ensures historical timesheets and audit trails remain accurate forever.
+  </div>
+
+  <h3>7.7 Interactive Inline Editing &amp; Bounds Validation</h3>
+  <p>To expedite adjustments, the DTL portal supports <strong>Inline Editing</strong>. Double-clicking any hours field (Regular Hours, Overtime, or Shift Qty) turns the static text into an editable input cell:</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <strong>Edit Cell</strong>
+      <p>Edit the hours or quantity value in the grid.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <strong>Enter New Value</strong>
+      <p>Type the adjusted hours. Standard validations are checked immediately as you type.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <strong>Save or Cancel</strong>
+      <p>Press <code>Enter</code> or click the green Check button to save. Press <code>Escape</code> or click the Red cross to discard changes.</p>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <strong>Real-time Bounds Validation Rules:</strong>
+    <br/>
+    The system immediately validates edits on the client-side, returning a toast alert and blocking the request if rules are violated:
+    <ul>
+      <li><strong>Day Limit:</strong> Regular hours and Overtime hours cannot be negative, and their sum cannot exceed <code>24.00</code> hours for a single date.</li>
+      <li><strong>Quantity Bounds:</strong> Shift quantities for material and helper headcounts must be non-negative numbers (zero or greater).</li>
+      <li><strong>Instant Recalculations:</strong> The moment you save, the system automatically updates the row's total cost on your screen, syncing the timesheet calculations instantly.</li>
+    </ul>
+  </div>
+
+  <h3>7.8 DTL Generation for Detour Blocks</h3>
+  <ul>
+    <li>The <strong>parent DETOUR block generates NO DTLs</strong> — the scheduler skips it entirely</li>
+    <li>Each <strong>child block generates its own DTL daily</strong> per the normal scheduler logic</li>
+    <li>Each child DTL stores <code>detourBlockId</code> pointing to the parent, enabling detour-level grouping in reports</li>
+  </ul>
+  <div class="callout success">
+    <strong>Day 3 of a "2-Lane Detour" running from June 1–7</strong>
+    DTLs created on June 3: Vehicle A (8 hrs), Vehicle B (8 hrs), Operator X (8 hrs), Operator Y (8 hrs), Cones (10 units), Flagmen (2 units)<br>
+    = 6 individual DTLs, each with detourBlockId pointing to the parent DETOUR block<br>
+    Over 7 days: 6 × 7 = 42 DTL rows — all individual, all traceable
+  </div>
+</div><!-- /chapter 7 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 8 — 8 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch8">
+<div class="chapter-title">
+    <div class="chapter-num">8</div>
+    <h2>Timesheets — Deep Dive</h2>
+  </div>
+  <p class="subtitle">A timesheet aggregates all daily time logs for a customer over a date range and calculates the billable amounts. It is the bridge between raw operational data (DTLs) and formal billing (invoices).</p>
+
+  <h3>8.1 Generating a Timesheet</h3>
+  <p><strong>Required inputs:</strong></p>
+  <ul>
+    <li>Customer (or "Internal" flag)</li>
+    <li>Project (optional — filters logs to that project only)</li>
+    <li>Period Start and Period End</li>
+  </ul>
+
+  <p><strong>What happens internally, step by step:</strong></p>
+  <div class="steps">
+    <div class="step"><div class="step-content">System queries all <code>daily_time_logs</code> where: date is within period, <code>isBillable = 1</code>, assignment is ACTIVE or COMPLETED, and customerId/projectId match the selected criteria.</div></div>
+    <div class="step"><div class="step-content">Groups logs into one line per resource per day. Grouping key: VEHICLE = date + vehicleId + operatorId; OPERATOR = date + operatorId; MATERIAL = date + materialId; LABOUR = date + labourTypeId.</div></div>
+    <div class="step"><div class="step-content">Calculates <code>calculatedAmount</code> for each line using the billing formulas (see Section 6.2).</div></div>
+    <div class="step"><div class="step-content">Inserts <code>timesheet_lines</code> rows linked to this timesheet.</div></div>
+    <div class="step"><div class="step-content">Creates the <code>timesheets</code> header record with a unique sequential code (e.g., TS-00001).</div></div>
+    <div class="step"><div class="step-content">Checks for overlapping timesheets: if another timesheet for the same customer/project already covers any part of this period (and is not INVOICED), the system warns. A <code>force</code> override allows proceeding.</div></div>
+    <div class="step"><div class="step-content">LPO auto-fill: If the project has an LPO number and attachment, these are automatically copied to the new timesheet.</div></div>
+  </div>
+
+  <h3>8.2 Cost Calculations &amp; Billing Rules</h3>
+  <p>To compile billing statements, the system aggregates all time logs (DTLs) within the timesheet date range and applies these clear, plain-English billing rules:</p>
+  
+  <ol>
+    <li><strong>Rate Normalization:</strong> Daily or monthly hire rates are normalized to an hourly baseline to compute partial days or overtime hours accurately.</li>
+    <li><strong>Vehicle Base Cost:</strong> Calculated by multiplying the total regular hours worked by the vehicle's normalized hourly rate.</li>
+    <li><strong>Operator Cost:</strong> If the vehicle block was scheduled "With Operator", the operator's hours are added to the billing. Standalone operator deployment lines are billed separately based on their specific contracted operator rates.</li>
+    <li><strong>Rate Multipliers:</strong> Regular overtime hours are multiplied by the overtime rate (e.g. 1.25x or 1.5x). Hours logged on official public holidays or designated weekends use the special holiday multiplier.</li>
+  </ol>
+
+  <h4>Full Worked Example — Vehicle with Operator, Weekday with OT</h4>
+  <div class="callout success">
+    <strong>Settings:</strong> Full Day Hours = 8 | OT Multiplier = 1.5 | Holiday Multiplier = 2.0<br>
+    <strong>Vehicle:</strong> baseRentAmount = AED 400 | baseRentType = DAILY | defaultRentCycle = DAILY<br>
+    <strong>Operator:</strong> hourlyRate = AED 20<br>
+    <strong>DTL:</strong> workedHours = 10, regularHours = 8, overtimeHours = 2 (plannedOT = 2)
+    <div class="code-block">vHourlyRate = 400 / 8 = AED 50/hr
+dailyRate   = 50 × 8 = AED 400
+vehicleCost = 400 + (10–8) × 50 = 400 + 100 = <span class="result">AED 500</span>
+
+operatorCost = (8 × 20) + (2 × 20 × 1.5)
+             = 160 + 60 = <span class="result">AED 220</span>
+
+<span class="result">Total line = AED 500 + AED 220 = AED 720</span></div>
+  </div>
+
+  <h4>Full Worked Example — Same Vehicle on a Weekend (Friday)</h4>
+  <div class="callout success">
+    <strong>DTL:</strong> workedHours = 10, regularHours = 0, overtimeHours = 10 (all weekend hours = OT)
+    <div class="code-block">vehicleCost = 400 + (10–8) × 50 = <span class="result">AED 500</span>  ← vehicle still charges daily + extra
+
+operatorCost = (0 × 20) + (10 × 20 × 1.5)
+             = 0 + 300 = <span class="result">AED 300</span>  ← all 10 hrs are OT rate
+
+<span class="result">Total line = AED 500 + AED 300 = AED 800</span></div>
+  </div>
+
+  <h4>Full Worked Example — Material Deployment</h4>
+  <div class="callout success">
+    <strong>Material:</strong> Traffic cones, costPerDay = AED 5/cone<br>
+    <strong>Block:</strong> quantity = 10 cones, deployed for 3 days (3 DTLs created, one per day)<br>
+    <strong>Each timesheet line:</strong> 10 × AED 5 = <strong>AED 50/day</strong><br>
+    <strong>Total for 3 days:</strong> <strong>AED 150</strong>
+  </div>
+
+  <h4>Monthly Rate Conversion Example</h4>
+  <div class="callout success">
+    <strong>Vehicle:</strong> baseRentAmount = AED 15,000/month | baseRentType = MONTHLY | defaultRentCycle = DAILY | fullDayHours = 8
+    <div class="code-block">vHourlyRate = 15,000 / 30 / 8 = AED 62.5/hr
+dailyRate   = 62.5 × 8 = <span class="result">AED 500/day</span>
+
+IF worked exactly 8 hrs: vehicleCost = AED 500
+IF worked 10 hrs: vehicleCost = 500 + (10–8) × 62.5 = <span class="result">AED 625</span></div>
+  </div>
+
+  <h3>8.3 Outdated Detection</h3>
+  <p>After a timesheet is generated, if any DTL that was included in it is later edited (its <code>updatedAt</code> timestamp changes), the timesheet shows an <strong>"Outdated"</strong> warning. This is your signal to regenerate the timesheet so it reflects the corrected hours.</p>
+
+  <h3>8.4 Regenerating a Timesheet</h3>
+  <p>If a timesheet is DRAFT or EXPORTED and <code>allowRegenerationBeforeInvoice = true</code> in settings:</p>
+  <div class="steps">
+    <div class="step"><div class="step-content">All existing <code>timesheet_lines</code> for this timesheet are deleted</div></div>
+    <div class="step"><div class="step-content">The system re-runs the full generation logic against current DTL data</div></div>
+    <div class="step"><div class="step-content">New lines are inserted with current rates and hours</div></div>
+    <div class="step"><div class="step-content"><code>generatedAt</code> and <code>generatedBy</code> are updated</div></div>
+  </div>
+  <div class="callout danger">Regeneration is permanently blocked if the timesheet is already INVOICED. To regenerate an invoiced timesheet, you must first delete the invoice (which reverts the timesheet to EXPORTED), then regenerate.</div>
+
+  <h3>8.5 Timesheet Statuses</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Status</th><th>Meaning</th><th>Transitions To</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-amber">DRAFT</span></td><td>Freshly generated, not yet sent or exported</td><td>EXPORTED</td></tr>
+      <tr><td><span class="badge badge-blue">EXPORTED</span></td><td>Sent to customer or downloaded as PDF</td><td>INVOICED</td></tr>
+      <tr><td><span class="badge badge-green">INVOICED</span></td><td>An invoice has been created from this timesheet</td><td>Terminal — back to EXPORTED only if invoice is deleted</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>8.6 Approval Workflow</h3>
+  <p>A timesheet can be approved before invoicing:</p>
+  <ul>
+    <li>Sets <code>approvedAt</code>, <code>approvedBy</code>, and <code>approvalNote</code></li>
+    <li>An approved timesheet signals readiness for invoicing</li>
+    <li>Approval can be reversed (unapprove) at any time before INVOICED status</li>
+  </ul>
+
+  <h3>8.7 Sending a Timesheet to Customer</h3>
+  <p>From the timesheet detail view, click "Send Timesheet." The system:</p>
+  <div class="steps">
+    <div class="step"><div class="step-content">Fetches all timesheet lines with resource names and amounts</div></div>
+    <div class="step"><div class="step-content">Generates a PDF buffer using the timesheet template</div></div>
+    <div class="step"><div class="step-content">Sends it via SMTP to the customer's email address</div></div>
+    <div class="step"><div class="step-content">Logs the SENT activity on the timesheet record</div></div>
+    <div class="step"><div class="step-content">Timesheet status changes from DRAFT to EXPORTED</div></div>
+  </div>
+
+  <h3>8.8 Rate Multipliers on the Timesheet</h3>
+  <p>The timesheet stores its own multiplier values at generation time (not just from settings — they can be adjusted per timesheet):</p>
+  <div class="steps">
+  <ul>
+    <li><code>standardRateMultiplier</code> (default: 1.0)</li>
+    <li><code>overtimeMultiplier</code> (default: 1.5)</li>
+    <li><code>holidayMultiplier</code> (default: 2.0)</li>
+  <p>You can regenerate a timesheet with different multipliers for contractual rate adjustments. This does not change the DTLs — only the calculated amounts on the timesheet lines.</p>
+  </div>
+  <h3>8.9 Grouped Timesheet View Modes (Presentation Only)</h3>
+  <p>Timesheets support multiple view modes. <strong>All grouping is presentation-only — the underlying DTLs are never modified.</strong></p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>View Mode</th><th>What It Shows</th></tr></thead>
+    <tbody>
+      <tr><td>Detailed</td><td>One line per resource per day (default internal view)</td></tr>
+      <tr><td>Group by Resource</td><td>One line per resource, hours summed across all dates</td></tr>
+      <tr><td>Group by Vehicle Type</td><td>Resources grouped by vehicle type</td></tr>
+      <tr><td>Group by Operator</td><td>Lines grouped per operator</td></tr>
+      <tr><td>Group by Detour</td><td>All resources under a detour block grouped together</td></tr>
+      <tr><td>Bundle Summary</td><td>One line per detour template (e.g. "2 Lane Detour — 7 Days")</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Customer vs. Internal:</strong> Internal users see full detail. Customers see grouped/bundle view only — they do not see individual vehicle codes, operator names, or OT breakdowns.</p>
+</div><!-- /chapter 8 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 9 — 9 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch9">
+<div class="chapter-title">
+    <div class="chapter-num">9</div>
+    <h2>Invoices — Deep Dive</h2>
+  </div>
+  <p class="subtitle">An invoice is created from a timesheet and represents the formal billing document sent to the customer. One timesheet = one invoice. The invoice captures the final billable amounts, VAT, adjustments, and LPO references.</p>
+
+  <h3>9.1 Creating an Invoice</h3>
+  <p>You can only create one invoice per timesheet. Navigate to a timesheet in DRAFT or EXPORTED status and click "Generate Invoice."</p>
+  <p><strong>What happens internally:</strong></p>
+  <div class="steps">
+    <div class="step"><div class="step-content">Creates an <code>invoices</code> record with: sequential invoice number (e.g. INV-00001), date = today, due date = today + <code>defaultDueDays</code>, status = GENERATED, customer/project/period copied from timesheet.</div></div>
+    <div class="step"><div class="step-content">Groups <code>timesheet_lines</code> into <code>invoice_items</code>. Lines with the same resource+operator combination are grouped; hours/quantities summed.</div></div>
+    <div class="step"><div class="step-content">Calculates totals: subtotal = sum of all invoice_items; vatAmount = subtotal × (vatPercentage/100) if VAT enabled; grandTotal = subtotal + vatAmount.</div></div>
+    <div class="step"><div class="step-content">If <code>lockTimesheetOnCreate = true</code>: sets the linked timesheet status to INVOICED.</div></div>
+    <div class="step"><div class="step-content">Sends invoice notification email to customer if configured in Notification Settings.</div></div>
+  </div>
+
+  <h3>9.2 Bundle Billing (Detour)</h3>
+  <p>When a DETOUR block has <code>bundleBilling = true</code>, the invoice collapses all lines under that detour into ONE line item. The <code>bundleBilling</code> flag on a DETOUR block controls how the invoice presents the charges to the customer versus how the system logs the data internally.</p>
+  <div class="callout success">
+    <strong>Without Bundle Billing (bundleBilling = false)</strong>
+    Customer sees: Vehicle 1 | Vehicle 2 | Operator 1 | Operator 2 | Operator 3 | Cones (10 units) | Flagmen (2 units)<br>
+    = 7 separate invoice lines
+  </div>
+  <div class="callout purple">
+    <strong>With Bundle Billing (bundleBilling = true)</strong>
+    Customer sees: "2-Lane Detour Service — 7 Days @ AED 850/day" = 1 invoice line<br>
+    Internally: all 7 DTL streams still exist in full detail. The bundle is presentation-only.
+  </div>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Metric/Aspect</th><th>bundleBilling = false</th><th>bundleBilling = true</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Timesheet view</strong></td><td>Individual lines for each resource</td><td>Individual lines still visible internally</td></tr>
+      <tr><td><strong>Invoice customer view</strong></td><td>One line per resource (5+ lines)</td><td>One line: "2-Lane Detour — 7 Days @ AED X/day"</td></tr>
+      <tr><td><strong>Internal DTL data</strong></td><td>Full granularity preserved</td><td>Full granularity preserved</td></tr>
+      <tr><td><strong>When to use</strong></td><td>Customer wants itemized billing</td><td>Customer prefers a simple bundle price</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout">Bundle mode only affects what the customer sees on the invoice. All individual DTLs, operator hours, OT tracking, and utilization data remain in full detail internally regardless of this setting.</div>
+
+  <h3>9.3 VAT Calculation</h3>
+  <div class="formula">
+    <div class="label">VAT Formula</div>
+    <pre>subtotal  = sum of all invoice_item totals
+vatAmount = subtotal × (vatPercentage / 100)
+grandTotal = subtotal + vatAmount + adjustmentAmount
+
+Example: subtotal = AED 5,000, VAT 5%:
+  vatAmount  = AED 250
+  grandTotal = AED 5,250</pre>
+  </div>
+  <div class="callout">VAT settings at the time of invoice creation are captured in the invoice record. If VAT settings change later, existing invoices are unaffected.</div>
+
+  <h3>9.4 Adjustments</h3>
+  <p>After creating an invoice, you can add an adjustment:</p>
+  <ul>
+    <li><strong>adjustmentAmount:</strong> Positive (surcharge) or negative (discount) amount — e.g., −100 for a discount, +50 for a handling fee</li>
+    <li><strong>adjustmentNote:</strong> Reason for the adjustment (displayed on invoice)</li>
+    <li>grandTotal is recalculated: <code>subtotal + vatAmount + adjustmentAmount</code></li>
+  </ul>
+
+  <h3>9.5 Invoice Attachments and LPO Reference</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Field</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>attachmentPath / attachmentName</td><td>Any supporting document upload</td></tr>
+      <tr><td>isSignedTimesheet</td><td>Toggle indicating the attachment is a signed copy of the timesheet</td></tr>
+      <tr><td>signatureDate</td><td>When the timesheet was physically signed by the customer</td></tr>
+      <tr><td>lpoNumber</td><td>The customer's Local Purchase Order reference number</td></tr>
+      <tr><td>lpoAttachmentPath / lpoAttachmentName</td><td>The actual PO document from the customer</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>If the project had an LPO when the timesheet was generated, it was already copied to the timesheet, and from there copied again to the invoice.</p>
+
+  <h3>9.6 Invoice Statuses</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Status</th><th>Meaning</th><th>Next States</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-amber">GENERATED</span></td><td>Invoice created, not yet sent to customer</td><td>SENT</td></tr>
+      <tr><td><span class="badge badge-blue">SENT</span></td><td>Emailed to customer</td><td>PAID, CANCELLED</td></tr>
+      <tr><td><span class="badge badge-green">PAID</span></td><td>Customer has paid. Updated manually.</td><td>Terminal</td></tr>
+      <tr><td><span class="badge badge-red">CANCELLED</span></td><td>Invoice voided</td><td>Terminal</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout">The system does not auto-detect payment. Status changes to PAID are always manual actions by a user with invoice edit permission.</div>
+
+  <h3>9.7 Sending an Invoice</h3>
+  <p>From the invoice detail view, click "Send Invoice." The system:</p>
+  <div class="steps">
+    <div class="step"><div class="step-content">Renders the invoice as HTML using the invoice template</div></div>
+    <div class="step"><div class="step-content">Generates a PDF buffer from the rendered HTML</div></div>
+    <div class="step"><div class="step-content">If <code>attachTimesheetWithInvoice = true</code>, also generates a separate timesheet PDF</div></div>
+    <div class="step"><div class="step-content">Sends both documents via SMTP to the customer's email address</div></div>
+    <div class="step"><div class="step-content">Updates invoice status from GENERATED to SENT</div></div>
+  </div>
+
+  <h3>9.8 Deleting an Invoice</h3>
+  <p>If you delete an invoice:</p>
+  <ul>
+    <li>All <code>invoice_items</code> are deleted</li>
+    <li>The linked timesheet status reverts from INVOICED back to EXPORTED</li>
+    <li>You can then edit DTLs, regenerate the timesheet, and create a fresh invoice</li>
+  </ul>
+  <div class="callout warn">Deleting an invoice does not delete the timesheet or the DTLs. Only the invoice and its line items are removed.</div>
+</div><!-- /chapter 9 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 10 — 10 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch10">
+<div class="chapter-title">
+    <div class="chapter-num">10</div>
+    <h2>Expenses</h2>
+  </div>
+  <p class="subtitle">Expenses track operational costs incurred during deployments — fuel, tolls, repairs, consumables. They are a separate cost-tracking track that does not affect DTLs, timesheets, or invoices.</p>
+
+  <h3>10.1 Expense Fields</h3>
+  <div class="fields-grid">
+    <div class="field-card"><div class="fname">Expense Code</div><div class="fdesc">Auto-generated sequential code (e.g. EXP-0021)</div><div class="ftag auto">Auto-generated</div></div>
+    <div class="field-card"><div class="fname">Expense Type</div><div class="fdesc">Category (fuel, maintenance, toll, consumables, etc.) Configured in Master Config.</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">Date</div><div class="fdesc">When the expense occurred</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">Amount</div><div class="fdesc">The cost in company currency</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">Vehicle</div><div class="fdesc">Link to the specific vehicle that incurred this cost</div><div class="ftag">Optional</div></div>
+    <div class="field-card"><div class="fname">Operator</div><div class="fdesc">Link to the operator if expense is operator-related (e.g., medical)</div><div class="ftag">Optional</div></div>
+    <div class="field-card"><div class="fname">Assignment</div><div class="fdesc">Link to the specific assignment this expense relates to</div><div class="ftag">Optional</div></div>
+    <div class="field-card"><div class="fname">Description</div><div class="fdesc">Free text description of the expense</div><div class="ftag">Optional</div></div>
+    <div class="field-card"><div class="fname">Attachment</div><div class="fdesc">Receipt or supporting document upload</div><div class="ftag">Optional</div></div>
+  </div>
+
+  <h3>10.2 Expense Statuses</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Status</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-amber">DRAFT</span></td><td>Just entered, awaiting verification</td></tr>
+      <tr><td><span class="badge badge-green">CONFIRMED</span></td><td>Reviewed, verified, and approved</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>10.3 Important: What Expenses Do NOT Do</h3>
+  <div class="callout danger">
+    <strong>Expenses are isolated from the billing pipeline</strong>
+    Expenses do NOT affect DTLs, timesheets, or invoices. An invoice is based purely on time/resource deployments (DTLs → Timesheet). Expenses are never automatically included in invoices. If you need to bill an expense to a customer, add it as an adjustment amount on the invoice, or handle it outside the system.
+  </div>
+
+  <h3>10.4 Where Expenses Appear</h3>
+  <ul>
+    <li><strong>Expense Report:</strong> Full list with filters by vehicle, type, project, date range, status</li>
+    <li><strong>Vehicle History:</strong> A vehicle's expenses appear in its detail view for cost tracking</li>
+    <li><strong>Profitability Analysis:</strong> Manual analysis can factor expense costs against billed revenue to assess true margin</li>
+  </ul>
+</div><!-- /chapter 10 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 11 — 11 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch11">
+<div class="chapter-title">
+    <div class="chapter-num">11</div>
+    <h2>Maintenance</h2>
+  </div>
+  <p class="subtitle">Maintenance records track all service work done on vehicles — from scheduled oil changes to emergency repairs. Creating a maintenance record triggers an automatic vehicle status change and prevents new assignments until completion.</p>
+
+  <h3>11.1 Creating a Maintenance Record</h3>
+  <div class="steps">
+    <div class="step"><div class="step-content">Navigate to the vehicle's detail page (or the Maintenance module) and click "Add Maintenance."</div></div>
+    <div class="step"><div class="step-content">System checks if the vehicle has any active assignment blocks. If it does, you receive a warning — you can still proceed, but you are responsible for stopping those blocks manually.</div></div>
+    <div class="step"><div class="step-content">Vehicle status is automatically set to <code>UNDER_MAINTENANCE</code>.</div></div>
+    <div class="step"><div class="step-content">Maintenance code is generated (e.g., MAINT-0001). Status is set based on startDate: if startDate ≤ today → IN_PROGRESS; if startDate &gt; today → SCHEDULED.</div></div>
+  </div>
+
+  <h3>11.2 Maintenance Fields</h3>
+  <div class="fields-grid">
+    <div class="field-card"><div class="fname">Maintenance Code</div><div class="fdesc">Auto-generated sequential code (e.g. MAINT-0001)</div><div class="ftag auto">Auto-generated</div></div>
+    <div class="field-card"><div class="fname">Vehicle</div><div class="fdesc">The vehicle being serviced</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">Maintenance Type</div><div class="fdesc">Category configured in Master Config (e.g., Oil Change, Annual Service, Tire Replacement)</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">Start Date</div><div class="fdesc">When maintenance begins. Determines initial status (SCHEDULED vs IN_PROGRESS)</div><div class="ftag required">Required</div></div>
+    <div class="field-card"><div class="fname">End Date</div><div class="fdesc">When maintenance is expected to complete. Auto-set when status → COMPLETED.</div><div class="ftag">Optional</div></div>
+    <div class="field-card"><div class="fname">Cost</div><div class="fdesc">Required for OWN vehicles (you're paying for the repair). Optional for LEASED (owner may cover it).</div><div class="ftag">Conditional</div></div>
+    <div class="field-card"><div class="fname">Description</div><div class="fdesc">Details of work performed</div><div class="ftag">Optional</div></div>
+  </div>
+
+  <h3>11.3 Maintenance Statuses and Transitions</h3>
+  <div class="status-flow">
+    <span class="status-node badge-blue">SCHEDULED</span>
+    <span class="status-arrow">→</span>
+    <span class="status-node badge-amber">IN_PROGRESS</span>
+    <span class="status-arrow">→</span>
+    <span class="status-node badge-green">COMPLETED</span>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Transition</th><th>What Happens</th></tr></thead>
+    <tbody>
+      <tr><td>Create with future startDate</td><td>Status = SCHEDULED. Vehicle = UNDER_MAINTENANCE.</td></tr>
+      <tr><td>Create with today/past startDate</td><td>Status = IN_PROGRESS. Vehicle = UNDER_MAINTENANCE.</td></tr>
+      <tr><td>SCHEDULED → IN_PROGRESS</td><td>Manual change or triggered when start date arrives.</td></tr>
+      <tr><td>IN_PROGRESS → COMPLETED</td><td>endDate set to now (if not set). Vehicle status automatically reverts to <strong>ACTIVE</strong>.</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="callout success">
+    <strong>Scenario — Vehicle Returns from Maintenance</strong>
+    Vehicle V-001 goes in for annual service on June 5. Status: UNDER_MAINTENANCE.<br>
+    On June 8, work is completed. Click "Complete Maintenance" → endDate auto-sets to June 8 → vehicle status → ACTIVE.<br>
+    V-001 is now available for new assignments again starting June 9.
+  </div>
+
+  <h3>11.4 Important: Existing Blocks Are Not Auto-Stopped</h3>
+  <div class="callout warn">
+    <strong>Critical: Maintenance Does Not Stop Existing Blocks</strong>
+    When a vehicle goes UNDER_MAINTENANCE, it is blocked from NEW assignment blocks. But any existing active blocks for this vehicle continue running and generating DTLs. You must manually stop those blocks if the vehicle should not be working.
+  </div>
+
+  
+
+  <h3>11.5 The Workshop Maintenance Report</h3>
+  <p>The **Maintenance Report** (under Reports → Maintenance) aggregates operational statistics for your workshop, tracking asset costs and preventing machine downtime:
+  <ul>
+    <li><strong>Maintenance Frequency:</strong> Identifies which vehicles or models spend the most time undergoing repairs.</li>
+    <li><strong>Breakdown Cost Analysis:</strong> Compiles and tracks parts replaced, repair costs, and total service durations.</li>
+    <li><strong>Filtering:</strong> Filter by date range, vehicle type, and maintenance category (e.g. Preventive vs Breakdown).</li>
+    <li><strong>Exporting:</strong> One-click download of the maintenance logs as a formatted PDF workshop summary or Excel data sheet.</li>
+  </ul>
+  </p>
+</div><!-- /chapter 11 -->
+
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 12 — 12 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch12">
+<div class="chapter-title">
+    <div class="chapter-num">12</div>
+    <h2>Reports — Each One Explained</h2>
+  </div>
+  <p class="subtitle">All reports require the "Reports → View" permission. All reports are read-only — none of them modify any data. Because DTLs remain resource-level, every report here is built by aggregating DTLs with appropriate filters.</p>
+
+  <h3>12.1 Assignments Report</h3>
+  <p><strong>Shows:</strong> All assignments with status, customer, project, date range, assignment code, and block count.</p>
+  <p><strong>Filters:</strong> Customer, Project, Status (ACTIVE/COMPLETED), Date range.</p>
+  <p><strong>Use case:</strong> Find all active assignments for a customer. See which assignments ended last month and should be invoiced.</p>
+
+  <h3>12.2 Daily Time Logs Report</h3>
+  <p><strong>Shows:</strong> Individual DTL rows with date, vehicle, operator, hours breakdown (regular, overtime, holiday), quantity, and whether each log was auto-generated or manual.</p>
+  <p><strong>Filters:</strong> Date range, assignment, customer, vehicle, block type (VEHICLE/OPERATOR/MATERIAL/LABOUR).</p>
+  <p><strong>Use case:</strong> Audit hours for a specific vehicle. Verify the scheduler generated logs for every working day. Dispute resolution with customers.</p>
+
+  <h3>12.3 Vehicle Utilization Report</h3>
+  <p><strong>Shows:</strong> For each vehicle over the selected period:</p>
+  <ul>
+    <li><strong>Assigned Days:</strong> Number of distinct dates the vehicle had at least one DTL</li>
+    <li><strong>Worked Hours:</strong> Total hours across all DTLs</li>
+    <li><strong>Utilization %:</strong> (assignedDays ÷ totalDaysInPeriod) × 100</li>
+    <li><strong>Vehicle Status:</strong> Current status</li>
+  </ul>
+  <div class="callout success">
+    <strong>Example Calculation — June (30 days)</strong>
+    Vehicle A has DTLs on 22 days (Mon–Fri deployment, 4 full weeks + 2 extra days)<br>
+    Utilization = (22 / 30) × 100 = <strong>73.3%</strong>
+  </div>
+  <p><strong>Use case:</strong> Identify underutilized vehicles. Optimize fleet deployment. Justify adding or retiring vehicles.</p>
+
+  <h3>12.4 Operator Utilization Report</h3>
+  <p><strong>Shows:</strong> For each operator: assigned days, total worked hours, utilization %. Counts DTLs from both VEHICLE blocks (where operator is attached) and standalone OPERATOR blocks.</p>
+  <p><strong>Use case:</strong> Identify operators with low utilization. Plan staffing levels. Identify operators consistently at 100% (burnout risk).</p>
+
+  <h3>12.5 Operator Overtime Report</h3>
+  <p><strong>Shows:</strong> Operators who have logged overtime hours in the selected period.</p>
+  <ul>
+    <li>Total overtime hours per operator</li>
+    <li>Regular hours alongside</li>
+    <li>Date-by-date breakdown available</li>
+  </ul>
+  <p><strong>Use case:</strong> Payroll preparation. Monitor who consistently works overtime. Ensure compliance with labour regulations.</p>
+
+  <h3>12.6 Vehicle Availability Report</h3>
+  <p><strong>Shows:</strong> Which vehicles are available (not assigned) on a given date or date range. Uses the same occupied-date logic as the availability check in assignments.</p>
+  <div class="callout success">
+    <strong>Use case:</strong> Customer calls and asks if you can deploy 3 vehicles starting next Monday. Run this report for next Monday — it lists all vehicles that have no occupied DTLs on that date and are ACTIVE status.
+  </div>
+
+  <h3>12.7 Material Report</h3>
+  <p><strong>Shows:</strong> Material deployment history — units deployed on each date, which assignment, which customer, total unit-days deployed in the period.</p>
+  <p><strong>Use case:</strong> Track material wear and decide reorder quantities. Show customers how many cones were on-site each day.</p>
+
+  <h3>12.8 Labour Report</h3>
+  <p><strong>Shows:</strong> Same as Material Report but for labour types — headcount deployed per day, per assignment, per customer.</p>
+  <p><strong>Use case:</strong> Workforce deployment overview. Customer billing reconciliation for labour-based contracts.</p>
+
+  <h3>12.9 Detour Report</h3>
+  <p><strong>Shows:</strong> Detour service deployments — which templates were used, how many days, which assignments, full resource breakdown per deployment.</p>
+  <p><strong>Use case:</strong> Understand how often each detour configuration is deployed. Inform pricing decisions for new contracts.</p>
+
+  <h3>12.10 Timesheets Report</h3>
+  <p><strong>Shows:</strong> All timesheets with status, customer, project, period, total amounts, and invoice reference.</p>
+  <p><strong>Filters:</strong> Customer, project, status, date range.</p>
+  <p><strong>Use case:</strong> Find all DRAFT timesheets awaiting invoicing. Identify timesheets that show "Outdated" and need regeneration before invoicing.</p>
+
+  <h3>12.11 Invoices Report</h3>
+  <p><strong>Shows:</strong> All invoices with status, customer, invoice number, subtotal, VAT amount, grand total, due date, and payment status.</p>
+  <p><strong>Filters:</strong> Customer, project, status (GENERATED/SENT/PAID/CANCELLED), date range.</p>
+  <p><strong>Use case:</strong> Find all SENT invoices not yet paid. Export for accounts receivable follow-up.</p>
+
+  <h3>12.12 Revenue Report</h3>
+  <p><strong>Shows:</strong> Monthly revenue summary across all invoices (excluding CANCELLED).</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Column</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Month</td><td>Calendar month/year</td></tr>
+      <tr><td>Invoice Count</td><td>Number of non-cancelled invoices in that month</td></tr>
+      <tr><td>Customer Count</td><td>Distinct customers billed</td></tr>
+      <tr><td>Subtotal</td><td>Sum of pre-VAT amounts</td></tr>
+      <tr><td>VAT Amount</td><td>Sum of VAT across all invoices</td></tr>
+      <tr><td>Grand Total</td><td>Subtotal + VAT</td></tr>
+      <tr><td>Paid</td><td>Sum from invoices with status = PAID</td></tr>
+      <tr><td>Unpaid</td><td>Grand Total − Paid</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="code-block"><span class="comment">Example Revenue Report output (AED)</span>
+Month     | Invoices | Subtotal   | VAT     | Grand Total | Paid      | Unpaid
+Jan 2026  | 8        | 40,000     | 2,000   | 42,000      | 35,000    | 7,000
+Feb 2026  | 6        | 30,000     | 1,500   | 31,500      | 31,500    | 0
+Mar 2026  | 9        | 52,000     | 2,600   | 54,600      | 20,000    | 34,600
+<span class="result">TOTAL     | 23       | 122,000    | 6,100   | 128,100     | 86,500    | 41,600</span></div>
+  <p><strong>Filters:</strong> Year, customer, project.</p>
+  <p><strong>Use case:</strong> Monthly revenue tracking, annual financial summary, outstanding balance overview for management reporting.</p>
+
+  <h3>12.13 Profitability Report</h3>
+  <p><strong>Shows:</strong> For each timesheet — billed revenue vs. estimated cost vs. profit margin.</p>
+  <div class="formula">
+    <div class="label">Profitability Calculation</div>
+    <pre>Billed = sum of timesheet_lines.calculatedAmount
+
+Estimated Cost (per line):
+  MATERIAL/LABOUR: rateSnapshot × quantity
+  VEHICLE/OPERATOR: rateSnapshot × (totalHours / fullDayHours)
+
+Profit = Billed − Estimated Cost
+Margin % = (Profit / Billed) × 100</pre>
+  </div>
+  <div class="callout success">
+    <strong>Example — TS-00012 for ABC Corp, June 2026</strong>
+    Billed: AED 12,000 | Estimated Cost: AED 7,500 | Profit: AED 4,500 | Margin: <strong>37.5%</strong>
+  </div>
+  <div class="callout warn">
+    <strong>Negative Margin Scenario</strong>
+    If the margin is negative, the billed amount is less than the internal cost. Common causes: billing rate set lower than the vehicle's costPerDay; many overtime hours inflating operator cost while billing was set as flat daily; rate configuration error. Use this report to identify and fix underpriced contracts.
+  </div>
+  <p><strong>Filters:</strong> Customer, project, date range. Internal timesheets are excluded.</p>
+
+  <h3>12.14 Monthly Summary Report</h3>
+  <p><strong>Shows:</strong> Cross-tabulation of resource utilization by month — total hours, assignment count, customer count, and revenue per calendar month. Designed for high-level operational dashboards and board reporting.</p>
+
+  <h3>12.15 Expenses Report</h3>
+  <p><strong>Shows:</strong> All expenses with type, vehicle, operator, project, amount, and status.</p>
+  <p><strong>Filters:</strong> Vehicle, expense type, status (DRAFT/CONFIRMED), project, date range.</p>
+  <p><strong>Use case:</strong> Track operational costs. Prepare data for accounting. Calculate true operational cost per vehicle.</p>
+
+  <h3>12.16 VAT Summary Report</h3>
+  <p><strong>Shows:</strong> VAT collected per period across all invoices — subtotal (net), VAT amount, grand total (gross), with per-invoice breakdown.</p>
+  <p><strong>Use case:</strong> VAT filing preparation. Tax compliance submissions. Audit evidence for VAT collected.</p>
+</div><!-- /chapter 12 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 13 — 13 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch13">
+  <div class="chapter-title">
+    <div class="chapter-num">13</div>
+    <h2>Daily Automation &amp; Email Notifications</h2>
+  </div>
+  <p class="subtitle">An overview of how the system handles daily automated time log entries, automated assignment completions, and email updates in the background.</p>
+
+  <h3>13.1 The Daily Automation Cycle</h3>
+  <p>RentERP runs automated background tasks at midnight relative to your local timezone to reduce coordinator manual entry workloads. These automations require zero user intervention:</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <strong>Auto-Generate Daily Logs (DTLs)</strong>
+      <p>Every night at midnight, the system scans all active assignments. If today is scheduled for deployment (and weekend rules match), it automatically creates a draft time log pre-populated with standard regular shift hours.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <strong>Auto-Complete Assignments</strong>
+      <p>If an assignment reaches its scheduled end date, the system automatically transitions its status to COMPLETED, releasing the vehicle and operator back to the available pool for future projects.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <strong>Compile &amp; Dispatch Expiry Alerts</strong>
+      <p>The system runs compliance checks and compiles expiring credentials (visa cards, driving permits, vehicle registrations) into a unified morning email report sent to the crew coordinator.</p>
+    </div>
+  </div>
+
+  <h3>13.2 System Email Notifications</h3>
+  <p>The system dispatches formatted email notifications during core operational events:
+  <ul>
+    <li><strong>New Assignments:</strong> Dispatched to coordinators or operator contacts upon assignment activation, listing project details and start times.</li>
+    <li><strong>Timesheets for Approval:</strong> Sends a PDF timesheet link to the customer contact, allowing them to review and approve hours digitally.</li>
+    <li><strong>Invoice Dispatch:</strong> Emails the client contact a PDF copy of finalized invoices alongside secure payment terms and instructions.</li>
+  </ul>
+  </p>
+
+  <h3>13.3 Scheduler Technical Details</h3>
+  <div class="callout">
+    <strong>Alignment Logic</strong>
+    The scheduler aligns to interval boundaries, not rolling delays. If frequency = 5 minutes and it's currently 12:03, the scheduler waits until 12:05, then 12:10, 12:15, etc. This prevents time drift over long periods.
+  </div>
+  <div class="callout success">
+    <strong>Resilience</strong>
+    If any tick throws an error, the scheduler catches it, logs the error, and retries in 1 minute (fallback heartbeat). It never crashes permanently. A single failed tick does not prevent subsequent ticks from running.
+  </div>
+
+  <h3>13.4 Manual Trigger</h3>
+  <p>Administrators can manually trigger the daily automation cycle from the system dashboard. This is useful after correcting DTLs or recovering from a missed scheduler window.</p>
+  <div class="callout">Manually triggering a job is safe — it is subject to the same idempotency guards as the scheduler. Running "Generate Daily Time Logs" manually will not create duplicate DTLs if they already exist for today.</div>
+
+  <h3>13.5 Timezone Handling</h3>
+  <p>The scheduler uses the timezone configured in Settings → Company to determine "midnight" for DTL generation. This ensures all time log dates match your local calendar, not the server's clock.</p>
+  <div class="callout warn">
+    <strong>Why Timezone Matters</strong>
+    If the company is in Dubai (UTC+4) and the server runs on UTC, without timezone correction the scheduler at 11:30 PM UTC thinks it is still "today" — but the Dubai calendar already shows the next day. The timezone setting ensures DTLs are generated for the correct date as experienced by the operations team.
+  </div>
+
+</div><!-- /chapter 13 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 14 — 14 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch14">
+<div class="chapter-title">
+    <div class="chapter-num">14</div>
+    <h2>Users, Roles &amp; Permissions</h2>
+  </div>
+  <p class="subtitle">RentERP uses a role-based access control system. Every API route checks the user's permissions before processing. A user without the required permission receives a 403 Forbidden response.</p>
+
+  <h3>14.1 User Management</h3>
+  <p>Users are created in the Users module. Each user has:</p>
+  <ul>
+    <li>Name, email, password (bcrypt hashed — never stored in plain text)</li>
+    <li>A role assignment (one role per user)</li>
+    <li>Status: ACTIVE or locked</li>
+    <li><strong>Account lock:</strong> After repeated failed login attempts, the account is temporarily locked. An admin can unlock it from the user detail page (Users → Unlock). The primary Super Admin account cannot be unlocked this way — see the FAQ chapter for the database recovery command.</li>
+  </ul>
+
+  <h3>14.2 Roles and Permissions (Updated)</h3>
+  <p>Each user belongs to exactly one Role. The system has <strong>one protected system role</strong> and unlimited custom roles:</p>
+
+  <div class="callout danger">
+    <strong>Super Admin — The Only System Role</strong>
+    "Super Admin" is the only <code>isSystem = true</code> role. It is auto-created and automatically receives ALL permissions. It cannot be deleted or have permissions removed. Any user assigned Super Admin has unrestricted access to the entire system. The legacy "ADMIN" role is automatically migrated to Super Admin on first load.
+  </div>
+
+  <p>All other roles are <strong>custom roles</strong> created by administrators. Each custom role gets a name, optional description, and a hand-picked set of permissions. Permissions are structured as <strong>Module → Action</strong>:</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Module</th><th>Available Actions</th></tr></thead>
+    <tbody>
+      <tr><td>Dashboard</td><td>View</td></tr>
+      <tr><td>Vehicles</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Operators</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Customers</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Projects</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Materials</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Labours</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Detour Services</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Assignment</td><td>View, Add, Edit, Delete, <strong>Calendar View</strong></td></tr>
+      <tr><td>Daily Time Logs</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Timesheet</td><td>View, Generate, Regenerate, Delete</td></tr>
+      <tr><td>Invoices</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Expenses</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Maintenance</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Reports</td><td>View</td></tr>
+      <tr><td>Users &amp; Roles</td><td>View, Add, Edit, Delete</td></tr>
+      <tr><td>Audit Logs</td><td>View</td></tr>
+      <tr><td>Settings</td><td>View, Edit</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout">
+    <strong>Calendar View — Separate Permission</strong>
+    The Assignment Calendar View is a distinct permission separate from Assignment: View. A user with Assignment:View can see the assignment list but cannot access the calendar. Grant <code>Assignment: Calendar View</code> explicitly to roles that need the calendar visualization.
+  </div>
+
+  <h4>Example Role Configurations</h4>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Role</th><th>Permissions</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Super Admin</strong></td><td>All permissions on all modules (system role — automatic)</td></tr>
+      <tr><td><strong>Dispatcher</strong></td><td>Assignment (View, Add, Calendar View), Daily Time Logs (View), Vehicles (View), Operators (View). No Settings, no Reports, no Invoices.</td></tr>
+      <tr><td><strong>Finance</strong></td><td>Timesheet (View, Generate, Regenerate), Invoices (View, Add, Edit), Reports (View), Expenses (View, Add). No Assignment:Add, no Settings.</td></tr>
+      <tr><td><strong>Fleet Manager</strong></td><td>Vehicles (all), Maintenance (all), Operators (all), Reports (View). No billing modules.</td></tr>
+      <tr><td><strong>View Only</strong></td><td>View permission on all modules. No Add, Edit, or Delete anywhere.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>14.3 Profile and Password</h3>
+  <p>Users can update their own profile (name, contact info) and change their password from the Profile page. Passwords are bcrypt hashed. Admin users can reset any user's password from the Users module.</p>
+
+  <h3>14.4 The Checkbox Permissions Matrix Form</h3>
+  <p>To customize staff access, administrators use the interactive Role Matrix Form (Users → Roles → New Role). Instead of writing complex rules, toggle checkboxes on a visual grid:</p>
+  <ul>
+    <li><strong>Modules:</strong> Lists all system screens as rows (e.g. Vehicles, Invoices, Daily Logs).</li>
+    <li><strong>Actions:</strong> Toggle specific checkboxes (Add, View, Edit, Delete) to define what staff can execute.</li>
+    <li><strong>Save and Apply:</strong> Once saved, access permissions apply instantly, updating sidebar links and hiding edit/delete buttons for the assigned staff.</li>
+  </ul>
+
+  <h3>14.5 Audit Logs &amp; Activity Tracking</h3>
+  <p>The system has two complementary log systems:</p>
+  <ul>
+    <li><strong>Tenant Audit Log</strong> (<code>/audit-logs</code>): Tenant-wide log of every create/update/delete/send action across all modules. Paginated and searchable. Requires <code>Audit Logs: View</code> permission.</li>
+    <li><strong>Entity Activity Log</strong>: Per-record history visible on each entity's detail page (e.g., all actions on Assignment #42). Shows last 200 events for that record. Available to any authenticated user.</li>
+  </ul>
+
+</div><!-- /chapter 14 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 15 — 15 
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch15">
+<div class="chapter-title">
+    <div class="chapter-num">15</div>
+    <h2>Scenario Library — Q&amp;A</h2>
+  </div>
+  <p class="subtitle">Real operational questions answered step by step. If you encounter a situation not covered elsewhere in this manual, check here first.</p>
+
+  <div class="scenario">
+    <p class="question">A vehicle is deployed Mon–Fri (weekends excluded). The customer asks for work on a Saturday. Can I create a DTL for Saturday?</p>
+    <div class="answer">
+      Yes. Create a manual DTL from the Time Logs module for that vehicle on the Saturday date. The scheduler would not have generated one (because <code>includeWeekendsForAutoLogs = false</code> on the block), but manual creation is always possible for any date within the block's start–end range.
+      <br><br>
+      The Saturday DTL will automatically have <code>isWeekend = 1</code>. All hours will be classified as overtime (regularHours = 0, overtimeHours = all worked hours). The timesheet will correctly charge weekend rates.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">I have a 30-day assignment. After 10 days, the vehicle breaks down and needs to be replaced. What is the correct workflow?</p>
+    <div class="answer">
+      Use the "Replace Vehicle" action on the VEHICLE block:
+      <ol>
+        <li>The current block is stopped: status → STOPPED, endedAt = today</li>
+        <li>A new block is created starting tomorrow with the replacement vehicle</li>
+        <li>DTLs 1–10 remain linked to the original vehicle (preserved, immutable)</li>
+        <li>DTLs 11–30 will be generated for the replacement vehicle</li>
+        <li>The timesheet will show two lines for the same period — one per vehicle</li>
+      </ol>
+      The availability system automatically frees the original vehicle from day 11 onward.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">I generated a timesheet but the hours are wrong for 3 days. What is the correct workflow?</p>
+    <div class="answer">
+      <ol>
+        <li>Go to the Time Logs module and edit the 3 incorrect DTLs (correct the hours)</li>
+        <li>Navigate back to the timesheet — it will show an "Outdated" warning</li>
+        <li>Click "Regenerate Timesheet" — all lines are deleted and recalculated</li>
+        <li>Verify the new amounts are correct</li>
+        <li>Proceed to invoice</li>
+      </ol>
+      <strong>Important:</strong> If the timesheet is already INVOICED, you must delete the invoice first (which reverts the timesheet to EXPORTED), then regenerate.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">A customer has two projects running simultaneously. How do I generate separate invoices for each project?</p>
+    <div class="answer">
+      When creating each assignment, set the <code>projectId</code> to the appropriate project. When generating timesheets:
+      <ul>
+        <li>For Project A: Select customer + Project A → timesheet TS-XXXXX includes only Project A DTLs</li>
+        <li>For Project B: Select customer + Project B → timesheet TS-YYYYY includes only Project B DTLs</li>
+      </ul>
+      Each project gets its own timesheet code and its own invoice. LPO numbers per project are also auto-populated separately.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">What happens if I try to assign a vehicle that is already deployed on those dates?</p>
+    <div class="answer">
+      The system blocks the save with an availability conflict error. The error message identifies which existing assignment has the vehicle occupied on those specific dates. Your options:
+      <ul>
+        <li>Choose different dates for the new block</li>
+        <li>Choose a different vehicle</li>
+        <li>Stop the conflicting block on the existing assignment (if the vehicle is no longer needed there)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">A vehicle is deployed Mon–Fri for 4 weeks. How many DTLs are created, and what do they contain?</p>
+    <div class="answer">
+      4 weeks × 5 working days = <strong>20 DTLs</strong>. The scheduler skips Saturday and Sunday because <code>includeWeekendsForAutoLogs = false</code>.
+      <br><br>
+      Each DTL (assuming no planned overtime and fullDayHours = 8):<br>
+      workedHours = 8 | regularHours = 8 | overtimeHours = 0 | isWeekend = 0
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">We have a detour with 2 vehicles and 3 operators. If bundleBilling is OFF, how many invoice lines does the customer see?</p>
+    <div class="answer">
+      One line per resource: Vehicle 1, Vehicle 2, Operator 1, Operator 2, Operator 3 — plus any materials and labour in the template (e.g., cones and flagmen). If the template has 10 cones and 2 flagmen, that is 7 invoice lines total.
+      <br><br>
+      If bundleBilling is ON: exactly <strong>1 invoice line</strong> — "2-Lane Detour Service — X Days." All 7 resource streams still exist as DTLs internally.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">A material (e.g., cones) has 10 total quantity. Can I split them across two simultaneous assignments?</p>
+    <div class="answer">
+      Yes — as long as the total requested across all active blocks on any given day does not exceed 10.
+      <ul>
+        <li>Assignment A: 6 cones + Assignment B: 4 cones = 10 ≤ 10 → <span class="badge badge-green">ALLOWED</span></li>
+        <li>Assignment A: 6 cones + Assignment B: 5 cones = 11 &gt; 10 → <span class="badge badge-red">BLOCKED</span></li>
+      </ul>
+      The check is per-day — if the split only overlaps for some days, the system checks each day individually.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">Can I invoice the same timesheet twice?</p>
+    <div class="answer">
+      No. The system enforces a one-to-one relationship between timesheets and invoices. Once a timesheet is INVOICED, the "Generate Invoice" button is removed. If you need to re-invoice, delete the existing invoice (which reverts the timesheet to EXPORTED status), then generate a new one.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">If I change an operator's hourly rate, do existing timesheets and invoices change?</p>
+    <div class="answer">
+      No. Existing timesheet lines use the <code>rateSnapshot</code> captured at the time the DTL was generated. The new hourly rate only affects DTLs created after the change. This is the snapshot mechanism — historical data is immutable and remains accurate regardless of any future rate changes.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">The profitability report shows a negative margin on one timesheet. What does that mean?</p>
+    <div class="answer">
+      It means the billed amount is less than the estimated internal cost. Common causes:
+      <ul>
+        <li>The billing rate was set lower than the vehicle's <code>costPerDay</code></li>
+        <li>Many overtime hours inflated the operator's cost, but the vehicle was billed at a flat daily rate that did not account for OT</li>
+        <li>Rate configuration error — billing rate set incorrectly when the assignment was created</li>
+      </ul>
+      Fix the underlying rate settings and issue a revised invoice (delete current invoice → adjust → re-generate).
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">What is the difference between stopping a block and deleting it?</p>
+    <div class="answer">
+      <ul>
+        <li><strong>Stopping a block:</strong> Sets <code>status = STOPPED</code>, records <code>endedAt</code>. All existing DTLs for this block are preserved. The block remains visible in the assignment for historical reference. No more DTLs are generated from the stop date onward. This is the correct action when a vehicle breaks down or a resource is removed from service mid-assignment.</li>
+        <li><strong>Deleting a block</strong> (removing it during an assignment edit): Deletes the block AND all its associated DTLs AND all child blocks (for DETOUR blocks). Historical time logs are permanently and irrecoverably lost. Use only when the block was created by mistake and has no real operational history.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">Can a timesheet span multiple months?</p>
+    <div class="answer">
+      Yes. The period start and end dates can cross month boundaries. All DTLs within the specified range are included in one timesheet. There is no system restriction requiring a timesheet to fit within a calendar month. Many operators generate monthly timesheets by convention, but this is not enforced by the system.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">How does the system handle public holidays? Can I mark a specific date as a holiday?</p>
+    <div class="answer">
+      There is no standalone holiday calendar UI in the current version. Holidays are handled at the DTL level. When editing a DTL manually, you can toggle <code>isHoliday = true</code>, which causes that day's hours to use the <code>holidayMultiplier</code> instead of the overtime multiplier.
+      <br><br>
+      The scheduler does not automatically detect public holidays — holiday marking is a manual operation on individual DTLs. Mark holidays in DTLs <em>before</em> generating the timesheet, or regenerate the timesheet after marking.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">The scheduler is enabled but no DTLs are being generated. What do I check?</p>
+    <div class="answer">
+      Work through this checklist in order (see Section 13.3 for technical details):
+      <ol>
+        <li>Is <code>cron_settings.is_enabled = 1</code>? (Settings → Cron)</li>
+        <li>Is the assignment status ACTIVE?</li>
+        <li>Is <code>enableAutoTimeLogs = true</code> on the block?</li>
+        <li>Is <code>block.status = 'ACTIVE'</code> (not STOPPED)?</li>
+        <li>Is today within the block's <code>startDate</code> to <code>endDate</code>?</li>
+        <li>Is today a weekend AND <code>includeWeekendsForAutoLogs = false</code>?</li>
+        <li>Does a DTL already exist for today for this block? (Already generated correctly)</li>
+        <li>Check the cron run history for errors (Settings → Cron → Run History)</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">What triggers the "Cannot assign vehicle — active assignment conflict" error even when the dates appear to be different?</p>
+    <div class="answer">
+      This happens because availability uses occupied-date logic, not simple date-range overlap. The system generates the exact list of working days for the proposed block (respecting the <code>includeWeekendsForAutoLogs</code> setting) and checks each day individually.
+      <br><br>
+      Example: An existing block runs June 1–30 with ALL days included. Your new block runs July 1–3, but somehow overlaps. This would not conflict. However, if a block runs June 25 – July 5 (All Days), and you propose July 1–3, that would conflict on July 1, 2, 3.
+      <br><br>
+      Check the existing block's weekend inclusion setting, and verify that no "All Days" blocks straddle the dates you are trying to use.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">Can an assignment be ACTIVE with all blocks stopped?</p>
+    <div class="answer">
+      Yes. The assignment status (ACTIVE/COMPLETED) is independent of the individual block statuses. If all blocks are STOPPED, no new DTLs will be generated — but the assignment itself remains ACTIVE until its end date passes (when it auto-completes). You can still add new blocks to an ACTIVE assignment at any time.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">How does the expense code "EXP-0021" get generated? Why does it start at 21 and not 1?</p>
+    <div class="answer">
+      The starting number is configurable in Settings → Expense Settings. The system was set up with a starting number of 21 — typically because the system continues numbering from a legacy system that already had expenses 1 through 20. Each new expense increments atomically from the current counter, so there are never gaps or duplicates.
+    </div>
+  </div>
+
+  <div class="scenario">
+    <p class="question">What happens if SMTP is not configured and the system tries to send an email?</p>
+    <div class="answer">
+      The email operation fails gracefully. The underlying record (assignment, timesheet, invoice) is still created and saved successfully. Only the email send fails. The failure is logged internally but does not surface as an error to the user in a blocking way, and does not roll back the main database operation.
+    </div>
+  </div>
+
+    <div class="scenario">
+    <p class="question">How do I unlock an administrator account if they get locked out of the system?</p>
+    <div class="answer">
+      If an employee is locked out of their account due to repeated failed login attempts, any administrator can log in and navigate to Settings → Security → Users (or standard Users list). Find the locked operator in the list and click the active <strong>Unlock Account</strong> button next to their name. 
+      <br><br>
+      This instantly clears their lockout penalty and lets them log in again immediately.
+    </div>
+  </div>
+
+    <div class="scenario">
+    <p class="question">How do I perform a manual database backup and restore via the system settings?</p>
+    <div class="answer">
+      Administrators can manage database backups directly in Settings → Backup &amp; Restore.
+      <br><br>
+      <strong>Backing Up:</strong> Click the "Generate Backup" button. The system automatically compiles all records, tables, and settings into a secure, compressed backup file stored in your cloud storage.
+      <br><br>
+      <strong>Restoring:</strong> To restore a historical backup point, select the desired file from the backups list and click "Restore". The system will ask for confirmation and then reload the system to that exact historical date.
+      <br><br>
+      <em>WARNING:</em> Restoring a database replaces all current data. All active users will be logged out to prevent data synchronization conflicts.
+    </div>
+  </div>
+
+    <div class="scenario">
+    <p class="question">How do I test my newly configured branding customization?</p>
+    <div class="answer">
+      Once you save a custom brand theme (e.g., uploading your logo, choosing dark/light primary colors, setting slogans) under Settings → Branding, the changes are applied globally and instantly to all active users.
+      <br><br>
+      To verify branding changes:
+      <ol>
+        <li>Clear your browser cache or log out and log back in.</li>
+        <li>Inspect sidebar placements to ensure custom logo ratios are correct.</li>
+        <li>Send a draft timesheet to your own email to confirm that email headers use your primary hex color and brand name correctly.</li>
+      </ol>
+    </div>
+  </div>
+</div><!-- /chapter 15 -->
+
+<!-- ══════════════════════════════════════════
+     CHAPTER 16 — Admin Tools
+══════════════════════════════════════════ -->
+<div class="chapter" id="ch16">
+  <div class="chapter-title">
+    <div class="chapter-num">16</div>
+    <h2>Admin Tools: Backup, Calendar &amp; Recovery</h2>
+  </div>
+  <p class="subtitle">A guide to administrator-only tools: system backup and restore, the assignment calendar, DTL backfill for missed logs, and the password reset flow.</p>
+
+  <h3>16.1 Backup &amp; Restore</h3>
+  <p>Administrators can take a complete snapshot of the entire system from <strong>Settings → Backup &amp; Restore</strong>. This requires the <code>Settings: Edit</code> permission.</p>
+
+  <h4>Taking a Backup</h4>
+  <p>Click <strong>Generate Backup</strong>. The system produces a ZIP file (<code>backup_{company}_{date}.zip</code>) containing:</p>
+  <ul>
+    <li><code>database.sql</code> — a full MySQL dump of all tables and data</li>
+    <li><code>files/</code> — all uploaded documents (vehicle registration scans, operator compliance files, invoice attachments, etc.)</li>
+  </ul>
+  <div class="callout warn">
+    <strong>Backup is streamed directly to your browser</strong> — it is not stored on the server. Save the file securely. The backup action is logged to the audit trail.
+  </div>
+
+  <h4>Restoring from a Backup</h4>
+  <p>Upload a previous backup ZIP and select which components to restore:</p>
+  <ul>
+    <li><strong>Database only</strong> — restores all data; uploaded files remain as-is</li>
+    <li><strong>Files only</strong> — replaces the uploads directory; database unchanged</li>
+    <li><strong>Both</strong> — full system restore to the backup point</li>
+  </ul>
+  <div class="callout danger">
+    <strong>WARNING: Restore is destructive.</strong> Restoring the database drops and recreates the entire tenant database. All data created after the backup point is permanently lost. All active users will be logged out immediately. Only restore when you are certain.
+  </div>
+
+  <h3>16.2 Assignment Calendar View</h3>
+  <p>The Calendar view (<strong>Assignments → Calendar</strong>) shows all deployment blocks as a visual timeline across a selected date range. It requires the separate <code>Assignment: Calendar View</code> permission.</p>
+  <ul>
+    <li>VEHICLE, OPERATOR, MATERIAL, LABOUR, and DETOUR blocks all appear as color-coded events.</li>
+    <li><strong>Maintenance windows</strong> (SCHEDULED and IN_PROGRESS) are overlaid on the same calendar, so coordinators can immediately see conflicts between active maintenance and deployment blocks.</li>
+    <li>Fleet totals (active vehicles count, active operators count) are displayed in the header.</li>
+    <li>Clicking an event navigates to the full assignment detail.</li>
+  </ul>
+  <div class="callout">
+    <strong>Calendar View ≠ Assignment: View</strong>
+    Granting a user Assignment:View lets them see the assignment list and details. They still need the explicit <code>Assignment: Calendar View</code> permission to access the calendar page.
+  </div>
+
+  <h3>16.3 Generate Missing Logs (DTL Backfill)</h3>
+  <p>If the scheduler missed a day (e.g., server downtime, or the cron was disabled), administrators can backfill all missing DTLs for any assignment from the assignment detail page using the <strong>Generate Missing Logs</strong> action. Requires <code>Settings: Edit</code> permission.</p>
+  <p><strong>How it works:</strong></p>
+  <ul>
+    <li>Iterates every block in the assignment from its <code>startDate</code> through today.</li>
+    <li>Checks each date: if a DTL already exists, it is skipped (fully idempotent — safe to run multiple times).</li>
+    <li>Skips STOPPED blocks and blocks with <code>enableAutoTimeLogs = false</code>.</li>
+    <li>Skips weekends if the block/company settings exclude them.</li>
+    <li>Creates backfilled DTLs with <code>remarks = "Auto-generated backfill missing logs"</code>.</li>
+    <li>Returns a summary: <code>{ createdCount, skippedCount }</code>.</li>
+  </ul>
+  <div class="callout success">
+    <strong>Safe to Re-run</strong>
+    Running Generate Missing Logs on an assignment that already has all its DTLs will create 0 new logs and skip all existing ones. There is no risk of duplicates.
+  </div>
+
+  <h3>16.4 Password Reset Flow</h3>
+  <p>Users who forget their password can use the <strong>Forgot Password</strong> link on the login page.</p>
+  <p><strong>The flow:</strong></p>
+  <ol>
+    <li>User enters their email address.</li>
+    <li>System checks if the email exists and sends a secure reset link (JWT token, signed with HS256, valid for 30 minutes).</li>
+    <li>User clicks the link → redirected to the Reset Password page.</li>
+    <li>User enters and confirms a new password. New password is saved (bcrypt hashed).</li>
+  </ol>
+  <div class="callout">
+    <strong>Anti-Enumeration Protection</strong>
+    The system always responds "If that email exists, a reset link has been sent" — regardless of whether the email is registered. This prevents attackers from discovering which email addresses are in the system.
+  </div>
+  <div class="callout warn">
+    <strong>Rate Limiting</strong>
+    Repeated reset requests from the same email + IP address are throttled. If you see HTTP 429 "Too many reset requests", wait and try again. The retry window is included in the response header.
+  </div>
+  <div class="callout">
+    All password reset events (requested, sent, completed) are logged to the tenant audit trail.
+  </div>
+
+</div><!-- /chapter 16 -->
+
+
+<!-- FOOTER -->
+<div style="text-align:center;padding:40px 0 60px;color:#8899aa;font-size:.8rem">
+  Rent ERP — System User Manual v4 &nbsp;·&nbsp; Generated May 2026 &nbsp;·&nbsp; by Upturnist
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// Active sidebar link tracking
+const sections = document.querySelectorAll('.chapter');
+const links = document.querySelectorAll('.sidebar a');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const match = document.querySelector('.sidebar a[href="#' + e.target.id + '"]');
+      if (match) match.classList.add('active');
+    }
+  });
+}, {rootMargin: '-30% 0px -60% 0px'});
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
