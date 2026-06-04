@@ -1,0 +1,50 @@
+export const countries = [
+    { code: "US", name: "United States", currency: "USD", symbol: "$", timezone: "America/New_York", dateFormat: "MM/DD/YYYY" },
+    { code: "GB", name: "United Kingdom", currency: "GBP", symbol: "£", timezone: "Europe/London", dateFormat: "DD/MM/YYYY" },
+    { code: "CA", name: "Canada", currency: "CAD", symbol: "$", timezone: "America/Toronto", dateFormat: "YYYY-MM-DD" },
+    { code: "AU", name: "Australia", currency: "AUD", symbol: "$", timezone: "Australia/Sydney", dateFormat: "DD/MM/YYYY" },
+    { code: "IN", name: "India", currency: "INR", symbol: "₹", timezone: "Asia/Kolkata", dateFormat: "DD/MM/YYYY" },
+    { code: "AE", name: "United Arab Emirates", currency: "AED", symbol: "AED", timezone: "Asia/Dubai", dateFormat: "DD/MM/YYYY" },
+    { code: "SA", name: "Saudi Arabia", currency: "SAR", symbol: "SR", timezone: "Asia/Riyadh", dateFormat: "DD/MM/YYYY" },
+    { code: "DE", name: "Germany", currency: "EUR", symbol: "€", timezone: "Europe/Berlin", dateFormat: "DD.MM.YYYY" },
+    { code: "FR", name: "France", currency: "EUR", symbol: "€", timezone: "Europe/Paris", dateFormat: "DD/MM/YYYY" },
+    { code: "JP", name: "Japan", currency: "JPY", symbol: "¥", timezone: "Asia/Tokyo", dateFormat: "YYYY/MM/DD" },
+    { code: "CN", name: "China", currency: "CNY", symbol: "¥", timezone: "Asia/Shanghai", dateFormat: "YYYY-MM-DD" },
+    // Add more as needed
+];
+export const dateFormats = [
+    { label: "DD/MM/YYYY (31/01/2024)", value: "DD/MM/YYYY" },
+    { label: "MM/DD/YYYY (01/31/2024)", value: "MM/DD/YYYY" },
+    { label: "YYYY-MM-DD (2024-01-31)", value: "YYYY-MM-DD" },
+    { label: "DD.MM.YYYY (31.01.2024)", value: "DD.MM.YYYY" },
+    { label: "YYYY/MM/DD (2024/01/31)", value: "YYYY/MM/DD" },
+];
+export const timeZones = [
+    "UTC",
+    "America/New_York",
+    "America/Los_Angeles",
+    "America/Chicago",
+    "America/Toronto",
+    "Europe/London",
+    "Europe/Paris",
+    "Europe/Berlin",
+    "Asia/Dubai",
+    "Asia/Riyadh",
+    "Asia/Kolkata",
+    "Asia/Singapore",
+    "Asia/Tokyo",
+    "Asia/Shanghai",
+    "Australia/Sydney",
+];
+export const currencies = [
+    { code: "USD", name: "US Dollar", symbol: "$" },
+    { code: "GBP", name: "British Pound", symbol: "£" },
+    { code: "EUR", name: "Euro", symbol: "€" },
+    { code: "CAD", name: "Canadian Dollar", symbol: "$" },
+    { code: "AUD", name: "Australian Dollar", symbol: "$" },
+    { code: "INR", name: "Indian Rupee", symbol: "₹" },
+    { code: "AED", name: "UAE Dirham", symbol: "AED" },
+    { code: "SAR", name: "Saudi Riyal", symbol: "SR" },
+    { code: "JPY", name: "Japanese Yen", symbol: "¥" },
+    { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
+];
