@@ -5,6 +5,7 @@ import { getSession } from "@/app/lib/auth";
 import { verifySessionPermission } from "@/app/lib/permissions";
 import { logActivity } from "@/app/lib/logger";
 import { checkEntityUsage, buildUsageError } from "@/app/lib/entity-usage";
+import { revalidatePath } from "next/cache";
 
 const updateProjectSchema = z.object({
     name: z.string().min(1),
@@ -64,6 +65,8 @@ export async function PUT(request, { params }) {
 
         const [rows] = await dbTenant(`SELECT * FROM \`projects\` WHERE id = ? LIMIT 1`, [id]);
         await logActivity("PROJECT", id, "UPDATE", `Project ${data.name} updated`);
+        revalidatePath("/projects");
+        revalidatePath(`/projects/${id}`);
         return NextResponse.json(rows[0]);
     } catch (error) {
         if (error instanceof z.ZodError)
@@ -88,6 +91,8 @@ export async function DELETE(request, { params }) {
 
         await dbTenant(`DELETE FROM \`projects\` WHERE id = ?`, [id]);
         await logActivity("PROJECT", id, "DELETE", `Project ID ${id} deleted`);
+        revalidatePath("/projects");
+        revalidatePath(`/projects/${id}`);
         return NextResponse.json({ message: "Project deleted successfully" });
     } catch (error) {
         console.error("Error deleting project:", error);
@@ -123,6 +128,8 @@ export async function PATCH(request, { params }) {
         await dbTenant(`UPDATE \`projects\` SET ${fields.join(", ")} WHERE id = ?`, [...values, id]);
         const [rows] = await dbTenant(`SELECT * FROM \`projects\` WHERE id = ? LIMIT 1`, [id]);
         await logActivity("PROJECT", id, "PATCH", `Project ${rows[0]?.name} partially updated`);
+        revalidatePath("/projects");
+        revalidatePath(`/projects/${id}`);
         return NextResponse.json(rows[0]);
     } catch (error) {
         if (error instanceof z.ZodError)

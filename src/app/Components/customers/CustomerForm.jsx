@@ -364,7 +364,7 @@ export function CustomerForm({ initialData }) {
                     </div>
                 </FormCard>
 
-                <FormCard title="Documents" description="Upload related documents (Contracts, IDs, etc)." icon={FileText}>
+                <FormCard title="Documents (Optional)" description="Upload related documents (Contracts, IDs, etc)." icon={FileText}>
                     <div className="space-y-4">
                         {docFields.map((field, index) => (<div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-lg bg-slate-50/50">
                                 <div className="md:col-span-4">
@@ -373,7 +373,7 @@ export function CustomerForm({ initialData }) {
                                 </div>
                                 <div className="md:col-span-4">
                                     <FormLabel className="text-xs">Upload File <span className="text-red-500">*</span></FormLabel>
-                                    <Input type="file" onChange={(e) => handleFileUpload(e, index)} disabled={uploading} className="text-xs h-9"/>
+                                    <Input type="file" onChange={(e) => handleFileUpload(e, index)} disabled={uploading} className="text-xs h-9 cursor-pointer file:cursor-pointer file:border-0 file:bg-slate-100 dark:file:bg-slate-800 file:text-xs file:font-semibold file:h-full file:mr-3 file:px-4 file:text-slate-700 dark:file:text-slate-300 hover:file:bg-slate-200 dark:hover:file:bg-slate-700 file:transition-colors p-0 overflow-hidden"/>
                                     {form.watch(`documents.${index}.url`) && <p className="text-[10px] text-green-600 mt-1 truncate">File uploaded successfully</p>}
                                     {form.formState.errors.documents?.[index]?.url && (<p className="text-xs text-red-500 mt-1">File required</p>)}
                                 </div>

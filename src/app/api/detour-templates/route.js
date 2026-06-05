@@ -5,6 +5,7 @@ import { verifySessionPermission } from "@/app/lib/permissions";
 import { logActivity } from "@/app/lib/logger";
 import { reserveSequentialCode } from "@/app/lib/sequential-code";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 const requirementSchema = z.object({
     resourceType: z.enum(["MATERIAL", "LABOUR"]),
@@ -108,6 +109,7 @@ export async function POST(req) {
         });
 
         await logActivity("DETOUR_TEMPLATE", templateId, "CREATE", `Created detour template: ${data.name}`);
+        revalidatePath("/detour-services");
         return NextResponse.json({ id: templateId, success: true }, { status: 201 });
     } catch (error) {
         if (error instanceof z.ZodError)

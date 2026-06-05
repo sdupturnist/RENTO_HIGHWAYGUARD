@@ -5,6 +5,7 @@ import { verifySessionPermission } from "@/app/lib/permissions";
 import { logActivity } from "@/app/lib/logger";
 import { checkEntityUsage, buildUsageError } from "@/app/lib/entity-usage";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
 
 const requirementSchema = z.object({
     resourceType: z.enum(["MATERIAL", "LABOUR"]),
@@ -88,6 +89,8 @@ export async function PUT(request, props) {
         });
 
         await logActivity("DETOUR_TEMPLATE", id, "UPDATE", `Updated detour template: ${data.name}`);
+        revalidatePath("/detour-services");
+        revalidatePath(`/detour-services/${id}`);
         return NextResponse.json(await fetchTemplate(id));
     } catch (error) {
         if (error instanceof z.ZodError)
@@ -119,6 +122,8 @@ export async function DELETE(request, props) {
         await dbTenant(`DELETE FROM \`detour_service_templates\` WHERE id = ?`, [id]);
 
         await logActivity("DETOUR_TEMPLATE", id, "DELETE", `Deleted detour template: ${template.name} (${template.templateCode})`);
+        revalidatePath("/detour-services");
+        revalidatePath(`/detour-services/${id}`);
         return NextResponse.json({ message: "Detour template deleted successfully." });
     } catch (error) {
         console.error("DELETE detour-template error:", error);

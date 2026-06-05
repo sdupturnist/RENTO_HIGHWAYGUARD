@@ -5,6 +5,7 @@ import { getSession } from "@/app/lib/auth";
 import { verifySessionPermission } from "@/app/lib/permissions";
 import { logActivity } from "@/app/lib/logger";
 import { reserveSequentialCode } from "@/app/lib/sequential-code";
+import { revalidatePath } from "next/cache";
 
 const createProjectSchema = z.object({
     name: z.string().min(1),
@@ -105,6 +106,7 @@ export async function POST(request) {
             [projectId]
         );
         const p = rows?.[0];
+        revalidatePath("/projects");
         return NextResponse.json({ ...p, customer: { companyName: p?.customer_companyName } });
     } catch (error) {
         if (error instanceof z.ZodError)

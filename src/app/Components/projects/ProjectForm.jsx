@@ -136,8 +136,8 @@ export function ProjectForm({ initialData }) {
 
             await queryClient.invalidateQueries({ queryKey: ["projects"], refetchType: "all" });
             toast.success(initialData ? "Project updated" : "Project created");
+            router.push(initialData ? `/projects/${initialData.id}` : "/projects");
             router.refresh();
-            router.push("/projects");
         } catch (error) {
             toast.error("An error occurred");
         } finally {

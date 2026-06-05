@@ -6,6 +6,8 @@ import { logActivity } from "@/app/lib/logger";
 import { z } from "zod";
 import { autoCompleteMaintenances } from "@/app/lib/maintenance-utils";
 import { checkEntityUsage, buildUsageError } from "@/app/lib/entity-usage";
+import { ensureVehicleDocumentsSchema } from "@/app/lib/vehicle-documents-schema";
+import { revalidatePath } from "next/cache";
 
 const vehicleSchema = z.object({
     typeId: z.number(),
@@ -33,13 +35,15 @@ const vehicleSchema = z.object({
     capacity: z.number().optional().nullable(),
     remarks: z.string().optional().nullable(),
     documents: z.array(z.object({
-        name: z.string(),
+        documentTypeId: z.coerce.number().min(1, "Document Type is required"),
+        name: z.string().optional().nullable(),
         url: z.string(),
         expiryDate: z.string().optional().nullable(),
     })).optional(),
 });
 
 async function fetchVehicleById(id) {
+    await ensureVehicleDocumentsSchema();
     const [rows] = await dbTenant(
         `SELECT v.*,
                 vt.name as vehicleType_name, vt.id as vehicleType_id,
@@ -56,7 +60,12 @@ async function fetchVehicleById(id) {
     );
     const v = rows?.[0];
     if (!v) return null;
-    const [docs] = await dbTenant(`SELECT * FROM \`vehicle_documents\` WHERE vehicleId = ?`, [id]);
+    const [docs] = await dbTenant(`
+        SELECT vd.*, dt.name as documentTypeName
+        FROM \`vehicle_documents\` vd
+        LEFT JOIN \`document_types\` dt ON dt.id = vd.documentTypeId
+        WHERE vd.vehicleId = ?
+    `, [id]);
     return {
         ...v,
         vehicleType: { id: v.vehicleType_id, name: v.vehicleType_name },
@@ -124,8 +133,8 @@ export async function PUT(request, props) {
             if (data.documents?.length > 0) {
                 for (const d of data.documents) {
                     await tx.execute(
-                        `INSERT INTO \`vehicle_documents\` (name, url, expiryDate, vehicleId, createdAt) VALUES (?, ?, ?, ?, NOW())`,
-                        [d.name, d.url, d.expiryDate ? new Date(d.expiryDate) : null, id]
+                        `INSERT INTO \`vehicle_documents\` (documentTypeId, name, url, expiryDate, vehicleId, createdAt) VALUES (?, ?, ?, ?, ?, NOW())`,
+                        [d.documentTypeId, d.name || null, d.url, d.expiryDate ? new Date(d.expiryDate) : null, id]
                     );
                 }
             }
@@ -142,6 +151,8 @@ export async function PUT(request, props) {
         await logActivity("VEHICLE", id, "UPDATE", `Updated vehicle ID: ${id}`);
 
         const updated = await fetchVehicleById(id);
+        revalidatePath("/vehicles");
+        revalidatePath(`/vehicles/${id}`);
         return NextResponse.json(updated);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -181,6 +192,8 @@ export async function DELETE(request, props) {
         });
 
         await logActivity("VEHICLE", id, "DELETE", `Deleted vehicle ${vehicle.vehicleCode}`);
+        revalidatePath("/vehicles");
+        revalidatePath(`/vehicles/${id}`);
         return NextResponse.json({ message: "Vehicle deleted" });
     } catch (error) {
         console.error("Error deleting vehicle:", error);

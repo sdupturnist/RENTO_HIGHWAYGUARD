@@ -6,6 +6,7 @@ import { logActivity } from "@/app/lib/logger";
 import * as z from "zod";
 import { reserveSequentialCode } from "@/app/lib/sequential-code";
 import { getSubdomain } from "@/app/lib/db";
+import { revalidatePath } from "next/cache";
 
 const operatorSchema = z.object({
     name: z.string().min(1),
@@ -145,6 +146,7 @@ export async function POST(request) {
 
         await logActivity("OPERATOR", operatorId, "CREATE", `Created operator ID: ${operatorId}`);
         const [rows] = await dbTenant(`SELECT * FROM \`operators\` WHERE id = ? LIMIT 1`, [operatorId]);
+        revalidatePath("/operators");
         return NextResponse.json(rows?.[0] || { id: operatorId });
     } catch (error) {
         console.error("Error creating operator:", error);

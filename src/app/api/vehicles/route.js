@@ -5,6 +5,9 @@ import { verifySessionPermission } from "@/app/lib/permissions";
 import { logActivity } from "@/app/lib/logger";
 import { z } from "zod";
 import { reserveSequentialCode } from "@/app/lib/sequential-code";
+import { ensureVehicleDocumentsSchema } from "@/app/lib/vehicle-documents-schema";
+import { revalidatePath } from "next/cache";
+
 const vehicleSchema = z.object({
     prefixRuleId: z.number().optional(),
     typeId: z.number(),
@@ -35,13 +38,15 @@ const vehicleSchema = z.object({
     capacity: z.number().optional().nullable(),
     remarks: z.string().optional().nullable(),
     documents: z.array(z.object({
-        name: z.string(),
+        documentTypeId: z.coerce.number().min(1, "Document Type is required"),
+        name: z.string().optional().nullable(),
         url: z.string(),
         expiryDate: z.string().optional().nullable(),
     })).optional(),
 });
 export async function GET(req) {
     try {
+        await ensureVehicleDocumentsSchema();
         const session = await getSession();
         if (!session)
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -68,7 +73,12 @@ export async function GET(req) {
         const docsByVehicle = {};
         if (vehicleIds.length > 0) {
             const placeholders = vehicleIds.map(() => "?").join(",");
-            const [allDocs] = await dbTenant(`SELECT * FROM \`vehicle_documents\` WHERE vehicleId IN (${placeholders})`, vehicleIds);
+            const [allDocs] = await dbTenant(`
+                SELECT vd.*, dt.name as documentTypeName
+                FROM \`vehicle_documents\` vd
+                LEFT JOIN \`document_types\` dt ON dt.id = vd.documentTypeId
+                WHERE vd.vehicleId IN (${placeholders})
+            `, vehicleIds);
             for (const doc of allDocs) {
                 if (!docsByVehicle[doc.vehicleId]) docsByVehicle[doc.vehicleId] = [];
                 docsByVehicle[doc.vehicleId].push(doc);
@@ -112,6 +122,7 @@ async function generateVehicleCode(tx, prefixRuleId) {
 
 export async function POST(req) {
     try {
+        await ensureVehicleDocumentsSchema();
         const session = await getSession();
         if (!session)
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -158,8 +169,8 @@ export async function POST(req) {
             if (data.documents?.length > 0) {
                 for (const d of data.documents) {
                     await tx.execute(
-                        "INSERT INTO `vehicle_documents` (name, url, expiryDate, vehicleId, createdAt) VALUES (?, ?, ?, ?, NOW())",
-                        [d.name, d.url, d.expiryDate ? new Date(d.expiryDate) : null, newId]
+                        "INSERT INTO `vehicle_documents` (documentTypeId, name, url, expiryDate, vehicleId, createdAt) VALUES (?, ?, ?, ?, ?, NOW())",
+                        [d.documentTypeId, d.name || null, d.url, d.expiryDate ? new Date(d.expiryDate) : null, newId]
                     );
                 }
             }
@@ -167,6 +178,7 @@ export async function POST(req) {
         });
 
         await logActivity("VEHICLE", vehicleId, "CREATE", `Created vehicle ID: ${vehicleId}`);
+        revalidatePath("/vehicles");
         return NextResponse.json({ id: vehicleId, success: true });
     }
     catch (error) {

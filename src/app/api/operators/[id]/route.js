@@ -5,6 +5,7 @@ import { verifySessionPermission } from "@/app/lib/permissions";
 import { logActivity } from "@/app/lib/logger";
 import * as z from "zod";
 import { checkEntityUsage, buildUsageError } from "@/app/lib/entity-usage";
+import { revalidatePath } from "next/cache";
 
 const operatorSchema = z.object({
     name: z.string().min(1),
@@ -115,6 +116,8 @@ export async function PUT(request, props) {
         operator.documents = docs || [];
 
         await logActivity("OPERATOR", id, "UPDATE", `Updated operator: ${operator.name} (Status: ${operator.status})`);
+        revalidatePath("/operators");
+        revalidatePath(`/operators/${id}`);
         return NextResponse.json(operator);
     } catch (error) {
         console.error("Error updating operator:", error);
@@ -147,6 +150,8 @@ export async function DELETE(request, props) {
         });
 
         await logActivity("OPERATOR", id, "DELETE", `Deleted operator: ${opName}`);
+        revalidatePath("/operators");
+        revalidatePath(`/operators/${id}`);
         return NextResponse.json({ message: "Operator deleted successfully" });
     } catch (error) {
         console.error("Error deleting operator:", error);

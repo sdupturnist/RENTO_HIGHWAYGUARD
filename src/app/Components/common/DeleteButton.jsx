@@ -23,8 +23,8 @@ export function DeleteButton({ apiPath, queryKey, redirectTo, entityLabel = "rec
             if (!res.ok) throw new Error();
             toast.success(`${entityLabel} permanently deleted`);
             if (queryKey) await queryClient.refetchQueries({ queryKey: Array.isArray(queryKey) ? queryKey : [queryKey] });
-            router.refresh();
             router.push(redirectTo);
+            router.refresh();
         } catch {
             toast.error(`Error deleting ${entityLabel.toLowerCase()}`);
             setLoading(false);

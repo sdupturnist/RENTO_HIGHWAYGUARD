@@ -28,8 +28,8 @@ export function DetourTemplateDeleteButton({ templateId }) {
             }
             toast.success("Detour template permanently deleted");
             await queryClient.refetchQueries({ queryKey: ["detour-templates"], exact: false });
-            router.refresh();
             router.push("/detour-services");
+            router.refresh();
         } catch {
             toast.error("Error deleting detour template");
             setLoading(false);

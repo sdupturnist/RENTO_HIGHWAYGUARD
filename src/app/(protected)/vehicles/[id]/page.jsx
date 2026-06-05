@@ -46,7 +46,12 @@ export default async function VehicleDetailsPage(props) {
     if (!vRows || vRows.length === 0) notFound();
     const v = vRows[0];
 
-    const [docs] = await dbTenant(`SELECT * FROM \`vehicle_documents\` WHERE vehicleId = ?`, [id]);
+    const [docs] = await dbTenant(`
+        SELECT vd.*, dt.name as documentTypeName
+        FROM \`vehicle_documents\` vd
+        LEFT JOIN \`document_types\` dt ON dt.id = vd.documentTypeId
+        WHERE vd.vehicleId = ?
+    `, [id]);
     const [assignmentBlocks] = await dbTenant(`
         SELECT * FROM \`assignment_blocks\`
         WHERE vehicleId = ? AND status = 'ACTIVE' AND endDate >= NOW()
@@ -164,7 +169,7 @@ export default async function VehicleDetailsPage(props) {
             {/* DOCUMENTS TAB */}
             < TabsContent value="documents" >
                 <OverviewSection title="Attached Documents">
-                    <FileList files={vehicle.documents || []} />
+                    <FileList files={vehicle.documents.map(d => ({ ...d, name: d.name || d.documentTypeName || d.url?.split('/').pop() || "Document" })) || []} />
                 </OverviewSection>
             </TabsContent >
 

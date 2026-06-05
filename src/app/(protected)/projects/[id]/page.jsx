@@ -75,6 +75,7 @@ export default async function ViewProjectPage(props) {
                 <div className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-2 w-fit">
                     <TabsList>
                         <TabsTrigger className="px-4 py-2.5 text-sm font-medium rounded-xl transition-all data-[state=active]:bg-white data-[state=active]:dark:bg-slate-800 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/60 data-[state=active]:dark:border-slate-700/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/30" value="overview">Overview</TabsTrigger>
+                        <TabsTrigger className="px-4 py-2.5 text-sm font-medium rounded-xl transition-all data-[state=active]:bg-white data-[state=active]:dark:bg-slate-800 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/60 data-[state=active]:dark:border-slate-700/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/30" value="lpo">LPO</TabsTrigger>
                         <TabsTrigger className="px-4 py-2.5 text-sm font-medium rounded-xl transition-all data-[state=active]:bg-white data-[state=active]:dark:bg-slate-800 data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-slate-200/60 data-[state=active]:dark:border-slate-700/60 hover:bg-slate-50/50 dark:hover:bg-slate-800/30" value="activity">Activity Log</TabsTrigger>
                     </TabsList>
                 </div>
@@ -137,6 +138,26 @@ export default async function ViewProjectPage(props) {
                             </OverviewSection>
                         )}
                     </div>
+                </TabsContent>
+
+                <TabsContent value="lpo" className="space-y-6">
+                    <OverviewSection title="LPO Reference" description="Local Purchase Order details for this project.">
+                        <InfoGrid cols={2}>
+                            <InfoField label="LPO Number" value={project.lpoNumber || "—"}/>
+                            <InfoField label="LPO Document" value={
+                                project.lpoAttachmentPath ? (
+                                    <a href={project.lpoAttachmentPath} target="_blank" rel="noopener noreferrer"
+                                       className="inline-flex items-center gap-2 text-sm border rounded-md px-3 py-1.5 hover:bg-muted/50 transition-colors">
+                                        <Paperclip className="h-4 w-4 text-muted-foreground" />
+                                        <span className="text-primary font-medium">
+                                            {project.lpoAttachmentName || project.lpoAttachmentPath.split("/").pop()}
+                                        </span>
+                                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                                    </a>
+                                ) : "—"
+                            }/>
+                        </InfoGrid>
+                    </OverviewSection>
                 </TabsContent>
 
                 <TabsContent value="activity">

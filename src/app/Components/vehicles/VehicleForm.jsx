@@ -47,7 +47,8 @@ const vehicleSchema = z.object({
     capacity: z.coerce.number().optional().nullable(),
     remarks: z.string().optional().nullable(),
     documents: z.array(z.object({
-        name: z.string().min(1, "Document name required"),
+        documentTypeId: z.coerce.number().min(1, "Document Type is required"),
+        name: z.string().optional().nullable(),
         url: z.string().min(1, "File required"),
         expiryDate: z.date().optional().nullable(),
     })).optional().nullable(),
@@ -61,6 +62,7 @@ export function VehicleForm({ initialData }) {
     const [types, setTypes] = useState([]);
     const [authorities, setAuthorities] = useState([]);
     const [prefixRules, setPrefixRules] = useState([]);
+    const [docTypes, setDocTypes] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     // Year generation
@@ -85,7 +87,9 @@ export function VehicleForm({ initialData }) {
             thirdPartyContractStart: initialData.thirdPartyContractStart ? new Date(initialData.thirdPartyContractStart) : null,
             thirdPartyContractEnd: initialData.thirdPartyContractEnd ? new Date(initialData.thirdPartyContractEnd) : null,
             documents: initialData.documents?.map((d) => ({
-                ...d,
+                documentTypeId: d.documentTypeId,
+                name: d.name || "",
+                url: d.url,
                 expiryDate: d.expiryDate ? new Date(d.expiryDate) : null
             })) || []
         } : {
@@ -113,12 +117,13 @@ export function VehicleForm({ initialData }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [bRes, mRes, tRes, aRes, cRes] = await Promise.all([
+                const [bRes, mRes, tRes, aRes, cRes, dtRes] = await Promise.all([
                     fetch("/api/config/brands"),
                     fetch("/api/config/models"),
                     fetch("/api/config/vehicle-types"),
                     fetch("/api/config/authorities"),
                     fetch("/api/config/vehicle-code-rules"),
+                    fetch("/api/config/doc-types"),
                 ]);
                 if (bRes.ok) {
                     const bData = await bRes.json();
@@ -149,6 +154,12 @@ export function VehicleForm({ initialData }) {
                     setPrefixRules(rulesArray);
                     if (!initialData && rulesArray[0]?.defaultRentCycle) {
                         form.setValue("defaultRentCycle", rulesArray[0].defaultRentCycle);
+                    }
+                }
+                if (dtRes.ok) {
+                    const dtData = await dtRes.json();
+                    if (Array.isArray(dtData)) {
+                        setDocTypes(dtData.filter(t => t.category === "VEHICLE"));
                     }
                 }
             }
@@ -594,30 +605,57 @@ export function VehicleForm({ initialData }) {
 
 
                 {/* Documents */}
-                <FormCard title="Documents (Optional)" description="Vehicle documents." icon={FileText}>
+                <FormCard title="Documents (Optional)" description="Upload vehicle specific documents." icon={FileText}>
                     <div className="space-y-4">
                         {fields.map((field, index) => (<div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-lg bg-slate-50/50">
+                                <div className="md:col-span-5">
+                                    <FormLabel className="text-xs">Document Type</FormLabel>
+                                    <Select 
+                                        onValueChange={(val) => {
+                                            form.setValue(`documents.${index}.documentTypeId`, Number(val));
+                                            form.clearErrors(`documents.${index}.documentTypeId`);
+                                        }} 
+                                        value={form.watch(`documents.${index}.documentTypeId`) ? String(form.watch(`documents.${index}.documentTypeId`)) : undefined}
+                                    >
+                                        <SelectTrigger className="w-full h-9">
+                                            <SelectValue placeholder="Select type"/>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {docTypes.map((dt) => (<SelectItem key={dt.id} value={String(dt.id)}>{dt.name}</SelectItem>))}
+                                        </SelectContent>
+                                    </Select>
+                                    {form.formState.errors.documents?.[index]?.documentTypeId && (
+                                        <p className="text-[11px] text-red-500 mt-1">
+                                            {form.formState.errors.documents[index].documentTypeId.message}
+                                        </p>
+                                    )}
+                                </div>
                                 <div className="md:col-span-3">
-                                    <FormLabel className="text-xs">Document Name</FormLabel>
-                                    <Input {...form.register(`documents.${index}.name`)} placeholder="e.g. Insurance 2024"/>
-                                </div>
-                                <div className="md:col-span-4">
                                     <FormLabel className="text-xs">Upload File</FormLabel>
-                                    <Input type="file" onChange={(e) => handleFileUpload(e, index)} disabled={uploading} className="text-xs"/>
-                                    {field.url && <p className="text-[10px] text-green-600 mt-1 truncate">Uploaded: {field.url.split('/').pop()}</p>}
+                                    <Input type="file" onChange={(e) => handleFileUpload(e, index)} disabled={uploading} className="text-xs h-9 cursor-pointer file:cursor-pointer file:border-0 file:bg-slate-100 dark:file:bg-slate-800 file:text-xs file:font-semibold file:h-full file:mr-3 file:px-4 file:text-slate-700 dark:file:text-slate-300 hover:file:bg-slate-200 dark:hover:file:bg-slate-700 file:transition-colors p-0 overflow-hidden"/>
+                                    {form.watch(`documents.${index}.url`) && (
+                                        <p className="text-[10px] text-green-600 mt-1 truncate">
+                                            Uploaded: {form.watch(`documents.${index}.url`).split("/").pop()}
+                                        </p>
+                                    )}
+                                    {form.formState.errors.documents?.[index]?.url && (
+                                        <p className="text-[11px] text-red-500 mt-1">
+                                            {form.formState.errors.documents[index].url.message}
+                                        </p>
+                                    )}
                                 </div>
-                                <div className="md:col-span-4">
+                                <div className="md:col-span-3">
                                     <FormLabel className="text-xs">Expiry (Optional)</FormLabel>
                                     <FormattedDatePicker value={form.watch(`documents.${index}.expiryDate`) || undefined} onChange={(date) => form.setValue(`documents.${index}.expiryDate`, date)}/>
                                 </div>
                                 <div className="md:col-span-1 flex justify-end">
-                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="hover:bg-red-100 hover:text-red-600">
+                                    <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)} className="hover:bg-red-100 hover:text-red-600 h-9 w-9">
                                         <Trash2 className="h-4 w-4"/>
                                     </Button>
                                 </div>
                             </div>))}
 
-                        <Button type="button" variant="outline" size="sm" onClick={() => append({ name: "", url: "", expiryDate: null })} className="mt-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => append({ documentTypeId: 0, name: "", url: "", expiryDate: null })} className="mt-2">
                             <Plus className="mr-2 h-4 w-4"/> Add Document
                         </Button>
                     </div>

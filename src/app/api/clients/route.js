@@ -5,6 +5,7 @@ import { getSession } from "@/app/lib/auth";
 import { verifySessionPermission } from "@/app/lib/permissions";
 import { logActivity } from "@/app/lib/logger";
 import { reserveSequentialCode } from "@/app/lib/sequential-code";
+import { revalidatePath } from "next/cache";
 
 const contactSchema = z.object({
     name: z.string().min(1),
@@ -147,6 +148,7 @@ export async function POST(request) {
         });
 
         await logActivity("CUSTOMER", customerId, "CREATE", `Created customer ID: ${customerId}`);
+        revalidatePath("/customers");
         const [rows] = await dbTenant(`SELECT * FROM \`customers\` WHERE id = ? LIMIT 1`, [customerId]);
         return NextResponse.json(rows?.[0] || { id: customerId });
     } catch (error) {

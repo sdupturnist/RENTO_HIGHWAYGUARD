@@ -4,6 +4,7 @@ import { getSession } from "@/app/lib/auth";
 import { verifySessionPermission } from "@/app/lib/permissions";
 import { logActivity } from "@/app/lib/logger";
 import { checkEntityUsage, buildUsageError } from "@/app/lib/entity-usage";
+import { revalidatePath } from "next/cache";
 
 export async function GET(request, props) {
     const params = await props.params;
@@ -93,6 +94,8 @@ export async function PUT(request, props) {
         const [documents] = await dbTenant(`SELECT * FROM \`customer_documents\` WHERE customerId = ?`, [id]);
 
         await logActivity("CUSTOMER", id, "UPDATE", `Updated customer: ${updRows[0].companyName}`);
+        revalidatePath("/customers");
+        revalidatePath(`/customers/${id}`);
 
         return NextResponse.json({
             ...updRows[0],
@@ -132,6 +135,8 @@ export async function DELETE(request, props) {
         });
 
         await logActivity("CUSTOMER", id, "DELETE", `Deleted customer: ${customer.companyName} (${customer.customerCode})`);
+        revalidatePath("/customers");
+        revalidatePath(`/customers/${id}`);
 
         return NextResponse.json({ message: "Customer deleted successfully." });
     } catch (error) {

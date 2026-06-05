@@ -107,8 +107,8 @@ export function DetourTemplatePageForm({ initialData, currencySymbol = "AED" }) 
             if (!res.ok) throw new Error(data.message || "Error saving template");
             toast.success(isEdit ? "Template updated." : "Template created.");
             await queryClient.invalidateQueries({ queryKey: ["detour-templates"] });
-            router.refresh();
             router.push(isEdit ? `/detour-services/${initialData.id}` : "/detour-services");
+            router.refresh();
         } catch (error) {
             toast.error(error.message);
         }

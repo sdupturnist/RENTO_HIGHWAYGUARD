@@ -143,7 +143,7 @@ export default async function OperatorDetailsPage(props) {
             {/* DOCUMENTS TAB */}
             <TabsContent value="documents">
                 <OverviewSection title="Attached Documents">
-                    <FileList files={operator.documents.map(d => ({ ...d, name: d.name || "Untitled Document" })) || []} />
+                    <FileList files={operator.documents.map(d => ({ ...d, name: d.name || d.documentTypeName || d.url?.split('/').pop() || "Document" })) || []} />
                 </OverviewSection>
             </TabsContent>
 

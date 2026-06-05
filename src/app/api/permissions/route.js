@@ -87,8 +87,8 @@ export async function GET() {
         const [permissions] = await dbTenant("SELECT * FROM `permissions` ORDER BY module ASC, action ASC");
 
         const moduleOrder = [
-            "Dashboard", "Vehicles", "Operators", "Customers", "Projects",
-            "Materials", "Labours", "Detour Services",
+            "Dashboard", "Vehicles", "Operators", "Materials", "Labours", "Detour Services",
+            "Customers", "Projects",
             "Assignment", "Daily Time Logs", "Timesheet", "Invoices", "Expenses",
             "Maintenance", "Reports", "Users & Roles", "Audit Logs", "Settings"
         ];

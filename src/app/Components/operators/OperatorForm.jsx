@@ -161,8 +161,8 @@ export function OperatorForm({ initialData }) {
             await queryClient.invalidateQueries({ queryKey: ["operators"], refetchType: "all" });
             toast.success(initialData ? "Operator updated" : "Operator created");
             if (initialData) await queryClient.invalidateQueries({ queryKey: ["operator", initialData.id] });
+            router.push(initialData ? `/operators/${initialData.id}` : "/operators");
             router.refresh();
-            router.push("/operators");
         },
         onError: (error) => {
             toast.error(error.message || "An error occurred");
@@ -362,31 +362,47 @@ export function OperatorForm({ initialData }) {
                 </FormCard>
 
                 {/* Documents */}
-                <FormCard title="Documents" description="Upload operator specific documents." icon={FileText}>
+                <FormCard title="Documents (Optional)" description="Upload operator specific documents." icon={FileText}>
                     <div className="space-y-4">
                         {fields.map((field, index) => (<div key={field.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-lg bg-slate-50/50">
-                                <div className="md:col-span-3">
+                                <div className="md:col-span-5">
                                     <FormLabel className="text-xs">Document Type</FormLabel>
-                                    <Select onValueChange={(val) => form.setValue(`documents.${index}.documentTypeId`, Number(val))} defaultValue={field.documentTypeId?.toString()}>
-                                        <SelectTrigger className="h-9">
+                                    <Select 
+                                        onValueChange={(val) => {
+                                            form.setValue(`documents.${index}.documentTypeId`, Number(val));
+                                            form.clearErrors(`documents.${index}.documentTypeId`);
+                                        }} 
+                                        value={form.watch(`documents.${index}.documentTypeId`) ? String(form.watch(`documents.${index}.documentTypeId`)) : undefined}
+                                    >
+                                        <SelectTrigger className="w-full h-9">
                                             <SelectValue placeholder="Select type"/>
                                         </SelectTrigger>
                                         <SelectContent>
                                             {docTypes.map((dt) => (<SelectItem key={dt.id} value={String(dt.id)}>{dt.name}</SelectItem>))}
                                         </SelectContent>
                                     </Select>
-                                </div>
-                                <div className="md:col-span-3">
-                                    <FormLabel className="text-xs">File Name (Optional)</FormLabel>
-                                    <Input className="h-9" {...form.register(`documents.${index}.name`)} placeholder="e.g. Scanned Copy"/>
+                                    {form.formState.errors.documents?.[index]?.documentTypeId && (
+                                        <p className="text-[11px] text-red-500 mt-1">
+                                            {form.formState.errors.documents[index].documentTypeId.message}
+                                        </p>
+                                    )}
                                 </div>
                                 <div className="md:col-span-3">
                                     <FormLabel className="text-xs">Upload File</FormLabel>
-                                    <Input type="file" onChange={(e) => handleFileUpload(e, index)} disabled={uploading} className="text-xs h-9"/>
-                                    {form.watch(`documents.${index}.url`) && <p className="text-[10px] text-green-600 mt-1 truncate">Uploaded</p>}
+                                    <Input type="file" onChange={(e) => handleFileUpload(e, index)} disabled={uploading} className="text-xs h-9 cursor-pointer file:cursor-pointer file:border-0 file:bg-slate-100 dark:file:bg-slate-800 file:text-xs file:font-semibold file:h-full file:mr-3 file:px-4 file:text-slate-700 dark:file:text-slate-300 hover:file:bg-slate-200 dark:hover:file:bg-slate-700 file:transition-colors p-0 overflow-hidden"/>
+                                    {form.watch(`documents.${index}.url`) && (
+                                        <p className="text-[10px] text-green-600 mt-1 truncate">
+                                            Uploaded: {form.watch(`documents.${index}.url`).split("/").pop()}
+                                        </p>
+                                    )}
+                                    {form.formState.errors.documents?.[index]?.url && (
+                                        <p className="text-[11px] text-red-500 mt-1">
+                                            {form.formState.errors.documents[index].url.message}
+                                        </p>
+                                    )}
                                 </div>
-                                <div className="md:col-span-2">
-                                    <FormLabel className="text-xs">Expiry</FormLabel>
+                                <div className="md:col-span-3">
+                                    <FormLabel className="text-xs">Expiry (Optional)</FormLabel>
                                     <FormattedDatePicker value={form.watch(`documents.${index}.expiryDate`) || undefined} onChange={(date) => form.setValue(`documents.${index}.expiryDate`, date)}/>
                                 </div>
                                 <div className="md:col-span-1 flex justify-end">
