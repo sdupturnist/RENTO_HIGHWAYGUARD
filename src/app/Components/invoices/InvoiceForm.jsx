@@ -36,6 +36,9 @@ export function InvoiceForm() {
     const [pendingValues, setPendingValues] = useState(null);
     const { currencySymbol } = useSettings();
 
+    const [customerId, setCustomerId] = useState("");
+    const [projectId, setProjectId] = useState("");
+
     const form = useForm({
         resolver: zodResolver(invoiceSchema),
         defaultValues: {
@@ -72,6 +75,42 @@ export function InvoiceForm() {
             return res.json();
         }
     });
+
+    // Extract unique customers who have pending timesheets
+    const uniqueCustomers = Array.from(
+        new Map(
+            timesheets
+                .filter(t => t.customerId && t.customer)
+                .map(t => [t.customerId, { id: t.customerId, companyName: t.customer.companyName }])
+        ).values()
+    );
+
+    // Extract unique projects who have pending timesheets under the selected customer
+    const filteredProjects = Array.from(
+        new Map(
+            timesheets
+                .filter(t => t.customerId?.toString() === customerId && t.projectId && t.project)
+                .map(t => [t.projectId, { id: t.projectId, name: t.project.name }])
+        ).values()
+    );
+
+    // Filter timesheets by customer and project
+    const filteredTimesheets = timesheets.filter(t => {
+        const matchCustomer = t.customerId?.toString() === customerId;
+        const matchProject = !projectId || projectId === "all" || t.projectId?.toString() === projectId;
+        return matchCustomer && matchProject;
+    });
+
+    const handleCustomerChange = (val) => {
+        setCustomerId(val);
+        setProjectId("");
+        form.setValue("timesheetId", "");
+    };
+
+    const handleProjectChange = (val) => {
+        setProjectId(val);
+        form.setValue("timesheetId", "");
+    };
 
     // Side effect to set default due date when settings load
     useEffect(() => {
@@ -136,24 +175,71 @@ export function InvoiceForm() {
                 <div className="grid gap-8 md:grid-cols-2">
                     {/* Left Column: Form Inputs */}
                     <div className="space-y-8">
-                        <FormCard title="Invoice Details" description="Select a timesheet to generate an invoice." icon={FileText}>
+                        <FormCard title="Invoice Details" description="Select customer, project, and timesheet to generate an invoice." icon={FileText}>
                             <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <FormLabel>Customer <span className="text-red-500">*</span></FormLabel>
+                                    <Select value={customerId} onValueChange={handleCustomerChange}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={isLoadingTimesheets ? "Loading..." : "Select Customer"} />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {uniqueCustomers.length === 0 ? (
+                                                <SelectItem value="none" disabled>No pending customers found</SelectItem>
+                                            ) : (
+                                                uniqueCustomers.map((c) => (
+                                                    <SelectItem key={c.id} value={c.id.toString()}>
+                                                        {c.companyName}
+                                                    </SelectItem>
+                                                ))
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <FormLabel>Project (Optional)</FormLabel>
+                                    <Select value={projectId} onValueChange={handleProjectChange} disabled={!customerId}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={!customerId ? "Select Customer First" : "All Projects"} />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="all">-- All Projects --</SelectItem>
+                                            {filteredProjects.map((p) => (
+                                                <SelectItem key={p.id} value={p.id.toString()}>
+                                                    {p.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
                                 <FormField control={form.control} name="timesheetId" render={({ field }) => (<FormItem>
                                             <FormLabel>Timesheet <span className="text-red-500">*</span></FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} value={field.value || ""}>
                                                 <FormControl>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder={isLoadingTimesheets ? "Loading..." : "Select Timesheet"}/>
+                                                    <SelectTrigger disabled={!customerId}>
+                                                        <SelectValue placeholder={!customerId ? "Select Customer First" : "Select Timesheet"}/>
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    {timesheets.length === 0 ? (<SelectItem value="none" disabled>No pending timesheets found</SelectItem>) : (timesheets.map((ts) => (<SelectItem key={ts.id} value={ts.id.toString()}>
-                                                                {ts.timesheetCode} - {ts.customer.companyName} ({format(new Date(ts.periodStart), "MMM d")} - {format(new Date(ts.periodEnd), "MMM d")})
-                                                            </SelectItem>)))}
+                                                    {filteredTimesheets.length === 0 ? (
+                                                        <SelectItem value="none" disabled>No pending timesheets found</SelectItem>
+                                                    ) : (
+                                                        filteredTimesheets.map((ts) => (
+                                                            <SelectItem key={ts.id} value={ts.id.toString()}>
+                                                                {ts.timesheetCode} ({format(new Date(ts.periodStart), "MMM d")} - {format(new Date(ts.periodEnd), "MMM d")})
+                                                            </SelectItem>
+                                                        ))
+                                                    )}
                                                 </SelectContent>
                                             </Select>
                                             <FormDescription>
-                                                Only timesheets that are not yet invoiced are shown.
+                                                Only approved timesheets that are not yet invoiced are shown.
                                             </FormDescription>
                                             <FormMessage />
                                         </FormItem>)}/>
