@@ -88,11 +88,11 @@ const USAGE_RULES = {
     // ---------- Reference data ----------
 
     customer: [
-        { table: "assignments",  col: "customerId", label: "Assignments" },
-        { table: "timesheets",   col: "customerId", label: "Timesheets" },
-        { table: "invoices",     col: "customerId", label: "Invoices" },
-        { table: "projects",     col: "customerId", label: "Projects" },
-        { table: "expenses",     col: "customerId", label: "Expenses" },
+        { table: "assignments",     col: "customerId", label: "Assignments" },
+        { table: "timesheets",      col: "customerId", label: "Timesheets" },
+        { table: "invoices",        col: "customerId", label: "Invoices" },
+        { table: "projects",        col: "customerId", label: "Projects" },
+        { table: "daily_time_logs", col: "customerId", label: "Daily Time Logs" },
     ],
 
     project: [

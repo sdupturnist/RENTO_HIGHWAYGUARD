@@ -103,23 +103,17 @@ export function OperatorWorkTypesManager() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Name</TableHead>
-                            <TableHead>Billable</TableHead>
                             <TableHead className="w-[100px] text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
-                            <TableRow><TableCell colSpan={3} className="text-center py-4">Loading...</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={2} className="text-center py-4">Loading...</TableCell></TableRow>
                         ) : types.length === 0 ? (
-                            <TableRow><TableCell colSpan={3} className="text-center py-4 text-slate-500">No work types found.</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={2} className="text-center py-4 text-slate-500">No work types found.</TableCell></TableRow>
                         ) : types.map((t) => (
                             <TableRow key={t.id}>
                                 <TableCell className="font-medium">{t.name}</TableCell>
-                                <TableCell>
-                                    {t.isBillable
-                                        ? <Badge className="bg-green-600 hover:bg-green-700">Billable</Badge>
-                                        : <Badge variant="secondary">Non-Billable</Badge>}
-                                </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2">
                                         <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
@@ -141,7 +135,7 @@ export function OperatorWorkTypesManager() {
                     <DialogHeader>
                         <DialogTitle>{editingType ? "Edit Work Type" : "Add Work Type"}</DialogTitle>
                         <DialogDescription>
-                            Non-billable work types are tracked operationally but excluded from customer timesheets and invoices.
+                            Define operator work type classifications.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-2">
@@ -153,15 +147,6 @@ export function OperatorWorkTypesManager() {
                                 onChange={(e) => setName(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                             />
-                        </div>
-                        <div className="flex items-center justify-between rounded-lg border p-3">
-                            <div className="space-y-0.5">
-                                <Label className="text-sm font-medium">Billable</Label>
-                                <p className="text-xs text-muted-foreground">
-                                    Billable work appears in customer timesheets and invoices.
-                                </p>
-                            </div>
-                            <Switch checked={isBillable} onCheckedChange={setIsBillable} />
                         </div>
                         <Button onClick={handleSubmit} disabled={submitting || !name.trim()}>
                             {submitting ? "Saving..." : "Save"}

@@ -281,12 +281,20 @@ export function TimesheetDetail({ timesheet }) {
                         <span>•</span>
                         <span>{format(new Date(timesheet.periodStart), "dd MMM yyyy")} - {format(new Date(timesheet.periodEnd), "dd MMM yyyy")}</span>
                         <span>•</span>
-                        {getStatusBadge(timesheet.status)}
-                        {timesheet.approvedAt && (
-                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 ml-2">
-                                <CheckCircle className="mr-1 h-3 w-3" />
-                                Approved {format(new Date(timesheet.approvedAt), "MMM d")}
-                            </Badge>
+                        {timesheet.status === "INVOICED" ? (
+                            getStatusBadge("INVOICED")
+                        ) : timesheet.approvedAt ? (
+                            <>
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                    <CheckCircle className="mr-1 h-3 w-3" />
+                                    Approved {format(new Date(timesheet.approvedAt), "MMM d")}
+                                </Badge>
+                                {timesheet.status === "EXPORTED" && (
+                                    <Badge variant="default" className="bg-blue-600">Exported</Badge>
+                                )}
+                            </>
+                        ) : (
+                            getStatusBadge(timesheet.status)
                         )}
                     </div>
                 </div>

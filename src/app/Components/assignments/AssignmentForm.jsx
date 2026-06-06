@@ -824,7 +824,7 @@ function VehicleBlockFields({ blockIndex, form, vehicles, operators, workTypes, 
                             <Select onValueChange={field.onChange} value={field.value ?? ""}>
                                 <FormControl><SelectTrigger><SelectValue placeholder="Select work type" /></SelectTrigger></FormControl>
                                 <SelectContent>
-                                    {workTypes.map(wt => <SelectItem key={wt.id} value={wt.name}>{wt.name}{!wt.isBillable ? " (Non-billable)" : ""}</SelectItem>)}
+                                    {workTypes.map(wt => <SelectItem key={wt.id} value={wt.name}>{wt.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                             <FormMessage />
@@ -881,7 +881,7 @@ function OperatorBlockFields({ blockIndex, form, operators, workTypes, watchStar
                             <Select onValueChange={field.onChange} value={field.value ?? ""}>
                                 <FormControl><SelectTrigger><SelectValue placeholder="Select work type" /></SelectTrigger></FormControl>
                                 <SelectContent>
-                                    {workTypes.map(wt => <SelectItem key={wt.id} value={wt.name}>{wt.name}{!wt.isBillable ? " (Non-billable)" : ""}</SelectItem>)}
+                                    {workTypes.map(wt => <SelectItem key={wt.id} value={wt.name}>{wt.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                             <FormMessage />

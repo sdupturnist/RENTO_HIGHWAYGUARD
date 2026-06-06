@@ -29,8 +29,7 @@ export function OperatorMasterConfig() {
                         <CardHeader>
                             <CardTitle>Work Types</CardTitle>
                             <CardDescription>
-                                Define operator work types (e.g., Traffic Control, Standby, Internal). Non-billable types are tracked
-                                operationally but excluded from customer timesheets and invoices.
+                                Define operator work types (e.g., Traffic Control, Standby, Internal).
                             </CardDescription>
                         </CardHeader>
                         <CardContent>

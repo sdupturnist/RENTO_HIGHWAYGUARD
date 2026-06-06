@@ -113,7 +113,26 @@ export function TimesheetTable({ data }) {
                         <TableCell className="text-center">{item.totalVehicles}</TableCell>
                         <TableCell className="text-center">{item.totalOperators}</TableCell>
                         <TableCell className="text-right font-medium">{item.totalHours.toFixed(1)}</TableCell>
-                        <TableCell>{getStatusBadge(item.status)}</TableCell>
+                        <TableCell>
+                            <div className="flex flex-col gap-1 items-start">
+                                {item.status === "INVOICED" ? (
+                                    getStatusBadge("INVOICED")
+                                ) : item.approvedAt ? (
+                                    <>
+                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-medium">
+                                            Approved
+                                        </Badge>
+                                        {item.status === "EXPORTED" && (
+                                            <Badge variant="default" className="bg-blue-600 text-[10px] px-1 py-0.5 h-auto text-[9px] font-semibold leading-none rounded">
+                                                Exported
+                                            </Badge>
+                                        )}
+                                    </>
+                                ) : (
+                                    getStatusBadge(item.status)
+                                )}
+                            </div>
+                        </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                             {format(new Date(item.generatedAt), "MMM dd, HH:mm")}
                         </TableCell>
