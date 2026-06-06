@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { FormCard } from "@/app/Components/ui/form-card";
 import { StickyFooter } from "@/app/Components/ui/sticky-footer";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { usePermissions } from "@/app/Components/auth/PermissionsProvider";
 import {
     DropdownMenu,
@@ -173,8 +173,19 @@ export function AssignmentForm({ initialData, canSplit = false }) {
     const [operators, setOperators] = useState([]);
     const [materials, setMaterials] = useState([]);
     const [labours, setLabours] = useState([]);
-    const [detourTemplates, setDetourTemplates] = useState([]);
     const [workTypes, setWorkTypes] = useState([]);
+
+    const { data: detourTemplates = [] } = useQuery({
+        queryKey: ["detour-templates"],
+        queryFn: async () => {
+            const res = await fetch("/api/detour-templates", { cache: "no-store" });
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.filter(t => t.status === "ACTIVE");
+        },
+        staleTime: 0,
+        refetchOnMount: "always",
+    });
     const [uploading, setUploading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [settings, setSettings] = useState(null);
@@ -271,14 +282,13 @@ export function AssignmentForm({ initialData, canSplit = false }) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [cRes, vRes, oRes, sRes, mRes, lRes, dtRes, wtRes] = await Promise.all([
+                const [cRes, vRes, oRes, sRes, mRes, lRes, wtRes] = await Promise.all([
                     fetch("/api/clients"),
                     fetch("/api/vehicles"),
                     fetch("/api/operators"),
                     fetch("/api/settings/assignment"),
                     fetch("/api/materials"),
                     fetch("/api/labours"),
-                    fetch("/api/detour-templates"),
                     fetch("/api/settings/master/operator-work-types"),
                 ]);
                 if (cRes.ok) setCustomers(await cRes.json());
@@ -291,7 +301,6 @@ export function AssignmentForm({ initialData, canSplit = false }) {
                 }
                 if (mRes.ok) setMaterials((await mRes.json()).filter(m => m.status === "ACTIVE"));
                 if (lRes.ok) setLabours((await lRes.json()).filter(l => l.status === "ACTIVE"));
-                if (dtRes.ok) setDetourTemplates((await dtRes.json()).filter(t => t.status === "ACTIVE"));
                 if (wtRes.ok) setWorkTypes(await wtRes.json());
             } catch (error) {
                 console.error("Error loading form data:", error);
@@ -1357,37 +1366,71 @@ function AttachmentRow({ index, form, fieldPrefix, onRemove, onFileUpload, uploa
         const url = await onFileUpload(file, fieldPrefix);
         if (url) {
             form.setValue(`${fieldPrefix}.${index}.url`, url);
-            if (!form.getValues(`${fieldPrefix}.${index}.name`)) form.setValue(`${fieldPrefix}.${index}.name`, file.name);
+            if (!form.getValues(`${fieldPrefix}.${index}.name`)) {
+                form.setValue(`${fieldPrefix}.${index}.name`, file.name);
+            }
         }
     };
 
+    const fileUrl = form.watch(`${fieldPrefix}.${index}.url`);
+
     return (
-        <div className="grid grid-cols-12 gap-3 items-start border p-3 rounded bg-white dark:bg-slate-900">
-            <div className="col-span-3">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end border p-4 rounded-lg bg-slate-50/50">
+            <div className="md:col-span-4">
                 <FormField control={form.control} name={`${fieldPrefix}.${index}.name`} render={({ field }) => (
-                    <FormItem><FormLabel className="text-xs">Name</FormLabel><FormControl><Input {...field} placeholder="Document name" className="h-9" /></FormControl><FormMessage /></FormItem>
-                )} />
-            </div>
-            <div className="col-span-4">
-                <FormField control={form.control} name={`${fieldPrefix}.${index}.url`} render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="text-xs">File</FormLabel>
+                        <FormLabel className="text-xs">Document Name</FormLabel>
                         <FormControl>
-                            <div className="flex gap-2">
-                                <Input type="file" onChange={handleFileChange} disabled={uploading} className="h-9" />
-                                {field.value && <Button type="button" variant="outline" size="sm" asChild><a href={field.value} target="_blank" rel="noopener noreferrer">View</a></Button>}
-                            </div>
+                            <Input {...field} placeholder="e.g. Contract Agreement" className="h-9" />
                         </FormControl>
+                        <FormMessage />
                     </FormItem>
                 )} />
             </div>
-            <div className="col-span-4">
-                <FormField control={form.control} name={`${fieldPrefix}.${index}.remarks`} render={({ field }) => (
-                    <FormItem><FormLabel className="text-xs">Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ""} placeholder="Optional" className="h-9 min-h-9" /></FormControl></FormItem>
+            <div className="md:col-span-3">
+                <FormField control={form.control} name={`${fieldPrefix}.${index}.url`} render={({ field }) => (
+                    <FormItem>
+                        <FormLabel className="text-xs">Upload File</FormLabel>
+                        <FormControl>
+                            <Input 
+                                type="file" 
+                                onChange={handleFileChange} 
+                                disabled={uploading} 
+                                className="text-xs h-9 cursor-pointer file:cursor-pointer file:border-0 file:bg-slate-100 dark:file:bg-slate-800 file:text-xs file:font-semibold file:h-full file:mr-3 file:px-4 file:text-slate-700 dark:file:text-slate-300 hover:file:bg-slate-200 dark:hover:file:bg-slate-700 file:transition-colors p-0 overflow-hidden" 
+                            />
+                        </FormControl>
+                        {fileUrl && (
+                            <p className="text-[10px] text-green-600 mt-1 truncate">
+                                <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                    Uploaded: {fileUrl.split("/").pop()}
+                                </a>
+                            </p>
+                        )}
+                        <FormMessage />
+                    </FormItem>
                 )} />
             </div>
-            <div className="col-span-1 flex items-end">
-                <Button type="button" variant="ghost" size="sm" onClick={onRemove} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+            <div className="md:col-span-4">
+                <FormField control={form.control} name={`${fieldPrefix}.${index}.remarks`} render={({ field }) => (
+                    <FormItem>
+                        <FormLabel className="text-xs">Remarks (Optional)</FormLabel>
+                        <FormControl>
+                            <Input {...field} value={field.value || ""} placeholder="Add comments..." className="h-9" />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )} />
+            </div>
+            <div className="md:col-span-1 flex justify-end">
+                <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={onRemove} 
+                    className="hover:bg-red-100 hover:text-red-600 h-9 w-9 text-destructive"
+                >
+                    <Trash2 className="h-4 w-4" />
+                </Button>
             </div>
         </div>
     );

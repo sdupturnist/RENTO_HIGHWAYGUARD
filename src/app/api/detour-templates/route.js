@@ -7,6 +7,8 @@ import { reserveSequentialCode } from "@/app/lib/sequential-code";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
+export const dynamic = "force-dynamic";
+
 const requirementSchema = z.object({
     resourceType: z.enum(["MATERIAL", "LABOUR"]),
     resourceId: z.number().int().positive(),

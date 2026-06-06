@@ -31,12 +31,13 @@ export function DetourTemplateList({ currencySymbol = "AED" }) {
     const { data: templates = [], isLoading } = useQuery({
         queryKey: ["detour-templates"],
         queryFn: async () => {
-            const res = await fetch("/api/detour-templates");
+            const res = await fetch("/api/detour-templates", { cache: "no-store" });
             if (!res.ok) throw new Error("Failed to load detour templates");
             return res.json();
         },
         enabled: !permsLoading && canView,
-        staleTime: 30 * 1000,
+        staleTime: 0,
+        refetchOnMount: "always",
     });
 
     const { mutate: deleteTemplate } = useMutation({

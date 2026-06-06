@@ -21,7 +21,10 @@ export async function GET(req) {
         });
 
         const runMap = new Map();
-        for (const entry of pageData.entries || []) {
+        // Reverse back to chronological order (oldest first) so we construct state sequentially
+        const entries = (pageData.entries || []).slice().reverse();
+
+        for (const entry of entries) {
             const cronRunId = entry.cronRunId ? String(entry.cronRunId) : "";
             if (!cronRunId) continue;
 
@@ -54,18 +57,37 @@ export async function GET(req) {
             }
             if (entry.jobRunId && entry.jobKey) {
                 const existingIndex = run.jobRuns.findIndex(jr => String(jr.id) === String(entry.jobRunId));
-                const baseJobRun = {
+                let existingJobRun = existingIndex !== -1 ? run.jobRuns[existingIndex] : {
                     id: String(entry.jobRunId),
                     cronRunId,
                     jobKey: entry.jobKey,
-                    status: entry.status || (entry.action === "CRON_JOB_STARTED" ? "started" : "-"),
-                    windowStart: entry.windowStart || null,
-                    windowEnd: entry.windowEnd || null,
-                    successCount: Number(entry.successCount ?? 0),
-                    failedCount: Number(entry.failedCount ?? 0),
+                    status: "started",
+                    windowStart: null,
+                    windowEnd: null,
+                    successCount: 0,
+                    failedCount: 0,
                 };
-                if (existingIndex === -1) run.jobRuns.push(baseJobRun);
-                else run.jobRuns[existingIndex] = { ...run.jobRuns[existingIndex], ...baseJobRun };
+
+                if (entry.action === "CRON_JOB_STARTED") {
+                    existingJobRun.status = "started";
+                } else if (entry.action === "CRON_JOB_FINISHED" || entry.action === "CRON_JOB_FAILED") {
+                    existingJobRun.status = entry.status || (entry.action === "CRON_JOB_FINISHED" ? "success" : "failed");
+                }
+
+                if (entry.windowStart) existingJobRun.windowStart = entry.windowStart;
+                if (entry.windowEnd) existingJobRun.windowEnd = entry.windowEnd;
+                if (entry.successCount !== undefined && entry.successCount !== null) {
+                    existingJobRun.successCount = Number(entry.successCount);
+                }
+                if (entry.failedCount !== undefined && entry.failedCount !== null) {
+                    existingJobRun.failedCount = Number(entry.failedCount);
+                }
+
+                if (existingIndex === -1) {
+                    run.jobRuns.push(existingJobRun);
+                } else {
+                    run.jobRuns[existingIndex] = existingJobRun;
+                }
             }
         }
 
