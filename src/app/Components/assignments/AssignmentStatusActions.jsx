@@ -9,5 +9,5 @@ const OPTIONS = [
 ];
 
 export function AssignmentStatusActions({ assignmentId, currentStatus }) {
-    return <StatusActions apiPath={`/api/assignments/${assignmentId}`} currentStatus={currentStatus} entityLabel="Assignment" options={OPTIONS} />;
+    return <StatusActions apiPath={`/api/assignments/${assignmentId}`} currentStatus={currentStatus} entityLabel="Assignment" queryKey={[["assignments"], ["assignments-active"]]} options={OPTIONS} />;
 }

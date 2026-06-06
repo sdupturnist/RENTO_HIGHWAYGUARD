@@ -10,5 +10,5 @@ const OPTIONS = [
 ];
 
 export function ProjectStatusActions({ projectId, currentStatus }) {
-    return <StatusActions apiPath={`/api/projects/${projectId}`} currentStatus={currentStatus} entityLabel="Project" options={OPTIONS} />;
+    return <StatusActions apiPath={`/api/projects/${projectId}`} currentStatus={currentStatus} entityLabel="Project" queryKey="projects" options={OPTIONS} />;
 }

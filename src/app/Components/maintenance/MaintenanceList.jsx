@@ -194,10 +194,16 @@ export function MaintenanceList() {
 
             toast.success("Maintenance record deleted");
 
-            await queryClient.refetchQueries({
-                queryKey: ["maintenance"],
-                exact: false,
-            });
+            await Promise.all([
+                queryClient.refetchQueries({
+                    queryKey: ["maintenance"],
+                    exact: false,
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: ["vehicles"],
+                    refetchType: "all",
+                }),
+            ]);
         },
 
         onError: (error) => {
@@ -247,10 +253,16 @@ export function MaintenanceList() {
 
             toast.success("Maintenance marked as completed");
 
-            await queryClient.refetchQueries({
-                queryKey: ["maintenance"],
-                exact: false,
-            });
+            await Promise.all([
+                queryClient.refetchQueries({
+                    queryKey: ["maintenance"],
+                    exact: false,
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: ["vehicles"],
+                    refetchType: "all",
+                }),
+            ]);
         },
 
         onError: (error) => {

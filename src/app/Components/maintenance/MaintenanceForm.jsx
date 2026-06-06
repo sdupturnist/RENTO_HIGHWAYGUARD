@@ -92,10 +92,16 @@ export function MaintenanceForm({ initialData, vehicles, maintenanceTypes }) {
                 ? "Maintenance updated successfully"
                 : "Maintenance scheduled successfully");
             // Invalidate and wait before navigating so the list has fresh data on arrival
-            await queryClient.invalidateQueries({
-                queryKey: ["maintenance"],
-                refetchType: "all",
-            });
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: ["maintenance"],
+                    refetchType: "all",
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: ["vehicles"],
+                    refetchType: "all",
+                }),
+            ]);
             router.refresh();
             router.push("/maintenance");
         } catch (error) {

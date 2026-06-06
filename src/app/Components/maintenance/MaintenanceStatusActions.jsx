@@ -9,5 +9,5 @@ const OPTIONS = [
 ];
 
 export function MaintenanceStatusActions({ maintenanceId, currentStatus }) {
-    return <StatusActions apiPath={`/api/maintenance/${maintenanceId}/status`} currentStatus={currentStatus} entityLabel="Maintenance" options={OPTIONS} />;
+    return <StatusActions apiPath={`/api/maintenance/${maintenanceId}/status`} currentStatus={currentStatus} entityLabel="Maintenance" queryKey={[["maintenance"], ["vehicles"]]} options={OPTIONS} />;
 }

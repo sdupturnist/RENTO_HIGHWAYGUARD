@@ -46,7 +46,19 @@ export function StatusActions({
             }
             toast.success(`${entityLabel} marked as ${targetStatus.replace(/_/g, " ")}`);
             if (queryKey) {
-                await queryClient.invalidateQueries({ queryKey: Array.isArray(queryKey) ? queryKey : [queryKey] });
+                if (Array.isArray(queryKey)) {
+                    if (queryKey.length > 0 && Array.isArray(queryKey[0])) {
+                        await Promise.all(
+                            queryKey.map((key) =>
+                                queryClient.invalidateQueries({ queryKey: key, refetchType: "all" })
+                            )
+                        );
+                    } else {
+                        await queryClient.invalidateQueries({ queryKey, refetchType: "all" });
+                    }
+                } else {
+                    await queryClient.invalidateQueries({ queryKey: [queryKey], refetchType: "all" });
+                }
             }
             router.refresh();
         } catch (error) {

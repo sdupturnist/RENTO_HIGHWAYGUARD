@@ -8,5 +8,5 @@ const OPTIONS = [
 ];
 
 export function CustomerStatusActions({ customerId, currentStatus }) {
-    return <StatusActions apiPath={`/api/clients/${customerId}`} method="PUT" currentStatus={currentStatus} entityLabel="Customer" options={OPTIONS} />;
+    return <StatusActions apiPath={`/api/clients/${customerId}`} method="PUT" currentStatus={currentStatus} entityLabel="Customer" queryKey="clients" options={OPTIONS} />;
 }

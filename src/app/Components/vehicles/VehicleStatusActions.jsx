@@ -14,5 +14,5 @@ export function VehicleStatusActions({ vehicleId, currentStatus, hasActiveAssign
             ? { ...opt, disabled: hasActiveAssignment, tooltip: "Vehicle has an active assignment. Stop the assignment block first." }
             : opt
     );
-    return <StatusActions apiPath={`/api/vehicles/${vehicleId}/status`} currentStatus={currentStatus} entityLabel="Vehicle" options={options} />;
+    return <StatusActions apiPath={`/api/vehicles/${vehicleId}/status`} currentStatus={currentStatus} entityLabel="Vehicle" queryKey="vehicles" options={options} />;
 }

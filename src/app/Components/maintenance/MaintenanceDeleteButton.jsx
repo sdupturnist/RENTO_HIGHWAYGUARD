@@ -4,9 +4,11 @@ import { Button } from "@/app/Components/ui/button";
 import { Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger, } from "@/app/Components/ui/alert-dialog";
 export function MaintenanceDeleteButton({ maintenanceId }) {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [loading, setLoading] = useState(false);
     const handleDelete = async () => {
         setLoading(true);
@@ -17,6 +19,10 @@ export function MaintenanceDeleteButton({ maintenanceId }) {
             if (!res.ok)
                 throw new Error("Failed to delete maintenance record");
             toast.success("Maintenance record permanently deleted");
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["maintenance"], refetchType: "all" }),
+                queryClient.invalidateQueries({ queryKey: ["vehicles"], refetchType: "all" }),
+            ]);
             router.refresh();
             router.push("/maintenance");
         }
