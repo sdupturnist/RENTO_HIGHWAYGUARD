@@ -293,8 +293,7 @@ export default async function AssignmentViewPage({ params }) {
 
                             {canEdit && (
                                 <div className="mt-4 flex flex-wrap justify-end gap-2">
-                                    {/* Show split actions if block is ACTIVE and covers multiple days */}
-                                    {block.status !== "STOPPED" && new Date(block.startDate).getTime() < new Date(block.endDate).getTime() && (
+                                    {block.status !== "STOPPED" && assignment.status !== "COMPLETED" && new Date() < new Date(block.endDate) && new Date(block.startDate).getTime() < new Date(block.endDate).getTime() && (block.blockType === "VEHICLE" || !block.blockType) && (
                                         <>
                                             <ReplaceVehicleModal assignmentId={assignment.id} block={block} />
                                             {block.withOperator && (
@@ -306,6 +305,8 @@ export default async function AssignmentViewPage({ params }) {
                                         assignmentId={assignment.id}
                                         blockId={block.id}
                                         isStopped={block.status === "STOPPED"}
+                                        assignmentStatus={assignment.status}
+                                        endDate={block.endDate}
                                     />
                                 </div>
                             )}

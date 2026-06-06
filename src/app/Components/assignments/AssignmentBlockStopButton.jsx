@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/app/Components/ui/button";
-import { Loader2, Octagon, Ban } from "lucide-react";
+import { Loader2, Octagon, Ban, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
@@ -17,14 +17,25 @@ import {
     AlertDialogTrigger,
 } from "@/app/Components/ui/alert-dialog";
 
-export function AssignmentBlockStopButton({ assignmentId, blockId, isStopped }) {
+export function AssignmentBlockStopButton({ assignmentId, blockId, isStopped, assignmentStatus, endDate }) {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    const isPast = endDate ? new Date(endDate) < new Date() : false;
+    const isCompleted = assignmentStatus === "COMPLETED" || isPast;
 
     if (isStopped) {
         return (
             <Button variant="outline" size="sm" disabled className="text-red-500 border-red-200 bg-red-50">
                 <Ban className="mr-2 h-4 w-4" /> Stopped
+            </Button>
+        );
+    }
+
+    if (isCompleted) {
+        return (
+            <Button variant="outline" size="sm" disabled className="text-blue-600 border-blue-200 bg-blue-50">
+                <CheckCircle className="mr-2 h-4 w-4" /> Completed
             </Button>
         );
     }
