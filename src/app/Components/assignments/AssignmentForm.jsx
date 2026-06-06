@@ -630,7 +630,7 @@ export function AssignmentForm({ initialData, canSplit = false }) {
 
                             <FormField control={form.control} name="billingCycle" render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Billing Cycle <span className="text-red-500">*</span></FormLabel>
+                                    <FormLabel>Billing Cycle</FormLabel>
                                     <Select onValueChange={field.onChange} value={field.value}>
                                         <FormControl>
                                             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -946,7 +946,7 @@ function MaterialBlockFields({ blockIndex, form, materials, watchStartDate: prop
 
                 <FormField control={form.control} name={`blocks.${blockIndex}.startDate`} render={({ field }) => (
                     <FormItem className="flex flex-col">
-                        <FormLabel>Start Date</FormLabel>
+                        <FormLabel>Start Date <span className="text-red-500">*</span></FormLabel>
                         <FormControl><FormattedDatePicker value={field.value} onChange={field.onChange} placeholder="Start date" minDate={watchStart} maxDate={watchEnd} /></FormControl>
                         <FormMessage />
                     </FormItem>
@@ -954,7 +954,7 @@ function MaterialBlockFields({ blockIndex, form, materials, watchStartDate: prop
 
                 <FormField control={form.control} name={`blocks.${blockIndex}.endDate`} render={({ field }) => (
                     <FormItem className="flex flex-col">
-                        <FormLabel>End Date</FormLabel>
+                        <FormLabel>End Date <span className="text-red-500">*</span></FormLabel>
                         <FormControl><FormattedDatePicker value={field.value} onChange={field.onChange} placeholder="End date" minDate={blockStart || watchStart} maxDate={watchEnd} /></FormControl>
                         <FormMessage />
                     </FormItem>
@@ -1010,7 +1010,7 @@ function LabourBlockFields({ blockIndex, form, labours, watchStartDate: propStar
 
                 <FormField control={form.control} name={`blocks.${blockIndex}.startDate`} render={({ field }) => (
                     <FormItem className="flex flex-col">
-                        <FormLabel>Start Date</FormLabel>
+                        <FormLabel>Start Date <span className="text-red-500">*</span></FormLabel>
                         <FormControl><FormattedDatePicker value={field.value} onChange={field.onChange} placeholder="Start date" minDate={watchStart} maxDate={watchEnd} /></FormControl>
                         <FormMessage />
                     </FormItem>
@@ -1018,7 +1018,7 @@ function LabourBlockFields({ blockIndex, form, labours, watchStartDate: propStar
 
                 <FormField control={form.control} name={`blocks.${blockIndex}.endDate`} render={({ field }) => (
                     <FormItem className="flex flex-col">
-                        <FormLabel>End Date</FormLabel>
+                        <FormLabel>End Date <span className="text-red-500">*</span></FormLabel>
                         <FormControl><FormattedDatePicker value={field.value} onChange={field.onChange} placeholder="End date" minDate={blockStart || watchStart} maxDate={watchEnd} /></FormControl>
                         <FormMessage />
                     </FormItem>
@@ -1091,7 +1091,7 @@ function DetourBlockFields({ blockIndex, form, detourTemplates, vehicles, operat
 
                 <FormField control={form.control} name={`blocks.${blockIndex}.startDate`} render={({ field }) => (
                     <FormItem className="flex flex-col">
-                        <FormLabel>Start Date</FormLabel>
+                        <FormLabel>Start Date <span className="text-red-500">*</span></FormLabel>
                         <FormControl><FormattedDatePicker value={field.value} onChange={field.onChange} placeholder="Start date" minDate={watchStart} maxDate={watchEnd} /></FormControl>
                         <FormMessage />
                     </FormItem>
@@ -1099,7 +1099,7 @@ function DetourBlockFields({ blockIndex, form, detourTemplates, vehicles, operat
 
                 <FormField control={form.control} name={`blocks.${blockIndex}.endDate`} render={({ field }) => (
                     <FormItem className="flex flex-col">
-                        <FormLabel>End Date</FormLabel>
+                        <FormLabel>End Date <span className="text-red-500">*</span></FormLabel>
                         <FormControl><FormattedDatePicker value={field.value} onChange={field.onChange} placeholder="End date" minDate={form.watch(`blocks.${blockIndex}.startDate`) || watchStart} maxDate={watchEnd} /></FormControl>
                         <FormMessage />
                     </FormItem>
@@ -1259,14 +1259,14 @@ function BlockDateFields({ blockIndex, form, watchStart, watchEnd, onCheckAvaila
         <>
             <FormField control={form.control} name={`blocks.${blockIndex}.startDate`} render={({ field }) => (
                 <FormItem className="flex flex-col">
-                    <FormLabel>Block Start Date</FormLabel>
+                    <FormLabel>Block Start Date <span className="text-red-500">*</span></FormLabel>
                     <FormControl><FormattedDatePicker value={field.value} onChange={d => { field.onChange(d); onCheckAvailability(); }} placeholder="Start date" minDate={watchStart} maxDate={watchEnd} /></FormControl>
                     <FormMessage />
                 </FormItem>
             )} />
             <FormField control={form.control} name={`blocks.${blockIndex}.endDate`} render={({ field }) => (
                 <FormItem className="flex flex-col">
-                    <FormLabel>Block End Date</FormLabel>
+                    <FormLabel>Block End Date <span className="text-red-500">*</span></FormLabel>
                     <FormControl><FormattedDatePicker value={field.value} onChange={d => { field.onChange(d); onCheckAvailability(); }} placeholder="End date" minDate={blockStart || watchStart} maxDate={watchEnd} /></FormControl>
                     <FormMessage />
                 </FormItem>

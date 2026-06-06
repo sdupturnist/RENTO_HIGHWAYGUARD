@@ -311,7 +311,7 @@ export function CustomerForm({ initialData }) {
                             <div key={field.id} className="border rounded-lg p-4 bg-slate-50/50 space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-1">
-                                        <FormLabel className="text-xs">Name <span className="text-red-500">*</span></FormLabel>
+                                        <FormLabel className="text-xs">Name</FormLabel>
                                         <Input {...form.register(`contacts.${index}.name`)} placeholder="John Doe"/>
                                         {form.formState.errors.contacts?.[index]?.name && (
                                             <p className="text-xs text-red-500">{form.formState.errors.contacts[index]?.name?.message}</p>

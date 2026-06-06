@@ -79,7 +79,7 @@ export function MaterialForm({ open, onOpenChange, material, currencySymbol = "A
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField control={form.control} name="name" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Material Name</FormLabel>
+                                <FormLabel>Material Name <span className="text-red-500">*</span></FormLabel>
                                 <FormControl><Input placeholder="e.g. Traffic Cones" {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>

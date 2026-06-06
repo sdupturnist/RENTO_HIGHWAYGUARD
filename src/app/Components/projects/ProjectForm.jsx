@@ -16,11 +16,11 @@ import { useQueryClient } from "@tanstack/react-query";
 
 const projectSchema = z.object({
     name: z.string().min(1, "Project Name is required"),
-    location: z.string().optional(),
+    location: z.string().optional().nullable().or(z.literal("")),
     billingCycle: z.enum(["HOURLY", "DAILY"]),
     customerId: z.string().min(1, "Client is required"),
     status: z.enum(["ACTIVE", "INACTIVE", "COMPLETED"]).optional(),
-    lpoNumber: z.string().optional(),
+    lpoNumber: z.string().optional().nullable().or(z.literal("")),
 });
 
 export function ProjectForm({ initialData }) {
@@ -39,6 +39,7 @@ export function ProjectForm({ initialData }) {
             ...initialData,
             customerId: String(initialData.customerId),
             status: initialData.status || "ACTIVE",
+            location: initialData.location || "",
             lpoNumber: initialData.lpoNumber || "",
         } : {
             name: "",

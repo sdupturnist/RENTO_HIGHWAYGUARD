@@ -70,8 +70,8 @@ export default async function VehicleDetailsPage(props) {
     const settings = (await dbTenant("SELECT * FROM `company_settings` LIMIT 1"))[0][0];
     const currencySymbol = settings?.currencySymbol || "AED";
 
-    if (!vehicle) notFound();
-
+    const brandModel = [vehicle.brand?.name, vehicle.model?.name].filter(Boolean).join(" ");
+    const vehicleDesc = [brandModel, vehicle.regNo].filter(Boolean).join(" · ") || "-";
     const hasActiveAssignment = vehicle.assignmentBlocks && vehicle.assignmentBlocks.length > 0;
 
     return (<OverviewPage title={<div className="flex items-center gap-3">
@@ -80,7 +80,7 @@ export default async function VehicleDetailsPage(props) {
                 <ArrowLeft className="h-4 w-4" />
             </Link>
         </Button>
-        <span>{`${vehicle.brand?.name || ""} ${vehicle.model?.name || ""}`.trim() || vehicle.vehicleCode}</span>
+        <span>{vehicle.vehicleCode || `VEH-${vehicle.id}`}</span>
         <Badge variant={vehicle.status === "ACTIVE"
             ? "default"
             : vehicle.status === "UNDER_MAINTENANCE"
@@ -92,7 +92,7 @@ export default async function VehicleDetailsPage(props) {
                         : ""}>
             {vehicle.status.replace(/_/g, " ")}
         </Badge>
-    </div>} description={`${vehicle.vehicleCode || `VEH-${vehicle.id}`}${vehicle.regNo ? ` · ${vehicle.regNo}` : ""}`} actions={<>
+    </div>} description={vehicleDesc} actions={<>
         {canEdit && <VehicleStatusActions vehicleId={vehicle.id} currentStatus={vehicle.status} hasActiveAssignment={hasActiveAssignment} />}
         {canEdit && (
             <Button variant="outline" asChild>

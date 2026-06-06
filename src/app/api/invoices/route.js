@@ -48,11 +48,11 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { timesheetId, date, dueDate, reference, notes, applyVat } = body;
+        const { timesheetId, date, dueDate, reference, notes, applyVat, lpoNumber, lpoAttachmentPath, lpoAttachmentName } = body;
 
         if (!timesheetId) return NextResponse.json({ error: "timesheetId is required" }, { status: 400 });
         if (!date || isNaN(new Date(date).getTime())) return NextResponse.json({ error: "Valid invoice date is required" }, { status: 400 });
-        if (!dueDate || isNaN(new Date(dueDate).getTime())) return NextResponse.json({ error: "Valid due date is required" }, { status: 400 });
+        if (dueDate && isNaN(new Date(dueDate).getTime())) return NextResponse.json({ error: "Valid due date is required" }, { status: 400 });
 
         // 1. Fetch Timesheet with Relations for Aggregation
         const [timesheetRows] = await dbTenant(`
@@ -168,7 +168,7 @@ export async function POST(request) {
                 const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
                 quantity = totalHours / fullDayHours;
                 unitPrice = quantity > 0 ? g.totalAmount / quantity : g.totalAmount;
-                g.description += " (Days)";
+                g.description += ` (${parseFloat(quantity.toFixed(2))} Days)`;
             } else {
                 const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
                 quantity = totalHours > 0 ? totalHours : 1;
@@ -220,13 +220,13 @@ export async function POST(request) {
                  createdAt, updatedAt)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             `, [
-                invoiceNumber, new Date(date), new Date(dueDate), reference, notes,
+                invoiceNumber, new Date(date), dueDate ? new Date(dueDate) : null, reference || null, notes || null,
                 timesheet.customerId, timesheet.projectId, timesheetId,
                 subtotal, useVat ? 1 : 0, vatPercentage, vatAmount, grandTotal, grandTotal,
                 timesheet.periodStart, timesheet.periodEnd, "GENERATED",
-                timesheet.lpoNumber || null,
-                timesheet.lpoAttachmentPath || null,
-                timesheet.lpoAttachmentName || null,
+                lpoNumber !== undefined ? (lpoNumber || null) : (timesheet.lpoNumber || null),
+                lpoAttachmentPath !== undefined ? (lpoAttachmentPath || null) : (timesheet.lpoAttachmentPath || null),
+                lpoAttachmentName !== undefined ? (lpoAttachmentName || null) : (timesheet.lpoAttachmentName || null),
             ]);
 
             const newInvoiceId = invResult.insertId;

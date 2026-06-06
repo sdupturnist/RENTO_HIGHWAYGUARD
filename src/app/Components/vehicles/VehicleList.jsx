@@ -125,11 +125,8 @@ export function VehicleList({ onEdit }) {
                 <Table>
                     <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-50/70 dark:hover:bg-slate-900/70">
                         <TableRow className="hover:bg-transparent border-slate-200/60 dark:border-slate-800/60">
-                            <TableHead className="h-10">Vehicle Code</TableHead>
-                            <TableHead className="h-10">Registration</TableHead>
+                            <TableHead className="h-10">ID</TableHead>
                             <TableHead className="h-10">Type</TableHead>
-                            <TableHead className="h-10">Brand</TableHead>
-                            <TableHead className="h-10">Model</TableHead>
                             <TableHead className="h-10">Expiry Date</TableHead>
                             <TableHead className="h-10">Ownership</TableHead>
                             <TableHead className="h-10">Status</TableHead>
@@ -137,18 +134,18 @@ export function VehicleList({ onEdit }) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {loading ? (<TableRow><TableCell colSpan={9} className="h-24 text-center">Loading...</TableCell></TableRow>) : filteredVehicles.length === 0 ? (<TableRow><TableCell colSpan={9} className="h-24 text-center">No vehicles found.</TableCell></TableRow>) : (Array.isArray(paginated) && paginated.map((vehicle) => (<TableRow key={vehicle.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 border-slate-200/60 dark:border-slate-800/60 transition-colors">
-                            <TableCell className="font-medium text-muted-foreground text-xs">
-                                {vehicle.vehicleCode || "-"}
-                            </TableCell>
+                        {loading ? (<TableRow><TableCell colSpan={6} className="h-24 text-center">Loading...</TableCell></TableRow>) : filteredVehicles.length === 0 ? (<TableRow><TableCell colSpan={6} className="h-24 text-center">No vehicles found.</TableCell></TableRow>) : (Array.isArray(paginated) && paginated.map((vehicle) => (<TableRow key={vehicle.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 border-slate-200/60 dark:border-slate-800/60 transition-colors">
                             <TableCell className="font-medium">
-                                <Link href={`/vehicles/${vehicle.id}`} className="hover:underline text-primary">
-                                    {vehicle.regNo}
-                                </Link>
+                                <div className="flex flex-col">
+                                    <Link href={`/vehicles/${vehicle.id}`} className="hover:underline text-primary font-semibold">
+                                        {vehicle.vehicleCode || `VEH-${vehicle.id}`}
+                                    </Link>
+                                    <span className="text-xs text-muted-foreground mt-0.5">
+                                        {vehicle.brand?.name || "No Brand"}{vehicle.model?.name ? ` ${vehicle.model.name}` : ""} · {vehicle.regNo || "No Reg"}
+                                    </span>
+                                </div>
                             </TableCell>
                             <TableCell title={vehicle.vehicleType?.name}>{truncateString(vehicle.vehicleType?.name, 20) || "-"}</TableCell>
-                            <TableCell title={vehicle.brand?.name}>{truncateString(vehicle.brand?.name, 20) || "-"}</TableCell>
-                            <TableCell title={vehicle.model?.name}>{truncateString(vehicle.model?.name, 20) || "-"}</TableCell>
                             <TableCell>
                                 {vehicle.registrationExpiry
                                     ? format(new Date(vehicle.registrationExpiry), "dd/MM/yyyy")

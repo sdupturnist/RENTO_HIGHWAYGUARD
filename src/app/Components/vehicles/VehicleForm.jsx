@@ -25,10 +25,10 @@ const vehicleSchema = z.object({
     status: z.enum(["ACTIVE", "MAINTENANCE", "INACTIVE"]),
     ownership: z.enum(["OWN", "THIRD_PARTY"]),
     // Registration
-    regNo: z.string().optional(),
+    regNo: z.string({ required_error: "Registration number is required" }).min(1, "Registration number is required"),
     registrationDate: z.date().optional().nullable(),
-    registrationExpiry: z.date().optional().nullable(),
-    registrationAuthorityId: z.coerce.number().optional(),
+    registrationExpiry: z.date({ required_error: "Expiry date is required", invalid_type_error: "Expiry date is required" }),
+    registrationAuthorityId: z.coerce.number().min(1, "Registration authority is required"),
     countryOfRegistration: z.string().default("UAE"),
     // Third Party
     thirdPartyOwnerName: z.string().optional().nullable().or(z.literal("")),
@@ -392,13 +392,13 @@ export function VehicleForm({ initialData }) {
                 <FormCard title="Registration & Compliance" description="Legal documentation details." icon={Shield}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField control={form.control} name="regNo" render={({ field }) => (<FormItem>
-                                <FormLabel>Registration Number</FormLabel>
+                                <FormLabel>Registration Number <span className="text-red-500">*</span></FormLabel>
                                 <FormControl><Input {...field} placeholder="DXB-1234"/></FormControl>
                                 <FormMessage />
                             </FormItem>)}/>
 
                         <FormField control={form.control} name="registrationAuthorityId" render={({ field }) => (<FormItem>
-                                <FormLabel>Registration Authority</FormLabel>
+                                <FormLabel>Registration Authority <span className="text-red-500">*</span></FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value?.toString()}>
                                     <FormControl>
                                         <SelectTrigger>
@@ -413,7 +413,7 @@ export function VehicleForm({ initialData }) {
                             </FormItem>)}/>
 
                         <FormField control={form.control} name="registrationDate" render={({ field }) => (<FormItem className="flex flex-col">
-                                <FormLabel>Registration Date (Optional)</FormLabel>
+                                <FormLabel>Registration Date</FormLabel>
                                 <FormControl>
                                     <FormattedDatePicker value={field.value || undefined} onChange={field.onChange} placeholder="Pick a date"/>
                                 </FormControl>
@@ -422,7 +422,7 @@ export function VehicleForm({ initialData }) {
 
 
                         <FormField control={form.control} name="registrationExpiry" render={({ field }) => (<FormItem className="flex flex-col">
-                                <FormLabel>Expiry Date</FormLabel>
+                                <FormLabel>Expiry Date <span className="text-red-500">*</span></FormLabel>
                                 <FormControl>
                                     <FormattedDatePicker value={field.value || undefined} onChange={field.onChange} placeholder="Pick a date"/>
                                 </FormControl>

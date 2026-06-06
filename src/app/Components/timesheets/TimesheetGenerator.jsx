@@ -106,9 +106,15 @@ export function TimesheetGenerator({ currentUserRole }) {
     };
 
     const handleGenerate = async (forceOverlapping = false) => {
-        if (!isInternal && !customerId && !projectId) {
-            toast.error("Validation Error", { description: "Select Customer or Project, or enable Internal mode" });
-            return;
+        if (!isInternal) {
+            if (!customerId) {
+                toast.error("Validation Error", { description: "Customer is required" });
+                return;
+            }
+            if (!projectId || projectId === "0") {
+                toast.error("Validation Error", { description: "Project is required" });
+                return;
+            }
         }
         if (!periodStart || !periodEnd) {
             toast.error("Validation Error", { description: "Select Period" });
@@ -280,7 +286,7 @@ export function TimesheetGenerator({ currentUserRole }) {
 
                     {!isInternal && (<>
                     <div className="space-y-2">
-                        <Label>Customer</Label>
+                        <Label>Customer <span className="text-red-500">*</span></Label>
                         <Select value={customerId} onValueChange={handleCustomerChange}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Customer" />
@@ -292,13 +298,12 @@ export function TimesheetGenerator({ currentUserRole }) {
                     </div>
 
                     <div className="space-y-2">
-                        <Label>Project (Optional)</Label>
+                        <Label>Project <span className="text-red-500">*</span></Label>
                         <Select value={projectId} onValueChange={setProjectId} disabled={!customerId}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Select Project" />
                             </SelectTrigger>
                             <SelectContent position="popper" className="z-[100]">
-                                <SelectItem value="0">-- All Projects --</SelectItem>
                                 {filteredProjects.map(p => (<SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>))}
                             </SelectContent>
                         </Select>
@@ -307,7 +312,7 @@ export function TimesheetGenerator({ currentUserRole }) {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Month (Optional)</Label>
+                            <Label>Month</Label>
                             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Custom Period" />

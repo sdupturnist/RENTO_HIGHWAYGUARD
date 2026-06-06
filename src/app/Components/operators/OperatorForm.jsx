@@ -22,14 +22,14 @@ const operatorSchema = z.object({
     name: z.string().min(1, "Name is required"),
     nationalityId: z.coerce.number().optional().nullable(),
     phoneCountryCode: z.string().default("+971"),
-    phoneNumber: z.string().optional().nullable(),
+    phoneNumber: z.string({ required_error: "Phone number is required" }).min(1, "Phone number is required"),
     email: z.string().email().optional().nullable().or(z.literal("")),
     address: z.string().optional().nullable(),
     experienceYears: z.coerce.number().min(0, "Experience cannot be negative").optional().nullable(),
     // License
-    licenseNumber: z.string().optional().nullable(),
+    licenseNumber: z.string({ required_error: "License number is required" }).min(1, "License number is required"),
     licenseIssueDate: z.date().optional().nullable(),
-    licenseExpiry: z.date().optional().nullable(),
+    licenseExpiry: z.date({ required_error: "Expiry date is required", invalid_type_error: "Expiry date is required" }),
     licenseTypeId: z.coerce.number().min(1, "License Type is required"),
     // Status
     status: z.enum(["ACTIVE", "INACTIVE", "DISABLED", "BLOCKED", "ON_LEAVE"]),
@@ -235,7 +235,7 @@ export function OperatorForm({ initialData }) {
                             </FormItem>)}/>
 
                         <FormItem>
-                            <FormLabel>Phone Number</FormLabel>
+                            <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
                             <div className="flex gap-2">
                                 <FormField control={form.control} name="phoneCountryCode" render={({ field }) => (
                                     <Select onValueChange={field.onChange} value={field.value}>
@@ -295,7 +295,7 @@ export function OperatorForm({ initialData }) {
                             </FormItem>)}/>
 
                         <FormField control={form.control} name="licenseNumber" render={({ field }) => (<FormItem>
-                                <FormLabel>License Number</FormLabel>
+                                <FormLabel>License Number <span className="text-red-500">*</span></FormLabel>
                                 <FormControl><Input {...field} value={field.value ?? ""}/></FormControl>
                                 <FormMessage />
                             </FormItem>)}/>
@@ -307,7 +307,7 @@ export function OperatorForm({ initialData }) {
                             </FormItem>)}/>
 
                         <FormField control={form.control} name="licenseExpiry" render={({ field }) => (<FormItem className="flex flex-col">
-                                <FormLabel>Expiry Date</FormLabel>
+                                <FormLabel>Expiry Date <span className="text-red-500">*</span></FormLabel>
                                 <FormattedDatePicker value={field.value || undefined} onChange={field.onChange}/>
                                 <FormMessage />
                             </FormItem>)}/>

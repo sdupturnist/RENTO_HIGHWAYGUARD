@@ -79,7 +79,7 @@ export function LabourForm({ open, onOpenChange, labour, currencySymbol = "AED",
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField control={form.control} name="labourType" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Labour Type Name</FormLabel>
+                                <FormLabel>Labour Type Name <span className="text-red-500">*</span></FormLabel>
                                 <FormControl><Input placeholder="e.g. General Labour" {...field} /></FormControl>
                                 <FormMessage />
                             </FormItem>

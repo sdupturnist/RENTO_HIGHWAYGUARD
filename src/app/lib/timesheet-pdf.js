@@ -40,16 +40,37 @@ async function loadImageData(logoUrl) {
     if (!logoUrl)
         return null;
     try {
-        const res = await fetch(logoUrl);
-        if (!res.ok)
-            return null;
-        const buffer = await res.arrayBuffer();
-        const mime = res.headers.get("content-type") || "image/png";
         if (typeof window === "undefined") {
-            const base64 = Buffer.from(buffer).toString("base64");
+            const fs = await import("fs/promises");
+            const path = await import("path");
+            const { getUploadRootDir } = await import("@/app/lib/file-storage");
+            const mimeLib = await import("mime-types");
+            const mimeLookup = mimeLib.lookup || mimeLib.default?.lookup;
+
+            let relativePath = logoUrl;
+            if (relativePath.startsWith("/api/uploads/")) {
+                relativePath = relativePath.replace("/api/uploads/", "");
+            } else if (relativePath.startsWith("/api/storage/")) {
+                relativePath = relativePath.replace("/api/storage/", "");
+            } else if (relativePath.startsWith("/uploads/")) {
+                relativePath = relativePath.replace("/uploads/", "");
+            }
+
+            const segments = relativePath.split("/").map(decodeURIComponent).filter(Boolean);
+            const rootDir = getUploadRootDir();
+            const filePath = path.join(rootDir, ...segments);
+
+            const data = await fs.readFile(filePath);
+            const base64 = data.toString("base64");
+            const mime = mimeLookup ? mimeLookup(filePath) : "image/png";
             return `data:${mime};base64,${base64}`;
         }
         else {
+            const res = await fetch(logoUrl);
+            if (!res.ok)
+                return null;
+            const buffer = await res.arrayBuffer();
+            const mime = res.headers.get("content-type") || "image/png";
             const binary = Array.from(new Uint8Array(buffer))
                 .map((b) => String.fromCharCode(b))
                 .join("");
