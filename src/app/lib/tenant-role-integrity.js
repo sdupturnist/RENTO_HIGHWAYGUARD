@@ -64,7 +64,9 @@ const REQUIRED_PERMISSIONS = [
     { module: "Detour Services", action: "Edit" },
     { module: "Detour Services", action: "Delete" },
     { module: "Assignment", action: "View" },
-    { module: "Timesheet", action: "Regenerate" }
+    { module: "Timesheet", action: "Regenerate" },
+    { module: "Timesheet", action: "Approve" },
+    { module: "Timesheet", action: "Edit" }
 ];
 
 async function ensureAllPermissionsExist() {

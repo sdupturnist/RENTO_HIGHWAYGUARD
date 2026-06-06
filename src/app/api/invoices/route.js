@@ -77,6 +77,10 @@ export async function POST(request) {
             return NextResponse.json({ error: "Timesheet is already invoiced" }, { status: 400 });
         }
 
+        if (!timesheet.approvedAt) {
+            return NextResponse.json({ error: "Timesheet must be approved to be invoiced" }, { status: 400 });
+        }
+
         // 2. Fetch Timesheet Lines with all resource types
         const [lines] = await dbTenant(`
             SELECT l.*,

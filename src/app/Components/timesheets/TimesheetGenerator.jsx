@@ -26,12 +26,17 @@ export function TimesheetGenerator({ currentUserRole }) {
     const [selectedMonth, setSelectedMonth] = useState("");
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
 
-    const [periodStart, setPeriodStart] = useState(format(startOfMonth(new Date()), "yyyy-MM-dd"));
-    const [periodEnd, setPeriodEnd] = useState(format(endOfMonth(new Date()), "yyyy-MM-dd"));
+    const [periodStart, setPeriodStart] = useState("");
+    const [periodEnd, setPeriodEnd] = useState("");
 
     // Update dates when month/year changes (derived state - keep useEffect)
     useEffect(() => {
         if (selectedMonth !== "" && selectedYear) {
+            if (selectedMonth === "custom") {
+                setPeriodStart("");
+                setPeriodEnd("");
+                return;
+            }
             const month = parseInt(selectedMonth);
             const year = parseInt(selectedYear);
             if (!isNaN(month) && !isNaN(year)) {
@@ -90,6 +95,8 @@ export function TimesheetGenerator({ currentUserRole }) {
             setProjectId("");
             setSelectedMonth("");
             setSelectedYear(new Date().getFullYear().toString());
+            setPeriodStart("");
+            setPeriodEnd("");
         }
     };
 

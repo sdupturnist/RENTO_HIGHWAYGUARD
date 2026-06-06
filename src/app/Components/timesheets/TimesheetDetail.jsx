@@ -293,22 +293,24 @@ export function TimesheetDetail({ timesheet }) {
             </div>
             <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
                 
-                {timesheet.approvedAt ? (
-                    <Button variant="outline" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200" onClick={handleRemoveApproval} disabled={approving}>
-                        Remove Approval
-                    </Button>
-                ) : (
-                    <Button variant="outline" className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200" onClick={() => setShowApprovalDialog(true)}>
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Mark Approved
-                    </Button>
-                )}
+                <PermissionGate module="Timesheet" action="Approve">
+                    {timesheet.approvedAt ? (
+                        <Button variant="outline" className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 border-amber-200" onClick={handleRemoveApproval} disabled={approving}>
+                            Remove Approval
+                        </Button>
+                    ) : (
+                        <Button variant="outline" className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200" onClick={() => setShowApprovalDialog(true)}>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Mark Approved
+                        </Button>
+                    )}
+                </PermissionGate>
                 
                 <Button variant="outline" onClick={handleSendEmail} disabled={sending}>
                     <Send className={`mr-2 h-4 w-4 ${sending ? "animate-pulse" : ""}`} />
                     {sending ? "Sending..." : "Send Email"}
                 </Button>
-                {timesheet.status === "DRAFT" && (<>
+                {timesheet.status !== "INVOICED" && !timesheet.approvedAt && (<>
                     <PermissionGate module="Timesheet" action="Regenerate">
                         {timesheet.allowRegenerationBeforeInvoice !== false && (<Button variant="outline" onClick={handleRegenerate} disabled={regenerating}>
                             <RefreshCw className={`mr-2 h-4 w-4 ${regenerating ? 'animate-spin' : ''}`} />
@@ -390,10 +392,12 @@ export function TimesheetDetail({ timesheet }) {
         <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/60 dark:border-slate-800/60">
             <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <CardTitle className="text-sm font-medium">Notes</CardTitle>
-                {!editingNotes && (
-                    <Button variant="ghost" size="sm" onClick={() => setEditingNotes(true)}>
-                        <Pencil className="h-4 w-4 mr-1" /> {notesText ? "Edit" : "Add Notes"}
-                    </Button>
+                {!editingNotes && !timesheet.approvedAt && timesheet.status !== "INVOICED" && (
+                    <PermissionGate module="Timesheet" action="Edit">
+                        <Button variant="ghost" size="sm" onClick={() => setEditingNotes(true)}>
+                            <Pencil className="h-4 w-4 mr-1" /> {notesText ? "Edit" : "Add Notes"}
+                        </Button>
+                    </PermissionGate>
                 )}
             </CardHeader>
             <CardContent>

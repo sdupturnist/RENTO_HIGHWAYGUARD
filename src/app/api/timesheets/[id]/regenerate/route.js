@@ -17,8 +17,8 @@ export async function POST(request, props) {
         const timesheet = tsRows?.[0];
         if (!timesheet) return NextResponse.json({ error: "Timesheet not found" }, { status: 404 });
 
-        if (timesheet.status === "INVOICED" || timesheet.status === "EXPORTED") {
-            return NextResponse.json({ error: "Cannot regenerate exported or invoiced timesheet." }, { status: 403 });
+        if (timesheet.status === "INVOICED" || timesheet.approvedAt) {
+            return NextResponse.json({ error: "Cannot regenerate approved or invoiced timesheet." }, { status: 403 });
         }
 
         const [tsSettingsRows] = await dbTenant("SELECT * FROM `timesheet_settings` LIMIT 1");

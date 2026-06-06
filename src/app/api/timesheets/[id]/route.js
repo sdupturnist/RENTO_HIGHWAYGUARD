@@ -81,12 +81,12 @@ export async function DELETE(request, props) {
 
     try {
         const id = parseInt(params.id);
-        const [rows] = await dbTenant("SELECT status FROM `timesheets` WHERE id = ?", [id]);
+        const [rows] = await dbTenant("SELECT status, approvedAt FROM `timesheets` WHERE id = ?", [id]);
         const timesheet = rows?.[0];
 
         if (!timesheet) return NextResponse.json({ error: "Timesheet not found" }, { status: 404 });
-        if (timesheet.status === "INVOICED" || timesheet.status === "EXPORTED") {
-            return NextResponse.json({ error: "Cannot delete exported or invoiced timesheet." }, { status: 403 });
+        if (timesheet.status === "INVOICED" || timesheet.approvedAt) {
+            return NextResponse.json({ error: "Cannot delete approved or invoiced timesheet." }, { status: 403 });
         }
 
         await withTenantTransaction(async (tx) => {
@@ -105,15 +105,30 @@ export async function DELETE(request, props) {
 export async function PATCH(request, props) {
     const params = await props.params;
     const session = await verifySession();
-    const canEdit = session ? await verifySessionPermission(session, "Timesheet", "Edit") : false;
-    if (!session || !canEdit) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
         const id = parseInt(params.id);
-        const { status, action, approvalNote, approvedAt, notes, viewMode } = await request.json();
+        const body = await request.json();
+        const { status, action, approvalNote, approvedAt, notes, viewMode } = body;
 
-        const [rows] = await dbTenant("SELECT status FROM `timesheets` WHERE id = ?", [id]);
+        let permissionAction = "Edit";
+        if (action === "approve" || action === "unapprove") {
+            permissionAction = "Approve";
+        }
+        const canPerform = await verifySessionPermission(session, "Timesheet", permissionAction);
+        if (!canPerform) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        const [rows] = await dbTenant("SELECT status, approvedAt FROM `timesheets` WHERE id = ?", [id]);
         if (!rows?.[0]) return NextResponse.json({ error: "Timesheet not found" }, { status: 404 });
+        const freshTimesheet = rows[0];
+
+        if (freshTimesheet.status === "INVOICED" && action !== "unapprove") {
+            return NextResponse.json({ error: "Cannot modify invoiced timesheet." }, { status: 403 });
+        }
+        if (freshTimesheet.approvedAt && action !== "unapprove" && status !== "EXPORTED") {
+            return NextResponse.json({ error: "Cannot modify approved timesheet." }, { status: 403 });
+        }
 
         if (action === "approve") {
             await dbTenant(`

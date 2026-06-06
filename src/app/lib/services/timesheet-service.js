@@ -7,7 +7,7 @@ export async function getTimesheets(filters = {}) {
     if (filters.customerId) { conditions.push("ts.customerId = ?"); params.push(filters.customerId); }
     if (filters.projectId) { conditions.push("ts.projectId = ?"); params.push(filters.projectId); }
     if (filters.status) { conditions.push("ts.status = ?"); params.push(filters.status); }
-    if (filters.uninvoiced) { conditions.push("ts.status != 'INVOICED'"); }
+    if (filters.uninvoiced) { conditions.push("ts.status != 'INVOICED' AND ts.approvedAt IS NOT NULL"); }
     if (filters.periodStart) { conditions.push("ts.periodStart >= ?"); params.push(filters.periodStart); }
     if (filters.periodEnd) { conditions.push("ts.periodEnd <= ?"); params.push(filters.periodEnd); }
     if (filters.search) {
