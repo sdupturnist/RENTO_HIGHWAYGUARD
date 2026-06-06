@@ -159,25 +159,30 @@ export async function ensureTenantRoleIntegrity() {
 
     // 4. Ensure the `isHidden` column exists on `users` (idempotent)
     try {
-        await dbTenant(
-            `ALTER TABLE \`users\` ADD COLUMN IF NOT EXISTS \`isHidden\` TINYINT(1) NOT NULL DEFAULT 0`
+        const [cols] = await dbTenant(
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'isHidden'"
         );
-    } catch (colErr) {
-        // Older MySQL versions without IF NOT EXISTS support — ignore duplicate column errors
-        if (colErr?.code !== "ER_DUP_FIELDNAME") {
-            console.error("Failed to add isHidden column:", colErr);
+        if (!cols || cols.length === 0) {
+            await dbTenant(
+                "ALTER TABLE `users` ADD COLUMN `isHidden` TINYINT(1) NOT NULL DEFAULT 0"
+            );
         }
+    } catch (colErr) {
+        console.error("Failed to add isHidden column:", colErr);
     }
 
     // 5. Ensure the `isSystem` column exists on `users` (idempotent)
     try {
-        await dbTenant(
-            `ALTER TABLE \`users\` ADD COLUMN IF NOT EXISTS \`isSystem\` TINYINT(1) NOT NULL DEFAULT 0`
+        const [cols] = await dbTenant(
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'isSystem'"
         );
-    } catch (colErr) {
-        if (colErr?.code !== "ER_DUP_FIELDNAME") {
-            console.error("Failed to add isSystem column to users:", colErr);
+        if (!cols || cols.length === 0) {
+            await dbTenant(
+                "ALTER TABLE `users` ADD COLUMN `isSystem` TINYINT(1) NOT NULL DEFAULT 0"
+            );
         }
+    } catch (colErr) {
+        console.error("Failed to add isSystem column to users:", colErr);
     }
 
 
