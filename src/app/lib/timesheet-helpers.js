@@ -73,46 +73,29 @@ export function aggregateLogsIntoLines(logs, { fullDayHours, overtimeMultiplier,
         const d = new Date(log.date);
         const dateStr = !isNaN(d.getTime()) ? d.toISOString().slice(0, 10) : "";
 
-        let key;
-        if (blockType === "VEHICLE") key = `V-${dateStr}-${log.vehicleId}-${log.operatorId || 0}`;
-        else if (blockType === "OPERATOR") key = `O-${dateStr}-${log.operatorId}`;
-        else if (blockType === "MATERIAL") key = `M-${dateStr}-${log.materialId}`;
-        else key = `L-${dateStr}-${log.labourTypeId}`;
+        if (blockType === "VEHICLE" && log.operatorId) {
+            // 1. Process Vehicle Part (Dry Rent)
+            const vehicleKey = `V-${dateStr}-${log.vehicleId}-0`;
+            if (!groupedLines.has(vehicleKey)) {
+                groupedLines.set(vehicleKey, {
+                    blockType: "VEHICLE",
+                    isBillable: log.isBillable ?? 1,
+                    date: log.date,
+                    vehicleId: log.vehicleId || null,
+                    operatorId: null,
+                    materialId: null,
+                    labourTypeId: null,
+                    regularHours: 0, overtimeHours: 0, holidayHours: 0,
+                    quantity: 0, calculatedAmount: 0,
+                    detourBlockId: log.detourBlockId ?? null,
+                    resourceNameSnapshot: log.vehicle_regNo ?? log.resourceNameSnapshot ?? null,
+                    rateSnapshot: log.baseRentAmount ?? null,
+                });
+            }
 
-        if (!groupedLines.has(key)) {
-            let resourceNameSnapshot = null, rateSnapshot = null;
-            if (blockType === "VEHICLE") { resourceNameSnapshot = log.vehicle_regNo; rateSnapshot = log.baseRentAmount; }
-            else if (blockType === "OPERATOR") { resourceNameSnapshot = log.operator_name; rateSnapshot = log.hourlyRate; }
-            else if (blockType === "MATERIAL") { resourceNameSnapshot = log.material_name; rateSnapshot = log.material_costPerDay; }
-            else { resourceNameSnapshot = log.labour_type_name; rateSnapshot = log.labour_costPerDay; }
+            const vehicleEntry = groupedLines.get(vehicleKey);
+            const worked = Number(log.workedHours || 0);
 
-            groupedLines.set(key, {
-                blockType,
-                isBillable: log.isBillable ?? 1,
-                date: log.date,
-                vehicleId: blockType === "VEHICLE" ? (log.vehicleId || null) : null,
-                operatorId: (blockType === "VEHICLE" || blockType === "OPERATOR") ? (log.operatorId || null) : null,
-                materialId: blockType === "MATERIAL" ? (log.materialId || null) : null,
-                labourTypeId: blockType === "LABOUR" ? (log.labourTypeId || null) : null,
-                regularHours: 0, overtimeHours: 0, holidayHours: 0,
-                quantity: 0, calculatedAmount: 0,
-                detourBlockId: log.detourBlockId ?? null,
-                resourceNameSnapshot: resourceNameSnapshot ?? log.resourceNameSnapshot ?? null,
-                rateSnapshot: rateSnapshot ?? null,
-            });
-        }
-
-        const entry = groupedLines.get(key);
-        const worked = Number(log.workedHours || 0);
-
-        if (blockType === "MATERIAL" || blockType === "LABOUR") {
-            const qty = Number(log.quantity || 0);
-            const rate = blockType === "MATERIAL"
-                ? Number(log.material_costPerDay || 0)
-                : Number(log.labour_costPerDay || 0);
-            entry.quantity += qty;
-            entry.calculatedAmount += rate * qty;
-        } else {
             let logRegular = 0, logOvertime = 0, logHoliday = 0;
             if (log.isHoliday) logHoliday = worked;
             else if (log.isWeekend) logOvertime = worked;
@@ -120,37 +103,134 @@ export function aggregateLogsIntoLines(logs, { fullDayHours, overtimeMultiplier,
                 logRegular = Math.min(worked, fullDayHours);
                 logOvertime = Math.max(0, worked - fullDayHours);
             }
-            entry.regularHours += logRegular;
-            entry.overtimeHours += logOvertime;
-            entry.holidayHours += logHoliday;
+            vehicleEntry.regularHours += logRegular;
+            vehicleEntry.overtimeHours += logOvertime;
+            vehicleEntry.holidayHours += logHoliday;
 
-            if (blockType === "VEHICLE") {
-                const rawRate = Number(log.baseRentAmount || 0);
-                const vHourlyRate = log.baseRentType === "HOURLY" ? rawRate
-                    : log.baseRentType === "DAILY" ? rawRate / fullDayHours
-                    : rawRate / 30 / fullDayHours;
-                const totalHrs = logRegular + logOvertime + logHoliday;
-                // Block-level billingCycle overrides the vehicle default
-                const effectiveCycle = log.block_billingCycle || log.defaultRentCycle;
-                let vehicleCost = 0;
-                if (totalHrs === 0) {
-                    vehicleCost = 0;
-                } else if (effectiveCycle === "DAILY") {
-                    const dailyRate = vHourlyRate * fullDayHours;
-                    vehicleCost = totalHrs <= fullDayHours ? dailyRate : dailyRate + (totalHrs - fullDayHours) * vHourlyRate;
-                } else {
-                    vehicleCost = totalHrs * vHourlyRate;
+            const rawRate = Number(log.baseRentAmount || 0);
+            const vHourlyRate = log.baseRentType === "HOURLY" ? rawRate
+                : log.baseRentType === "DAILY" ? rawRate / fullDayHours
+                : rawRate / 30 / fullDayHours;
+            const totalHrs = logRegular + logOvertime + logHoliday;
+            const effectiveCycle = log.block_billingCycle || log.defaultRentCycle;
+            let vehicleCost = 0;
+            if (totalHrs === 0) {
+                vehicleCost = 0;
+            } else if (effectiveCycle === "DAILY") {
+                const dailyRate = vHourlyRate * fullDayHours;
+                vehicleCost = totalHrs <= fullDayHours ? dailyRate : dailyRate + (totalHrs - fullDayHours) * vHourlyRate;
+            } else {
+                vehicleCost = totalHrs * vHourlyRate;
+            }
+            vehicleEntry.calculatedAmount += vehicleCost;
+
+            // 2. Process Operator Part
+            const operatorKey = `O-${dateStr}-${log.operatorId}`;
+            if (!groupedLines.has(operatorKey)) {
+                const operatorName = log.operator_name || "Operator";
+                const vehicleReg = log.vehicle_regNo ? ` (on ${log.vehicle_regNo})` : "";
+                groupedLines.set(operatorKey, {
+                    blockType: "OPERATOR",
+                    isBillable: log.isBillable ?? 1,
+                    date: log.date,
+                    vehicleId: null,
+                    operatorId: log.operatorId || null,
+                    materialId: null,
+                    labourTypeId: null,
+                    regularHours: 0, overtimeHours: 0, holidayHours: 0,
+                    quantity: 0, calculatedAmount: 0,
+                    detourBlockId: log.detourBlockId ?? null,
+                    resourceNameSnapshot: `${operatorName}${vehicleReg}`,
+                    rateSnapshot: log.hourlyRate ?? null,
+                });
+            }
+
+            const operatorEntry = groupedLines.get(operatorKey);
+            operatorEntry.regularHours += logRegular;
+            operatorEntry.overtimeHours += logOvertime;
+            operatorEntry.holidayHours += logHoliday;
+
+            const opRate = Number(log.hourlyRate || 0);
+            operatorEntry.calculatedAmount += logRegular * opRate
+                + logOvertime * opRate * overtimeMultiplier
+                + logHoliday * opRate * holidayMultiplier;
+
+        } else {
+            // Process normally (VEHICLE without operator, OPERATOR, MATERIAL, LABOUR)
+            let key;
+            if (blockType === "VEHICLE") key = `V-${dateStr}-${log.vehicleId}-0`;
+            else if (blockType === "OPERATOR") key = `O-${dateStr}-${log.operatorId}`;
+            else if (blockType === "MATERIAL") key = `M-${dateStr}-${log.materialId}`;
+            else key = `L-${dateStr}-${log.labourTypeId}`;
+
+            if (!groupedLines.has(key)) {
+                let resourceNameSnapshot = null, rateSnapshot = null;
+                if (blockType === "VEHICLE") { resourceNameSnapshot = log.vehicle_regNo; rateSnapshot = log.baseRentAmount; }
+                else if (blockType === "OPERATOR") { resourceNameSnapshot = log.operator_name; rateSnapshot = log.hourlyRate; }
+                else if (blockType === "MATERIAL") { resourceNameSnapshot = log.material_name; rateSnapshot = log.material_costPerDay; }
+                else { resourceNameSnapshot = log.labour_type_name; rateSnapshot = log.labour_costPerDay; }
+
+                groupedLines.set(key, {
+                    blockType,
+                    isBillable: log.isBillable ?? 1,
+                    date: log.date,
+                    vehicleId: blockType === "VEHICLE" ? (log.vehicleId || null) : null,
+                    operatorId: (blockType === "VEHICLE" || blockType === "OPERATOR") ? (log.operatorId || null) : null,
+                    materialId: blockType === "MATERIAL" ? (log.materialId || null) : null,
+                    labourTypeId: blockType === "LABOUR" ? (log.labourTypeId || null) : null,
+                    regularHours: 0, overtimeHours: 0, holidayHours: 0,
+                    quantity: 0, calculatedAmount: 0,
+                    detourBlockId: log.detourBlockId ?? null,
+                    resourceNameSnapshot: resourceNameSnapshot ?? log.resourceNameSnapshot ?? null,
+                    rateSnapshot: rateSnapshot ?? null,
+                });
+            }
+
+            const entry = groupedLines.get(key);
+            const worked = Number(log.workedHours || 0);
+
+            if (blockType === "MATERIAL" || blockType === "LABOUR") {
+                const qty = Number(log.quantity || 0);
+                const rate = blockType === "MATERIAL"
+                    ? Number(log.material_costPerDay || 0)
+                    : Number(log.labour_costPerDay || 0);
+                entry.quantity += qty;
+                entry.calculatedAmount += rate * qty;
+            } else {
+                let logRegular = 0, logOvertime = 0, logHoliday = 0;
+                if (log.isHoliday) logHoliday = worked;
+                else if (log.isWeekend) logOvertime = worked;
+                else {
+                    logRegular = Math.min(worked, fullDayHours);
+                    logOvertime = Math.max(0, worked - fullDayHours);
                 }
-                const opRate = Number(log.hourlyRate || 0);
-                entry.calculatedAmount += vehicleCost
-                    + logRegular * opRate
-                    + logOvertime * opRate * overtimeMultiplier
-                    + logHoliday * opRate * holidayMultiplier;
-            } else if (blockType === "OPERATOR") {
-                const opRate = Number(log.hourlyRate || 0);
-                entry.calculatedAmount += logRegular * opRate
-                    + logOvertime * opRate * overtimeMultiplier
-                    + logHoliday * opRate * holidayMultiplier;
+                entry.regularHours += logRegular;
+                entry.overtimeHours += logOvertime;
+                entry.holidayHours += logHoliday;
+
+                if (blockType === "VEHICLE") {
+                    const rawRate = Number(log.baseRentAmount || 0);
+                    const vHourlyRate = log.baseRentType === "HOURLY" ? rawRate
+                        : log.baseRentType === "DAILY" ? rawRate / fullDayHours
+                        : rawRate / 30 / fullDayHours;
+                    const totalHrs = logRegular + logOvertime + logHoliday;
+                    const effectiveCycle = log.block_billingCycle || log.defaultRentCycle;
+                    let vehicleCost = 0;
+                    if (totalHrs === 0) {
+                        vehicleCost = 0;
+                    } else if (effectiveCycle === "DAILY") {
+                        const dailyRate = vHourlyRate * fullDayHours;
+                        vehicleCost = totalHrs <= fullDayHours ? dailyRate : dailyRate + (totalHrs - fullDayHours) * vHourlyRate;
+                    } else {
+                        vehicleCost = totalHrs * vHourlyRate;
+                    }
+                    entry.calculatedAmount += vehicleCost;
+                } else if (blockType === "OPERATOR") {
+                    const opRate = Number(log.hourlyRate || 0);
+                    entry.calculatedAmount += logRegular * opRate
+                        + logOvertime * opRate * overtimeMultiplier
+                        + logHoliday * opRate * holidayMultiplier;
+                }
             }
         }
     }

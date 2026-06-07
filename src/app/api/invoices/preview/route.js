@@ -238,46 +238,77 @@ export async function POST(request) {
                 if (days <= 0) continue;
 
                 const bt = block.blockType || "VEHICLE";
-                let description, quantity, unitPrice, total;
 
                 if (bt === "VEHICLE") {
                     const rentAmount = Number(block.baseRentAmount || 0);
-                    const operatorRate = block.withOperator ? Number(block.hourlyRate || 0) * 8 : 0;
-                    unitPrice = rentAmount + operatorRate;
-                    quantity = days;
-                    total = unitPrice * days;
-                    description = `${block.regNo || "Vehicle"} / ${block.operatorName || "No Operator"} (${block.billingCycle || "DAILY"}) - ${days} Days`;
+                    const vehicleDesc = `${block.regNo || "Vehicle"} (Dry Rent) (${block.billingCycle || "DAILY"}) - ${days} Days`;
+                    items.push({
+                        description: vehicleDesc,
+                        quantity: days,
+                        unitPrice: parseFloat(rentAmount.toFixed(2)),
+                        total: parseFloat((rentAmount * days).toFixed(2)),
+                        details: {
+                            period: `${effectiveStart.toLocaleDateString()} - ${effectiveEnd.toLocaleDateString()}`
+                        }
+                    });
+                    totalAmount += rentAmount * days;
+
+                    if (block.withOperator) {
+                        const opRate = Number(block.hourlyRate || 0) * 8;
+                        const opDesc = `Operator: ${block.operatorName || "N/A"} (on ${block.regNo || "Vehicle"}) - ${days} Days`;
+                        items.push({
+                            description: opDesc,
+                            quantity: days,
+                            unitPrice: parseFloat(opRate.toFixed(2)),
+                            total: parseFloat((opRate * days).toFixed(2)),
+                            details: {
+                                period: `${effectiveStart.toLocaleDateString()} - ${effectiveEnd.toLocaleDateString()}`
+                            }
+                        });
+                        totalAmount += opRate * days;
+                    }
                 } else if (bt === "OPERATOR") {
-                    unitPrice = Number(block.hourlyRate || 0) * 8;
-                    quantity = days;
-                    total = unitPrice * days;
-                    description = `Operator: ${block.operatorName || "N/A"} - ${days} Days`;
+                    const opRate = Number(block.hourlyRate || 0) * 8;
+                    const opDesc = `Operator: ${block.operatorName || "N/A"} - ${days} Days`;
+                    items.push({
+                        description: opDesc,
+                        quantity: days,
+                        unitPrice: parseFloat(opRate.toFixed(2)),
+                        total: parseFloat((opRate * days).toFixed(2)),
+                        details: {
+                            period: `${effectiveStart.toLocaleDateString()} - ${effectiveEnd.toLocaleDateString()}`
+                        }
+                    });
+                    totalAmount += opRate * days;
                 } else if (bt === "MATERIAL") {
                     const qty = Number(block.quantity || 1);
-                    unitPrice = Number(block.materialCostPerDay || 0) * qty;
-                    quantity = days;
-                    total = unitPrice * days;
-                    description = `Material: ${block.materialName || "N/A"} × ${qty} units - ${days} Days`;
+                    const unitPrice = Number(block.materialCostPerDay || 0) * qty;
+                    const total = unitPrice * days;
+                    items.push({
+                        description: `Material: ${block.materialName || "N/A"} × ${qty} units - ${days} Days`,
+                        quantity: days,
+                        unitPrice: parseFloat(unitPrice.toFixed(2)),
+                        total: parseFloat(total.toFixed(2)),
+                        details: {
+                            period: `${effectiveStart.toLocaleDateString()} - ${effectiveEnd.toLocaleDateString()}`
+                        }
+                    });
+                    totalAmount += total;
                 } else if (bt === "LABOUR") {
                     const qty = Number(block.quantity || 1);
-                    unitPrice = Number(block.labourCostPerDay || 0) * qty;
-                    quantity = days;
-                    total = unitPrice * days;
-                    description = `Labour: ${block.labourTypeName || "N/A"} × ${qty} - ${days} Days`;
-                } else {
-                    continue;
+                    const unitPrice = Number(block.labourCostPerDay || 0) * qty;
+                    const total = unitPrice * days;
+                    items.push({
+                        description: `Labour: ${block.labourTypeName || "N/A"} × ${qty} - ${days} Days`,
+                        quantity: days,
+                        unitPrice: parseFloat(unitPrice.toFixed(2)),
+                        total: parseFloat(total.toFixed(2)),
+                        details: {
+                            period: `${effectiveStart.toLocaleDateString()} - ${effectiveEnd.toLocaleDateString()}`
+                        }
+                    });
+                    totalAmount += total;
                 }
-
-                items.push({
-                    description,
-                    quantity,
-                    unitPrice: parseFloat(unitPrice.toFixed(2)),
-                    total: parseFloat(total.toFixed(2)),
-                    details: {
-                        period: `${effectiveStart.toLocaleDateString()} - ${effectiveEnd.toLocaleDateString()}`
-                    }
-                });
-                totalAmount += total;
             }
         }
 
