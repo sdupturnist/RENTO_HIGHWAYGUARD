@@ -103,6 +103,7 @@ export async function GET(request) {
                     regularHours: 0, overtimeHours: 0, holidayHours: 0,
                     quantity: 0,
                     totalAmount: 0,
+                    daysCount: 0,
                 };
             }
 
@@ -112,6 +113,11 @@ export async function GET(request) {
             g.holidayHours += Number(line.holidayHours || 0);
             g.quantity += Number(line.quantity || 0);
             g.totalAmount += Number(line.calculatedAmount || 0);
+
+            const totalHours = Number(line.regularHours || 0) + Number(line.overtimeHours || 0) + Number(line.holidayHours || 0);
+            if (totalHours > 0) {
+                g.daysCount += 1;
+            }
         }
 
         for (const key in groups) {
@@ -123,8 +129,7 @@ export async function GET(request) {
                 quantity = g.quantity || 1;
                 unitPrice = quantity > 0 ? g.totalAmount / quantity : g.totalAmount;
             } else if (bt === "VEHICLE" && g.baseRentType === "DAILY") {
-                const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
-                quantity = totalHours / fullDayHours;
+                quantity = g.daysCount > 0 ? g.daysCount : 1;
                 unitPrice = quantity > 0 ? g.totalAmount / quantity : g.totalAmount;
                 g.description += ` (${parseFloat(quantity.toFixed(2))} Days)`;
             } else {
