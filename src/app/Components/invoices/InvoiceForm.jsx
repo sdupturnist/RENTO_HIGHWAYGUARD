@@ -321,6 +321,7 @@ export function InvoiceForm({ mode = "create", initialData = null, defaultTimesh
                     regularHours: Number(item.regularHours || 0),
                     overtimeHours: Number(item.overtimeHours || 0),
                     holidayHours: Number(item.holidayHours || 0),
+                    days: Number(item.days || 0),
                 })),
             };
 
@@ -342,10 +343,20 @@ export function InvoiceForm({ mode = "create", initialData = null, defaultTimesh
         },
         onSuccess: async (data) => {
             toast.success(mode === "edit" ? "Invoice updated successfully" : "Invoice created successfully");
-            await queryClient.invalidateQueries({
-                queryKey: ["invoices"],
-                refetchType: "all",
-            });
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: ["invoices"],
+                    refetchType: "all",
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: ["timesheets"],
+                    refetchType: "all",
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: ["uninvoiced-timesheets"],
+                    refetchType: "all",
+                })
+            ]);
             router.refresh();
             router.push(`/invoices/${mode === "edit" ? initialData.id : data.invoiceId}`);
         },
@@ -523,11 +534,12 @@ export function InvoiceForm({ mode = "create", initialData = null, defaultTimesh
                                         <Table>
                                             <TableHeader className="bg-muted/40">
                                                 <TableRow>
-                                                    <TableHead className="w-[45%] text-xs font-semibold">Description</TableHead>
+                                                    <TableHead className="w-[35%] text-xs font-semibold">Description</TableHead>
                                                     <TableHead className="text-right w-[10%] text-xs font-semibold">Reg</TableHead>
                                                     <TableHead className="text-right w-[10%] text-xs font-semibold">OT</TableHead>
                                                     <TableHead className="text-right w-[10%] text-xs font-semibold">Hol</TableHead>
                                                     <TableHead className="text-right w-[10%] text-xs font-semibold">Qty</TableHead>
+                                                    <TableHead className="text-right w-[10%] text-xs font-semibold">Day</TableHead>
                                                     <TableHead className="text-right w-[15%] text-xs font-semibold">Unit Price</TableHead>
                                                     <TableHead className="text-right w-[10%] text-xs font-semibold">Total</TableHead>
                                                 </TableRow>
@@ -549,6 +561,9 @@ export function InvoiceForm({ mode = "create", initialData = null, defaultTimesh
                                                         </TableCell>
                                                         <TableCell className="text-right text-xs font-medium">
                                                             {Number(item.quantity || 0).toFixed(2)}
+                                                        </TableCell>
+                                                        <TableCell className="text-right text-xs font-medium">
+                                                            {item.days || 0}
                                                         </TableCell>
                                                         <TableCell className="text-right">
                                                             <div className="flex items-center justify-end gap-1">
@@ -572,6 +587,9 @@ export function InvoiceForm({ mode = "create", initialData = null, defaultTimesh
                                                 ))}
                                             </TableBody>
                                         </Table>
+                                    </div>
+                                    <div className="text-xs text-muted-foreground/70 italic mt-2">
+                                        * Important: For Detour blocks with bundle billing disabled, vehicles & operators are billed at hourly rates, whereas materials & labours are billed at daily rates.
                                     </div>
 
                                     <div className="flex flex-col items-end gap-2 pt-4 border-t mt-4">

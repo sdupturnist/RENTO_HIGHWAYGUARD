@@ -79,35 +79,27 @@ export function InvoiceTemplate({ invoice, settings, companySettings, branding }
             <table className="w-full text-sm">
                 <thead>
                     <tr className="border-b-2 text-white" style={{ backgroundColor: pdfThemeColor, borderColor: pdfThemeColor }}>
-                        <th className="py-2 text-left w-[40%]">Description</th>
-                        <th className="py-2 text-center">Regular</th>
-                        <th className="py-2 text-center">OT</th>
-                        <th className="py-2 text-center">Holiday</th>
-                        <th className="py-2 text-right">Rate</th>
-                        <th className="py-2 text-right">Amount</th>
+                        <th className="py-2 text-left w-[60%] pl-4">Description</th>
+                        <th className="py-2 text-center w-[15%]">Day</th>
+                        <th className="py-2 text-right w-[25%] pr-4">Amount</th>
                     </tr>
                 </thead>
                 <tbody className="text-slate-700">
                     {invoice.items.map((item, index) => (<tr key={index} className="border-b border-slate-100 last:border-0">
-                        <td className="py-3 pr-4 font-medium">
+                        <td className="py-3 pr-4 pl-4 font-medium">
                             {item.description}
                         </td>
-                        <td className="py-3 text-center">{item.regularHours > 0 ? item.regularHours.toFixed(1) : "-"}</td>
-                        <td className="py-3 text-center">{item.overtimeHours > 0 ? item.overtimeHours.toFixed(1) : "-"}</td>
-                        <td className="py-3 text-center">{item.holidayHours > 0 ? item.holidayHours.toFixed(1) : "-"}</td>
-                        <td className="py-3 text-right">
-                            {fmt(item.unitPrice, companySettings.currency)}
-                        </td>
-                        <td className="py-3 text-right font-semibold text-slate-900">
+                        <td className="py-3 text-center">{Number(item.days) > 0 ? Number(item.days).toFixed(0) : "-"}</td>
+                        <td className="py-3 text-right pr-4 font-semibold text-slate-900">
                             {fmt(item.total, companySettings.currency)}
                         </td>
                     </tr>))}
                 </tbody>
                 <tfoot>
                     <tr className="border-t-2 border-slate-800">
-                        <td colSpan={4}></td>
+                        <td colSpan={1}></td>
                         <td className="py-4 text-right font-bold text-slate-800">Subtotal</td>
-                        <td className="py-4 text-right font-bold text-slate-900">
+                        <td className="py-4 text-right font-bold text-slate-900 pr-4">
                             <span className="inline-flex items-center gap-1">
                                 <AedSymbol size="0.9em" />
                                 {fmt(invoice.subtotal || invoice.totalAmount, companySettings.currency)}
@@ -115,11 +107,11 @@ export function InvoiceTemplate({ invoice, settings, companySettings, branding }
                         </td>
                     </tr>
                     {invoice.vatEnabled && (<tr>
-                        <td colSpan={4}></td>
+                        <td colSpan={1}></td>
                         <td className="py-2 text-right font-medium text-slate-600">
                             VAT ({invoice.vatPercentage}%)
                         </td>
-                        <td className="py-2 text-right font-medium text-slate-900">
+                        <td className="py-2 text-right font-medium text-slate-900 pr-4">
                             <span className="inline-flex items-center gap-1">
                                 <AedSymbol size="0.9em" />
                                 {fmt(invoice.vatAmount, companySettings.currency)}
@@ -128,12 +120,12 @@ export function InvoiceTemplate({ invoice, settings, companySettings, branding }
                     </tr>)}
                     {invoice.adjustmentAmount && Number(invoice.adjustmentAmount) !== 0 && (
                         <tr>
-                            <td colSpan={4}></td>
+                            <td colSpan={1}></td>
                             <td className="py-2 text-right font-medium text-slate-600 flex flex-col items-end">
                                 Adjustment
                                 {invoice.adjustmentNote && <span className="text-xs text-gray-400 font-normal">{invoice.adjustmentNote}</span>}
                             </td>
-                            <td className="py-2 text-right font-medium text-slate-900 align-top">
+                            <td className="py-2 text-right font-medium text-slate-900 align-top pr-4">
                                 <span className="inline-flex items-center gap-1">
                                     <AedSymbol size="0.9em" />
                                     {fmt(invoice.adjustmentAmount, companySettings.currency)}
@@ -142,9 +134,9 @@ export function InvoiceTemplate({ invoice, settings, companySettings, branding }
                         </tr>
                     )}
                     <tr>
-                        <td colSpan={4}></td>
+                        <td colSpan={1}></td>
                         <td className="py-2 text-right font-bold text-lg text-slate-900 border-t border-slate-200">Total Due</td>
-                        <td className="py-2 text-right font-bold text-lg text-slate-900 border-t border-slate-200">
+                        <td className="py-2 text-right font-bold text-lg text-slate-900 border-t border-slate-200 pr-4">
                             <span className="inline-flex items-center gap-1">
                                 <AedSymbol size="1em" />
                                 {fmt(invoice.grandTotal || invoice.totalAmount, companySettings.currency)}
@@ -153,6 +145,10 @@ export function InvoiceTemplate({ invoice, settings, companySettings, branding }
                     </tr>
                 </tfoot>
             </table>
+        </div>
+
+        <div className="text-xs text-slate-500 italic mt-2 mb-6">
+            * Important: For Detour blocks with bundle billing disabled, vehicles & operators are billed at hourly rates, whereas materials & labours are billed at daily rates.
         </div>
 
         {/* Footer */}

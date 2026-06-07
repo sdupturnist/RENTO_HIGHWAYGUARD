@@ -24,7 +24,7 @@ export default async function EditAssignmentPage({ params }) {
     const [blocks] = await dbTenant(`SELECT * FROM \`assignment_blocks\` WHERE assignmentId = ? ORDER BY startDate ASC`, [id]);
     const [attachments] = await dbTenant(`SELECT * FROM \`assignment_attachments\` WHERE assignmentId = ?`, [id]);
 
-    // Fetch block attachments and check for time logs
+    // Fetch check for time logs
     const enrichedBlocks = await Promise.all((blocks || []).map(async (b) => {
         const [tlCheck] = await dbTenant(`SELECT id FROM \`daily_time_logs\` WHERE assignmentBlockId = ? LIMIT 1`, [b.id]);
         return {
@@ -34,9 +34,22 @@ export default async function EditAssignmentPage({ params }) {
         };
     }));
 
+    const topLevelBlocks = enrichedBlocks.filter(b => b.detourBlockId === null);
+    const childBlocks = enrichedBlocks.filter(b => b.detourBlockId !== null);
+
+    const nestedBlocks = topLevelBlocks.map(b => {
+        if (b.blockType === "DETOUR") {
+            return {
+                ...b,
+                detourChildren: childBlocks.filter(c => c.detourBlockId === b.id)
+            };
+        }
+        return b;
+    });
+
     const assignment = {
         ...aRow,
-        blocks: enrichedBlocks,
+        blocks: nestedBlocks,
         attachments: attachments || [],
     };
 
@@ -44,12 +57,16 @@ export default async function EditAssignmentPage({ params }) {
         notFound();
     }
 
-    // Map blocks to include a simple boolean `hasTimeLogs` property
+    // Map blocks to include a simple boolean \`hasTimeLogs\` property for parents and children
     const processedAssignment = {
         ...assignment,
         blocks: assignment.blocks.map(block => ({
             ...block,
-            hasTimeLogs: block.dailyTimeLogs.length > 0
+            hasTimeLogs: block.dailyTimeLogs.length > 0,
+            detourChildren: (block.detourChildren || []).map(c => ({
+                ...c,
+                hasTimeLogs: c.dailyTimeLogs.length > 0
+            }))
         }))
     };
     return (<div className="max-w-5xl mx-auto">

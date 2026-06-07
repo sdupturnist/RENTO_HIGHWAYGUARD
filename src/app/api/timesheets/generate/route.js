@@ -16,13 +16,16 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { customerId, projectId, periodStart, periodEnd, generatedBy, force, isInternal } = body;
+        const { customerId, projectId, periodStart, periodEnd, generatedBy, isInternal, assignmentIds } = body;
 
         if (!isInternal && !customerId && !projectId) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
         if (!periodStart || !periodEnd) {
             return NextResponse.json({ error: "Period dates required" }, { status: 400 });
+        }
+        if (!assignmentIds || !Array.isArray(assignmentIds) || assignmentIds.length === 0) {
+            return NextResponse.json({ error: "At least one assignment must be selected." }, { status: 400 });
         }
 
         const start = `${periodStart} 00:00:00`;
@@ -33,28 +36,54 @@ export async function POST(request) {
         let existingRows;
         if (isInternal) {
             [existingRows] = await dbTenant(`
-                SELECT id, timesheetCode, periodStart, periodEnd FROM \`timesheets\`
-                WHERE isInternal = 1 AND periodStart <= ? AND periodEnd >= ? AND status != 'INVOICED'
-                LIMIT 1
+                SELECT t.id, t.timesheetCode, t.periodStart, t.periodEnd, t.status, t.approvedAt,
+                       GROUP_CONCAT(ta.assignmentId) as assignmentIdsStr
+                FROM \`timesheets\` t
+                LEFT JOIN \`timesheet_assignments\` ta ON t.id = ta.timesheetId
+                WHERE t.isInternal = 1 AND t.periodStart <= ? AND t.periodEnd >= ?
+                GROUP BY t.id
             `, [end, start]);
         } else {
             [existingRows] = await dbTenant(`
-                SELECT id, timesheetCode, periodStart, periodEnd FROM \`timesheets\`
-                WHERE customerId = ? AND (projectId = ? OR (projectId IS NULL AND ? IS NULL))
-                  AND periodStart <= ? AND periodEnd >= ? AND status != 'INVOICED'
-                LIMIT 1
+                SELECT t.id, t.timesheetCode, t.periodStart, t.periodEnd, t.status, t.approvedAt,
+                       GROUP_CONCAT(ta.assignmentId) as assignmentIdsStr
+                FROM \`timesheets\` t
+                LEFT JOIN \`timesheet_assignments\` ta ON t.id = ta.timesheetId
+                WHERE t.customerId = ? AND (t.projectId = ? OR (t.projectId IS NULL AND ? IS NULL)) AND t.isInternal = 0
+                  AND t.periodStart <= ? AND t.periodEnd >= ?
+                GROUP BY t.id
             `, [customerId, projectId || null, projectId || null, end, start]);
         }
 
-        const existing = existingRows?.[0];
-        if (existing && !force) {
-            return NextResponse.json({
-                error: `A timesheet (${existing.timesheetCode}) overlaps with this period.`,
-                existingId: existing.id,
-                conflictType: "OVERLAP",
-                existingCode: existing.timesheetCode,
-                existingPeriod: `${format(new Date(existing.periodStart), "yyyy-MM-dd")} to ${format(new Date(existing.periodEnd), "yyyy-MM-dd")}`
-            }, { status: 409 });
+        const selectedIds = assignmentIds.map(Number);
+        for (const row of existingRows || []) {
+            const rowAssignments = row.assignmentIdsStr ? row.assignmentIdsStr.split(",").map(Number) : [];
+            const intersection = selectedIds.filter(id => rowAssignments.includes(id));
+            if (intersection.length > 0) {
+                const isExactMatch = selectedIds.length === rowAssignments.length && selectedIds.every(id => rowAssignments.includes(id));
+                const existingPeriodStartStr = format(new Date(row.periodStart), "yyyy-MM-dd");
+                const existingPeriodEndStr = format(new Date(row.periodEnd), "yyyy-MM-dd");
+                const isSamePeriod = existingPeriodStartStr === periodStart && existingPeriodEndStr === periodEnd;
+
+                if (isExactMatch && isSamePeriod) {
+                    return NextResponse.json({
+                        error: `A timesheet (${row.timesheetCode}) already exists for this exact same period and assignments.`,
+                        existingId: row.id,
+                        conflictType: "EXACT",
+                        existingCode: row.timesheetCode,
+                        isApproved: row.status === "INVOICED" || row.approvedAt !== null,
+                        existingPeriod: `${existingPeriodStartStr} to ${existingPeriodEndStr}`
+                    }, { status: 409 });
+                }
+
+                return NextResponse.json({
+                    error: `Selected assignments fall under an existing timesheet (${row.timesheetCode}) for the period ${existingPeriodStartStr} to ${existingPeriodEndStr}.`,
+                    existingId: row.id,
+                    conflictType: "PARTIAL",
+                    existingCode: row.timesheetCode,
+                    existingPeriod: `${existingPeriodStartStr} to ${existingPeriodEndStr}`
+                }, { status: 409 });
+            }
         }
 
         // 2. Fetch Settings
@@ -64,10 +93,17 @@ export async function POST(request) {
         const overtimeMultiplier = Number(companySettings.overtimeMultiplier || 1.5);
         const holidayMultiplier = Number(companySettings.holidayMultiplier || 2.0);
 
-        // 3. Fetch Daily Logs — all block types, billable only
-        const { sql: logQuery, params: logParams } = buildDTLQuery({ isInternal, customerId, projectId, periodStart: start, periodEnd: end });
+        // 3. Fetch Daily Logs — filtered by selected assignmentIds
+        const { sql: logQuery, params: logParams } = buildDTLQuery({
+            isInternal,
+            customerId,
+            projectId,
+            periodStart: start,
+            periodEnd: end,
+            assignmentIds: selectedIds
+        });
         const [logs] = await dbTenant(logQuery, logParams);
-        if (!logs || logs.length === 0) return NextResponse.json({ error: "No time logs found" }, { status: 404 });
+        if (!logs || logs.length === 0) return NextResponse.json({ error: "No time logs found for selected assignments in this period" }, { status: 404 });
 
         // 4. Aggregation — one line per resource per day (Detailed mode)
         const linesToCreate = aggregateLogsIntoLines(logs, { fullDayHours, overtimeMultiplier, holidayMultiplier });
@@ -120,6 +156,11 @@ export async function POST(request) {
 
             const tsId = tsRes.insertId;
 
+            // Insert assignment mappings
+            for (const assignId of selectedIds) {
+                await tx.execute("INSERT INTO `timesheet_assignments` (timesheetId, assignmentId) VALUES (?, ?)", [tsId, assignId]);
+            }
+
             await insertTimesheetLines(tx, tsId, linesToCreate);
             return tsId;
         });
@@ -170,7 +211,10 @@ async function sendTimesheetNotification(timesheet) {
         const [compRows] = await dbTenant("SELECT * FROM `company_settings` LIMIT 1");
         buffer = await generateTimesheetPDFBuffer({
             ...fullTs,
-            totalHours: fullTs.lines.reduce((sum, l) => sum + Number(l.totalHours || 0), 0),
+            totalHours: fullTs.lines.reduce((sum, l) => {
+                if (l.blockType === "OPERATOR" && l.vehicleId) return sum;
+                return sum + Number(l.totalHours || 0);
+            }, 0),
             totalVehicles: new Set(fullTs.lines.map(l => l.vehicleId).filter(Boolean)).size,
             totalOperators: new Set(fullTs.lines.map(l => l.operatorId).filter(Boolean)).size,
             companySettings: compRows?.[0] || {},

@@ -32,12 +32,20 @@ export function TimeLogList() {
     const canEdit = can("Daily Time Logs", "Edit");
     const canDelete = can("Daily Time Logs", "Delete");
 
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+
     // Debounced search term for query key
     const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedSearch(searchTerm), 500);
         return () => clearTimeout(timer);
     }, [searchTerm]);
+
+    // Reset selected IDs when query parameters change
+    useEffect(() => {
+        setSelectedIds([]);
+    }, [page, perPage, debouncedSearch, dateFrom, dateTo]);
 
     // Refetch when the tab/window regains focus (catches navigating back from create page)
     useEffect(() => {
@@ -69,6 +77,21 @@ export function TimeLogList() {
     const logs = data?.timeLogs || [];
     const total = data?.total || 0;
 
+    const isAllSelected = logs.length > 0 && logs.every(log => selectedIds.includes(log.id));
+
+    const toggleSelectAll = () => {
+        if (isAllSelected) {
+            const currentIds = logs.map(l => l.id);
+            setSelectedIds(prev => prev.filter(id => !currentIds.includes(id)));
+        } else {
+            const currentIds = logs.map(l => l.id);
+            setSelectedIds(prev => {
+                const unique = new Set([...prev, ...currentIds]);
+                return Array.from(unique);
+            });
+        }
+    };
+
     const { mutate: deleteTimeLog, isPending: isDeleting } = useMutation({
         mutationFn: async (id) => {
             const res = await fetch(`/api/time-logs/${id}`, { method: "DELETE" });
@@ -85,6 +108,28 @@ export function TimeLogList() {
         },
         onSettled: () => {
             setDeleteId(null);
+        }
+    });
+
+    const { mutate: bulkDeleteTimeLogs, isPending: isBulkDeleting } = useMutation({
+        mutationFn: async (ids) => {
+            const res = await fetch("/api/time-logs", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Failed to delete time logs");
+            return data;
+        },
+        onSuccess: (data) => {
+            toast.success(data.message || "Selected time logs deleted successfully");
+            setSelectedIds([]);
+            setIsBulkDeleteOpen(false);
+            queryClient.invalidateQueries({ queryKey: ["time-logs"], refetchType: "all" });
+        },
+        onError: (error) => {
+            toast.error(error.message);
         }
     });
 
@@ -125,6 +170,11 @@ export function TimeLogList() {
     const handleConfirmDelete = () => {
         if (!deleteId) return;
         deleteTimeLog(deleteId);
+    };
+
+    const handleConfirmBulkDelete = () => {
+        if (selectedIds.length === 0) return;
+        bulkDeleteTimeLogs(selectedIds);
     };
 
     const clearFilters = () => {
@@ -200,10 +250,49 @@ export function TimeLogList() {
                         </Button>)}
                 </div>
 
+                {selectedIds.length > 0 && (
+                    <div className="flex items-center justify-between bg-primary/5 dark:bg-primary/10 border border-primary/20 p-4 rounded-xl mb-4 transition-all duration-300 animate-in fade-in slide-in-from-top-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-primary dark:text-primary-foreground bg-primary/10 dark:bg-primary/20 px-2.5 py-1 rounded-lg">
+                                {selectedIds.length} selected
+                            </span>
+                            <span className="text-sm text-slate-600 dark:text-slate-400">time logs selected for bulk action.</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => setSelectedIds([])}
+                                className="text-xs hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+                            >
+                                Cancel
+                            </Button>
+                            <Button 
+                                variant="destructive" 
+                                size="sm"
+                                onClick={() => setIsBulkDeleteOpen(true)}
+                                className="text-xs flex items-center gap-1.5 rounded-lg shadow-sm"
+                            >
+                                <Trash2 className="h-3.5 w-3.5" /> Delete Selected
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="rounded-2xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden">
                     <Table>
                         <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-50/70 dark:hover:bg-slate-900/70">
                             <TableRow className="hover:bg-transparent border-slate-200/60 dark:border-slate-800/60">
+                                {canDelete && (
+                                    <TableHead className="h-10 w-[40px] pl-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={isAllSelected}
+                                            onChange={toggleSelectAll}
+                                            className="rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary h-4 w-4 cursor-pointer align-middle"
+                                        />
+                                    </TableHead>
+                                )}
                                 <TableHead className="h-10">Date</TableHead>
                                 <TableHead className="h-10">Assignment</TableHead>
                                 <TableHead className="h-10">Customer</TableHead>
@@ -216,10 +305,26 @@ export function TimeLogList() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {loading ? (<TableRow><TableCell colSpan={9} className="h-24 text-center">Loading...</TableCell></TableRow>) : logs.length === 0 ? (<TableRow><TableCell colSpan={9} className="h-24 text-center">No logs found.</TableCell></TableRow>) : (logs.map((log) => {
+                            {loading ? (<TableRow><TableCell colSpan={canDelete ? 10 : 9} className="h-24 text-center">Loading...</TableCell></TableRow>) : logs.length === 0 ? (<TableRow><TableCell colSpan={canDelete ? 10 : 9} className="h-24 text-center">No logs found.</TableCell></TableRow>) : (logs.map((log) => {
                                 const isQtyBased = log.blockType === "MATERIAL" || log.blockType === "LABOUR";
                                 const canEditThisLog = canEdit;
                                 return (<TableRow key={log.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/50 border-slate-200/60 dark:border-slate-800/60 transition-colors">
+                                        {canDelete && (
+                                            <TableCell className="w-[40px] pl-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.includes(log.id)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedIds(prev => [...prev, log.id]);
+                                                        } else {
+                                                            setSelectedIds(prev => prev.filter(id => id !== log.id));
+                                                        }
+                                                    }}
+                                                    className="rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary h-4 w-4 cursor-pointer align-middle"
+                                                />
+                                            </TableCell>
+                                        )}
                                         <TableCell className="w-[120px]">{format(new Date(log.date), "dd MMM yyyy")}</TableCell>
                                         <TableCell>
                                             <span className="font-mono text-xs bg-muted px-2 py-1 rounded-md">
@@ -240,6 +345,9 @@ export function TimeLogList() {
                                                         {truncateString(`${log.vehicle.brand?.name} ${log.vehicle.model?.name}`, 25)}
                                                     </span>
                                                     <span className="text-xs text-muted-foreground">{log.vehicle.regNo}</span>
+                                                    {log.operator && (
+                                                        <span className="text-xs text-muted-foreground block font-light">Operator: {log.operator.name}</span>
+                                                    )}
                                                 </div>
                                             ) : log.blockType === "OPERATOR" && log.operator ? (
                                                 <span className="font-medium">{log.operator.name}</span>
@@ -340,6 +448,31 @@ export function TimeLogList() {
             handleConfirmDelete();
         }} className="bg-red-600 hover:bg-red-700" disabled={isDeleting}>
                                 {isDeleting ? "Deleting..." : "Delete Permanently"}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                <AlertDialog open={isBulkDeleteOpen} onOpenChange={(open) => !open && setIsBulkDeleteOpen(false)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Multiple Time Logs?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to permanently delete the <strong>{selectedIds.length}</strong> selected time logs?
+                                <br />This action cannot be undone. If any of these logs were auto-generated, they will not be re-created automatically.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isBulkDeleting}>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    handleConfirmBulkDelete();
+                                }} 
+                                className="bg-red-600 hover:bg-red-700" 
+                                disabled={isBulkDeleting}
+                            >
+                                {isBulkDeleting ? "Deleting..." : "Delete Permanently"}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

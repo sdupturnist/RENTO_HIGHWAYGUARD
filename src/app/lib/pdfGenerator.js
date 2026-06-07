@@ -157,15 +157,14 @@ export async function generateInvoicePDF(invoice) {
         doc.text(`Project: ${invoice.project.name}`, 14, 90);
     }
     // TABLE
-    const tableColumn = ["Description", "Quantity", "Unit Price", "Total"];
+    const tableColumn = ["Description", "Days", "Amount"];
     const tableRows = [];
     const currency = companySettings.currencySymbol || companySettings.currency || "AED";
     invoice.items.forEach((item) => {
         const symbolPlaceholder = currency === 'AED' ? '     ' : currency;
         const invoiceData = [
             item.description,
-            item.quantity,
-            `${symbolPlaceholder} ${Number(item.unitPrice).toFixed(2)}`,
+            Number(item.days || 0).toFixed(0),
             `${symbolPlaceholder} ${Number(item.total).toFixed(2)}`,
         ];
         tableRows.push(invoiceData);
@@ -177,8 +176,13 @@ export async function generateInvoicePDF(invoice) {
         body: tableRows,
         startY: startY,
         headStyles: { fillColor: themeColor },
+        columnStyles: {
+            0: { cellWidth: "auto" },
+            1: { halign: "center", cellWidth: 35 },
+            2: { halign: "right", cellWidth: 45 },
+        },
         didDrawCell: (data) => {
-            if (data.section === 'body' && (data.column.index === 2 || data.column.index === 3) && currency === 'AED') {
+            if (data.section === 'body' && (data.column.index === 2) && currency === 'AED') {
                 const fontSize = data.cell.styles.fontSize;
                 const x = data.cell.x + data.cell.padding('left');
                 const y = data.cell.y + data.cell.padding('top') + fontSize;
@@ -198,6 +202,15 @@ export async function generateInvoicePDF(invoice) {
     } else {
         doc.text(`${currency} ${Number(invoice.totalAmount).toFixed(2)}`, 140 + textWidth, finalY);
     }
+
+    // Detour Footnote
+    doc.setFontSize(7);
+    doc.setFont(undefined, "italic");
+    doc.setTextColor(100, 100, 100);
+    doc.text("* Important: For Detour blocks with bundle billing disabled, vehicles & operators are billed at hourly rates, whereas materials & labours are billed at daily rates.", 14, finalY + 10);
+    doc.setFont(undefined, "normal");
+    doc.setTextColor(0, 0, 0);
+
     // FOOTER
     doc.setFontSize(8);
     doc.text("Thank you for your business!", 14, finalY + 20);
@@ -287,13 +300,10 @@ export async function generateInvoicePDFBuffer(invoice, companySettingsParams, b
     y += 8;
 
     // === TABLE ===
-    const tableColumn = ["Description", "Regular", "OT", "Holiday", "Rate", "Amount"];
+    const tableColumn = ["Description", "Days", "Amount"];
     const tableRows = (invoice.items || []).map((item) => [
         item.description || "-",
-        Number(item.regularHours || 0) > 0 ? Number(item.regularHours).toFixed(1) : "-",
-        Number(item.overtimeHours || 0) > 0 ? Number(item.overtimeHours).toFixed(1) : "-",
-        Number(item.holidayHours || 0) > 0 ? Number(item.holidayHours).toFixed(1) : "-",
-        Number(item.unitPrice || 0).toFixed(2),
+        Number(item.days || 0).toFixed(0),
         Number(item.total || 0).toFixed(2),
     ]);
 
@@ -304,12 +314,9 @@ export async function generateInvoicePDFBuffer(invoice, companySettingsParams, b
         headStyles: { fillColor: themeColor, textColor: [255, 255, 255], fontSize: 8 },
         bodyStyles: { fontSize: 8 },
         columnStyles: {
-            0: { cellWidth: 70 },
-            1: { halign: "center", cellWidth: 20 },
-            2: { halign: "center", cellWidth: 18 },
-            3: { halign: "center", cellWidth: 20 },
-            4: { halign: "right", cellWidth: 30 },
-            5: { halign: "right", cellWidth: 30, fontStyle: "bold" },
+            0: { cellWidth: "auto" },
+            1: { halign: "center", cellWidth: 35 },
+            2: { halign: "right", cellWidth: 45, fontStyle: "bold" },
         },
         margin: { left: 14, right: 14 },
     });
@@ -346,8 +353,17 @@ export async function generateInvoicePDFBuffer(invoice, companySettingsParams, b
     doc.text(`${currencyPrefix}${Number(invoice.grandTotal || invoice.totalAmount || 0).toFixed(2)}`, 196, totalsY, { align: "right" });
     doc.setFont(undefined, "normal");
 
+    // Detour Footnote
+    totalsY += 10;
+    doc.setFontSize(7);
+    doc.setFont(undefined, "italic");
+    doc.setTextColor(100, 100, 100);
+    doc.text("* Important: For Detour blocks with bundle billing disabled, vehicles & operators are billed at hourly rates, whereas materials & labours are billed at daily rates.", 14, totalsY);
+    doc.setFont(undefined, "normal");
+    doc.setTextColor(0, 0, 0);
+
     // === FOOTER ===
-    totalsY += 20;
+    totalsY += 10;
     doc.setDrawColor(200, 200, 200);
     doc.line(14, totalsY, 196, totalsY);
     totalsY += 8;

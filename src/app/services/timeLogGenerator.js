@@ -56,10 +56,29 @@ export async function generateDailyTimeLogs(params = new Date()) {
                 const blockEndStr = block.endDate.toISOString ? block.endDate.toISOString().split("T")[0] : String(block.endDate).split("T")[0];
 
                 if (targetDateStr < blockStartStr || targetDateStr > blockEndStr) continue;
-                if (!block.enableAutoTimeLogs) continue;
+
+                let enableAutoTimeLogs = block.enableAutoTimeLogs;
+                let includeWeekendsForAutoLogs = block.includeWeekendsForAutoLogs;
+                let plannedOvertimeHours = block.plannedOvertimeHours;
+
+                if (block.detourBlockId) {
+                    const [parentRows] = await tx.execute(
+                        `SELECT enableAutoTimeLogs, includeWeekendsForAutoLogs, plannedOvertimeHours 
+                         FROM \`assignment_blocks\` WHERE id = ? LIMIT 1`,
+                        [block.detourBlockId]
+                    );
+                    if (parentRows && parentRows.length > 0) {
+                        const parentBlock = parentRows[0];
+                        enableAutoTimeLogs = parentBlock.enableAutoTimeLogs;
+                        includeWeekendsForAutoLogs = parentBlock.includeWeekendsForAutoLogs;
+                        plannedOvertimeHours = parentBlock.plannedOvertimeHours;
+                    }
+                }
+
+                if (!enableAutoTimeLogs) continue;
                 if (block.status === "STOPPED") continue;
 
-                const includeWeekends = block.includeWeekendsForAutoLogs ?? assignmentSettings.includeWeekendsForAutoLogs ?? false;
+                const includeWeekends = includeWeekendsForAutoLogs ?? assignmentSettings.includeWeekendsForAutoLogs ?? false;
                 if (isWknd && !includeWeekends) continue;
 
                 const [existing] = await tx.execute(
@@ -77,7 +96,7 @@ export async function generateDailyTimeLogs(params = new Date()) {
                     vehicleId = block.vehicleId || null;
                     operatorId = block.operatorId || null;
                     workType = "Full Day";
-                    const plannedOT = Number(block.plannedOvertimeHours || 0);
+                    const plannedOT = Number(plannedOvertimeHours || 0);
                     workedHours = globalFullDayHours + plannedOT;
                     regularHours = isWknd ? 0 : Math.min(workedHours, globalFullDayHours);
                     overtimeHours = isWknd ? workedHours : Math.max(0, workedHours - globalFullDayHours);
@@ -92,7 +111,7 @@ export async function generateDailyTimeLogs(params = new Date()) {
                 } else if (blockType === "OPERATOR") {
                     operatorId = block.operatorId || null;
                     workType = block.workType || "Full Day";
-                    const plannedOT = Number(block.plannedOvertimeHours || 0);
+                    const plannedOT = Number(plannedOvertimeHours || 0);
                     workedHours = globalFullDayHours + plannedOT;
                     regularHours = isWknd ? 0 : Math.min(workedHours, globalFullDayHours);
                     overtimeHours = isWknd ? workedHours : Math.max(0, workedHours - globalFullDayHours);

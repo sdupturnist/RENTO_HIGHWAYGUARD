@@ -3,6 +3,16 @@ import { dbTenant } from "@/app/lib/db";
 import { verifySession } from "@/app/lib/auth";
 import { verifySessionPermission } from "@/app/lib/permissions";
 import { logActivity } from "@/app/lib/logger";
+import { format } from "date-fns";
+
+function cleanDescription(desc) {
+    if (!desc) return "";
+    return desc
+        .replace(/\s*\(Dry Rent\)/gi, "")
+        .replace(/\s*\(\d+(?:\.\d+)?\s*Days?\)/gi, "")
+        .replace(/\s*\(.*?\bDays?\b\)/gi, "")
+        .trim();
+}
 
 export async function GET(request) {
     const session = await verifySession();
@@ -107,6 +117,7 @@ export async function POST(request) {
                     regularHours: Number(item.regularHours || 0),
                     overtimeHours: Number(item.overtimeHours || 0),
                     holidayHours: Number(item.holidayHours || 0),
+                    days: Number(item.days || 0),
                 });
                 totalInvoiceAmount += total;
             }
@@ -117,7 +128,7 @@ export async function POST(request) {
                        o.name as operatorName, o.operatorCode, o.hourlyRate as operatorHourlyRate,
                        mat.name as materialName,
                        lab.labourType as labourTypeName,
-                       ab.bundleBilling, dst.name as detourTemplateName
+                       ab.bundleBilling, dst.name as detourTemplateName, dst.bundleCostPerDay
                 FROM \`timesheet_lines\` l
                 LEFT JOIN \`vehicles\` v ON l.vehicleId = v.id
                 LEFT JOIN \`vehicle_types\` vt ON v.typeId = vt.id
@@ -168,12 +179,16 @@ export async function POST(request) {
                         rateSnapshot: Number(line.rateSnapshot || 0),
                         vehicleBaseRent: Number(line.vehicleBaseRent || 0),
                         operatorHourlyRate: Number(line.operatorHourlyRate || 0),
+                        bundleCostPerDay: Number(line.bundleCostPerDay || 0),
                         regularHours: 0, overtimeHours: 0, holidayHours: 0,
                         quantity: 0,
                         totalAmount: 0,
-                        daysCount: 0,
-                        totalOtHours: 0,
+                        dates: new Set(),
                     };
+                } else {
+                    if (line.baseRentType === "DAILY") {
+                        groups[key].baseRentType = "DAILY";
+                    }
                 }
 
                 const g = groups[key];
@@ -183,135 +198,104 @@ export async function POST(request) {
                 g.quantity += Number(line.quantity || 0);
                 g.totalAmount += Number(line.calculatedAmount || 0);
 
-                const totalHours = Number(line.regularHours || 0) + Number(line.overtimeHours || 0) + Number(line.holidayHours || 0);
-                if (totalHours > 0) {
-                    g.daysCount += 1;
-                }
-                if (bt === "VEHICLE" && line.baseRentType === "DAILY") {
-                    g.totalOtHours += Math.max(0, totalHours - fullDayHours);
+                const dVal = new Date(line.date);
+                const dateStr = !isNaN(dVal.getTime()) ? dVal.toISOString().slice(0, 10) : "";
+                if (dateStr) {
+                    g.dates.add(dateStr);
                 }
             }
 
             for (const key in groups) {
                 const g = groups[key];
                 const bt = g.blockType;
+                const daysCount = g.dates.size;
 
                 const fallbackRate = bt === "VEHICLE" ? g.vehicleBaseRent : g.operatorHourlyRate;
                 const basePrice = g.rateSnapshot > 0 ? g.rateSnapshot : fallbackRate;
+                const desc = cleanDescription(g.description);
 
-                if (bt === "MATERIAL" || bt === "LABOUR") {
-                    const qty = g.quantity || 1;
-                    const price = qty > 0 ? g.totalAmount / qty : g.totalAmount;
+                if (bt === "BUNDLE") {
+                    const days = daysCount > 0 ? daysCount : 1;
+                    const price = g.bundleCostPerDay;
+                    const total = days * price;
                     invoiceItemsData.push({
-                        description: g.description,
-                        quantity: parseFloat(qty.toFixed(4)),
+                        description: desc,
+                        quantity: 1,
+                        days: days,
                         unitPrice: parseFloat(price.toFixed(4)),
-                        total: g.totalAmount,
+                        total: parseFloat(total.toFixed(4)),
                         regularHours: 0,
                         overtimeHours: 0,
                         holidayHours: 0,
                     });
-                    totalInvoiceAmount += g.totalAmount;
+                    totalInvoiceAmount += total;
+                } else if (bt === "MATERIAL" || bt === "LABOUR") {
+                    const days = daysCount > 0 ? daysCount : 1;
+                    const qty = days > 0 ? g.quantity / days : g.quantity || 1;
+                    const price = basePrice;
+                    const total = qty * days * price;
+                    invoiceItemsData.push({
+                        description: desc,
+                        quantity: parseFloat(qty.toFixed(4)),
+                        days: days,
+                        unitPrice: parseFloat(price.toFixed(4)),
+                        total: parseFloat(total.toFixed(4)),
+                        regularHours: 0,
+                        overtimeHours: 0,
+                        holidayHours: 0,
+                    });
+                    totalInvoiceAmount += total;
                 } else if (bt === "VEHICLE") {
-                    if (g.baseRentType === "DAILY") {
-                        // Vehicle Base Rent
-                        const baseQty = g.daysCount > 0 ? g.daysCount : 1;
-                        const baseTotal = baseQty * basePrice;
-                        invoiceItemsData.push({
-                            description: `${g.description} (Dry Rent) (${parseFloat(baseQty.toFixed(2))} Days)`,
-                            quantity: parseFloat(baseQty.toFixed(4)),
-                            unitPrice: parseFloat(basePrice.toFixed(4)),
-                            total: baseTotal,
-                            regularHours: g.regularHours,
-                            overtimeHours: 0,
-                            holidayHours: 0,
-                        });
-                        totalInvoiceAmount += baseTotal;
+                    const days = daysCount > 0 ? daysCount : 1;
+                    const unitPrice = g.baseRentType === "DAILY" ? basePrice / fullDayHours 
+                                   : (g.baseRentType === "MONTHLY" ? basePrice / 30 / fullDayHours : basePrice);
+                    const regularHours = g.baseRentType === "DAILY" ? Math.max(g.regularHours, days * fullDayHours) : g.regularHours;
+                    const qty = regularHours + g.overtimeHours + g.holidayHours;
+                    const total = qty * unitPrice;
 
-                        // Vehicle Overtime
-                        if (g.totalOtHours > 0) {
-                            const vHourlyRate = basePrice / fullDayHours;
-                            const otTotal = g.totalOtHours * vHourlyRate;
-                            invoiceItemsData.push({
-                                description: `${g.description} (Overtime)`,
-                                quantity: parseFloat(g.totalOtHours.toFixed(4)),
-                                unitPrice: parseFloat(vHourlyRate.toFixed(4)),
-                                total: otTotal,
-                                regularHours: 0,
-                                overtimeHours: g.totalOtHours,
-                                holidayHours: 0,
-                            });
-                            totalInvoiceAmount += otTotal;
-                        }
-                    } else {
-                        // HOURLY
-                        const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
-                        const qty = totalHours > 0 ? totalHours : 1;
-                        const total = qty * basePrice;
-                        invoiceItemsData.push({
-                            description: g.description,
-                            quantity: parseFloat(qty.toFixed(4)),
-                            unitPrice: parseFloat(basePrice.toFixed(4)),
-                            total: total,
-                            regularHours: g.regularHours,
-                            overtimeHours: g.overtimeHours,
-                            holidayHours: g.holidayHours,
-                        });
-                        totalInvoiceAmount += total;
-                    }
+                    invoiceItemsData.push({
+                        description: desc,
+                        quantity: parseFloat(qty.toFixed(4)),
+                        days: days,
+                        unitPrice: parseFloat(unitPrice.toFixed(4)),
+                        total: parseFloat(total.toFixed(4)),
+                        regularHours: regularHours,
+                        overtimeHours: g.overtimeHours,
+                        holidayHours: g.holidayHours,
+                    });
+                    totalInvoiceAmount += total;
                 } else if (bt === "OPERATOR") {
-                    // 1. Regular Hours
-                    if (g.regularHours > 0) {
-                        const regTotal = g.regularHours * basePrice;
-                        invoiceItemsData.push({
-                            description: `${g.description} (Normal Hours)`,
-                            quantity: parseFloat(g.regularHours.toFixed(4)),
-                            unitPrice: parseFloat(basePrice.toFixed(4)),
-                            total: regTotal,
-                            regularHours: g.regularHours,
-                            overtimeHours: 0,
-                            holidayHours: 0,
-                        });
-                        totalInvoiceAmount += regTotal;
-                    }
+                    const days = daysCount > 0 ? daysCount : 1;
+                    const unitPrice = basePrice;
+                    const regularHours = g.baseRentType === "DAILY" ? Math.max(g.regularHours, days * fullDayHours) : g.regularHours;
+                    const qty = regularHours + g.overtimeHours + g.holidayHours;
 
-                    // 2. Overtime Hours
-                    if (g.overtimeHours > 0) {
-                        const otPrice = basePrice * overtimeMultiplier;
-                        const otTotal = g.overtimeHours * otPrice;
-                        invoiceItemsData.push({
-                            description: `${g.description} (Overtime Hours)`,
-                            quantity: parseFloat(g.overtimeHours.toFixed(4)),
-                            unitPrice: parseFloat(otPrice.toFixed(4)),
-                            total: otTotal,
-                            regularHours: 0,
-                            overtimeHours: g.overtimeHours,
-                            holidayHours: 0,
-                        });
-                        totalInvoiceAmount += otTotal;
-                    }
+                    const regTotal = regularHours * unitPrice;
+                    const otPrice = unitPrice * overtimeMultiplier;
+                    const otTotal = g.overtimeHours * otPrice;
+                    const holPrice = unitPrice * holidayMultiplier;
+                    const holTotal = g.holidayHours * holPrice;
+                    const total = regTotal + otTotal + holTotal;
 
-                    // 3. Holiday Hours
-                    if (g.holidayHours > 0) {
-                        const holPrice = basePrice * holidayMultiplier;
-                        const holTotal = g.holidayHours * holPrice;
-                        invoiceItemsData.push({
-                            description: `${g.description} (Holiday Hours)`,
-                            quantity: parseFloat(g.holidayHours.toFixed(4)),
-                            unitPrice: parseFloat(holPrice.toFixed(4)),
-                            total: holTotal,
-                            regularHours: 0,
-                            overtimeHours: 0,
-                            holidayHours: g.holidayHours,
-                        });
-                        totalInvoiceAmount += holTotal;
-                    }
+                    invoiceItemsData.push({
+                        description: desc,
+                        quantity: parseFloat(qty.toFixed(4)),
+                        days: days,
+                        unitPrice: parseFloat(unitPrice.toFixed(4)),
+                        total: parseFloat(total.toFixed(4)),
+                        regularHours: regularHours,
+                        overtimeHours: g.overtimeHours,
+                        holidayHours: g.holidayHours,
+                    });
+                    totalInvoiceAmount += total;
                 } else {
                     // Fallback
                     const qty = g.quantity || 1;
+                    const days = daysCount > 0 ? daysCount : 1;
                     invoiceItemsData.push({
-                        description: g.description,
+                        description: desc,
                         quantity: parseFloat(qty.toFixed(4)),
+                        days: days,
                         unitPrice: parseFloat((g.totalAmount / qty).toFixed(4)),
                         total: g.totalAmount,
                         regularHours: g.regularHours,
@@ -374,9 +358,9 @@ export async function POST(request) {
             for (const item of invoiceItemsData) {
                 await tx.execute(`
                     INSERT INTO \`invoice_items\` 
-                    (invoiceId, description, quantity, unitPrice, total, regularHours, overtimeHours, holidayHours)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                `, [newInvoiceId, item.description, item.quantity, item.unitPrice, item.total, item.regularHours, item.overtimeHours, item.holidayHours]);
+                    (invoiceId, description, quantity, unitPrice, total, regularHours, overtimeHours, holidayHours, days)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `, [newInvoiceId, item.description, item.quantity, item.unitPrice, item.total, item.regularHours, item.overtimeHours, item.holidayHours, item.days || 0]);
             }
 
             if (invSettings[0]?.lockTimesheetOnCreate !== false) {
@@ -459,7 +443,10 @@ async function sendInvoiceNotification(invoiceId) {
                     material: l.materialId ? { name: l.materialName } : null,
                     labour: l.labourTypeId ? { labourType: l.labourTypeName } : null,
                 })),
-                totalHours: lineRows.reduce((s, l) => s + Number(l.totalHours || 0), 0),
+                totalHours: lineRows.reduce((s, l) => {
+                    if (l.blockType === "OPERATOR" && l.vehicleId) return s;
+                    return s + Number(l.totalHours || 0);
+                }, 0),
                 totalVehicles: new Set(lineRows.filter(l => l.vehicleId).map(l => l.vehicleId)).size,
                 totalOperators: new Set(lineRows.filter(l => l.operatorId).map(l => l.operatorId)).size,
                 companySettings: compRows[0],

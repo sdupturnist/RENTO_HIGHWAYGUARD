@@ -26,7 +26,7 @@ export async function fetchTimesheetLines(timesheetId) {
  * Returns { sql, params } ready for dbTenant(sql, params).
  * Used by: generate/route.js, regenerate/route.js
  */
-export function buildDTLQuery({ isInternal, customerId, projectId, periodStart, periodEnd }) {
+export function buildDTLQuery({ isInternal, customerId, projectId, periodStart, periodEnd, assignmentIds }) {
     let sql = `
         SELECT l.*,
             v.baseRentAmount, v.baseRentType, v.defaultRentCycle, v.regNo as vehicle_regNo,
@@ -56,6 +56,12 @@ export function buildDTLQuery({ isInternal, customerId, projectId, periodStart, 
             sql += " AND l.projectId = ?";
             params.push(projectId);
         }
+    }
+
+    if (assignmentIds && assignmentIds.length > 0) {
+        const placeholders = assignmentIds.map(() => "?").join(",");
+        sql += ` AND l.assignmentId IN (${placeholders})`;
+        params.push(...assignmentIds);
     }
 
     return { sql, params };
@@ -133,7 +139,7 @@ export function aggregateLogsIntoLines(logs, { fullDayHours, overtimeMultiplier,
                     blockType: "OPERATOR",
                     isBillable: log.isBillable ?? 1,
                     date: log.date,
-                    vehicleId: null,
+                    vehicleId: log.vehicleId || null,
                     operatorId: log.operatorId || null,
                     materialId: null,
                     labourTypeId: null,

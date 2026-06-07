@@ -44,16 +44,19 @@ export async function POST(request, props) {
             const dStr = String(d.getUTCDate()).padStart(2, '0');
             return `${y}-${m}-${dStr}`;
         };
-        
         const periodStartStr = `${formatDBDate(timesheet.periodStart)} 00:00:00`;
         const periodEndStr = `${formatDBDate(timesheet.periodEnd)} 23:59:59`;
+
+        const [assignmentRows] = await dbTenant("SELECT assignmentId FROM `timesheet_assignments` WHERE timesheetId = ?", [id]);
+        const assignmentIds = (assignmentRows || []).map(r => r.assignmentId);
 
         const { sql: logQuery, params: logParams } = buildDTLQuery({
             isInternal,
             customerId: timesheet.customerId,
             projectId: timesheet.projectId,
             periodStart: periodStartStr,
-            periodEnd: periodEndStr
+            periodEnd: periodEndStr,
+            assignmentIds
         });
         const [logs] = await dbTenant(logQuery, logParams);
         if (!logs || logs.length === 0) return NextResponse.json({ error: "No time logs found for the period anymore." }, { status: 404 });

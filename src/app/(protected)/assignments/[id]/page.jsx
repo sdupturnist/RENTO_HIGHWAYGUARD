@@ -84,8 +84,8 @@ export default async function AssignmentViewPage({ params }) {
                 .filter(c => c.detourBlockId === b.id)
                 .map(c => ({
                     ...c,
-                    vehicle: c.vehicleId ? { id: c.vehicle_db_id, vehicleCode: c.vehicleCode, regNo: c.regNo, model: { name: c.vehicle_model_name }, brand: { name: c.vehicle_brand_name } } : null,
-                    operator: c.operatorId ? { id: c.operator_db_id, name: c.operator_name, operatorCode: c.operator_code } : null,
+                    vehicle: (c.vehicleId && c.vehicle_db_id) ? { id: c.vehicle_db_id, vehicleCode: c.vehicleCode, regNo: c.regNo, model: { name: c.vehicle_model_name }, brand: { name: c.vehicle_brand_name } } : null,
+                    operator: (c.operatorId && c.operator_db_id) ? { id: c.operator_db_id, name: c.operator_name, operatorCode: c.operator_code } : null,
                     material: c.materialId ? { id: c.materialId, name: c.material_name } : null,
                     labour: c.labourTypeId ? { id: c.labourTypeId, labourType: c.labour_type_name } : null,
                 }));
@@ -93,8 +93,8 @@ export default async function AssignmentViewPage({ params }) {
 
         return {
             ...b,
-            vehicle: b.vehicleId ? { id: b.vehicle_db_id, vehicleCode: b.vehicleCode, regNo: b.regNo, model: { name: b.vehicle_model_name }, brand: { name: b.vehicle_brand_name } } : null,
-            operator: b.operatorId ? { id: b.operator_db_id, name: b.operator_name, operatorCode: b.operator_code } : null,
+            vehicle: (b.vehicleId && b.vehicle_db_id) ? { id: b.vehicle_db_id, vehicleCode: b.vehicleCode, regNo: b.regNo, model: { name: b.vehicle_model_name }, brand: { name: b.vehicle_brand_name } } : null,
+            operator: (b.operatorId && b.operator_db_id) ? { id: b.operator_db_id, name: b.operator_name, operatorCode: b.operator_code } : null,
             material: b.materialId ? { id: b.materialId, name: b.material_name } : null,
             labour: b.labourTypeId ? { id: b.labourTypeId, labourType: b.labour_type_name } : null,
             detourTemplate: b.detourTemplateId ? { id: b.detourTemplateId, name: b.detour_template_name } : null,
@@ -262,7 +262,7 @@ export default async function AssignmentViewPage({ params }) {
                                                                 {child.blockType === "VEHICLE" && (
                                                                     <>
                                                                         <div><strong>Vehicle:</strong> {child.vehicle ? `${child.vehicle.regNo} (${child.vehicle.model?.name || ''})` : "Unassigned"}</div>
-                                                                        {child.withOperator && (
+                                                                        {!!child.withOperator && (
                                                                             <div><strong>Operator:</strong> {child.operator ? `${child.operator.name} (${child.operator.operatorCode})` : "Unassigned"}</div>
                                                                         )}
                                                                     </>
@@ -288,6 +288,13 @@ export default async function AssignmentViewPage({ params }) {
                                 <InfoField label="End Date" value={format(new Date(block.endDate), "dd MMM yyyy")} />
                                 {block.billingCycle && block.billingCycle !== assignment.billingCycle && (
                                     <InfoField label="Billing Override" value={<Badge variant="outline">{block.billingCycle} (Override)</Badge>} />
+                                )}
+                                <InfoField label="Auto Time Logs" value={block.enableAutoTimeLogs ? "Enabled" : "Disabled"} />
+                                {!!block.enableAutoTimeLogs && (block.blockType === "VEHICLE" || !block.blockType || block.blockType === "OPERATOR" || block.blockType === "DETOUR") && (
+                                    <>
+                                        <InfoField label="Planned Overtime" value={`${block.plannedOvertimeHours || 0} hrs/day`} />
+                                        <InfoField label="Include Weekends" value={block.includeWeekendsForAutoLogs ? "Yes" : "No"} />
+                                    </>
                                 )}
                             </InfoGrid>
 

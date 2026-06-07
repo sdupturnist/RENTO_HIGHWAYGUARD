@@ -84,7 +84,11 @@ export function InvoiceGenerator({ onSuccess }) {
                     items: items.map(item => ({
                         description: item.description,
                         quantity: item.quantity,
-                        unitPrice: item.unitPrice
+                        unitPrice: item.unitPrice,
+                        regularHours: item.regularHours || 0,
+                        overtimeHours: item.overtimeHours || 0,
+                        holidayHours: item.holidayHours || 0,
+                        days: item.days || 0,
                     }))
                 })
             });
@@ -153,7 +157,8 @@ export function InvoiceGenerator({ onSuccess }) {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Description</TableHead>
-                                    <TableHead className="text-right">Qty (Days/Units)</TableHead>
+                                    <TableHead className="text-right">Qty</TableHead>
+                                    <TableHead className="text-right">Day</TableHead>
                                     <TableHead className="text-right">Unit Price</TableHead>
                                     <TableHead className="text-right">Total</TableHead>
                                 </TableRow>
@@ -162,6 +167,7 @@ export function InvoiceGenerator({ onSuccess }) {
                                 {items.map((item, idx) => (<TableRow key={idx}>
                                         <TableCell>{item.description}</TableCell>
                                         <TableCell className="text-right">{item.quantity}</TableCell>
+                                        <TableCell className="text-right">{item.days || 0}</TableCell>
                                         <TableCell className="text-right">
                                             <span className="inline-flex justify-end items-center gap-1">
                                                 <CurrencySymbol symbol={currencySymbol} />
@@ -176,7 +182,7 @@ export function InvoiceGenerator({ onSuccess }) {
                                         </TableCell>
                                     </TableRow>))}
                                 <TableRow>
-                                    <TableCell colSpan={3} className="text-right font-bold">Total Amount</TableCell>
+                                    <TableCell colSpan={4} className="text-right font-bold">Total Amount</TableCell>
                                     <TableCell className="text-right font-bold text-lg">
                                         <span className="inline-flex justify-end items-center gap-1">
                                             <CurrencySymbol symbol={currencySymbol} />
@@ -186,6 +192,10 @@ export function InvoiceGenerator({ onSuccess }) {
                                 </TableRow>
                             </TableBody>
                         </Table>
+
+                        <div className="text-xs text-muted-foreground/70 italic mt-2">
+                            * Important: For Detour blocks with bundle billing disabled, vehicles & operators are billed at hourly rates, whereas materials & labours are billed at daily rates.
+                        </div>
 
                         <div className="flex flex-col items-end gap-2 pt-4 border-t">
                             <div className="flex justify-between w-64 text-sm">

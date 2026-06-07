@@ -296,3 +296,33 @@ export async function POST(request) {
         return NextResponse.json({ message: "Error creating time log", error: String(error) }, { status: 500 });
     }
 }
+
+export async function DELETE(request) {
+    const session = await getSession();
+    if (!session)
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    const canDelete = await verifySessionPermission(session, "Daily Time Logs", "Delete");
+    if (!canDelete)
+        return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+
+    try {
+        const { ids } = await request.json();
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return NextResponse.json({ message: "No IDs provided" }, { status: 400 });
+        }
+
+        await withTenantTransaction(async (tx) => {
+            const placeholders = ids.map(() => "?").join(",");
+            await tx.execute(`DELETE FROM \`daily_time_logs\` WHERE id IN (${placeholders})`, ids);
+            for (const id of ids) {
+                await logActivity("DAILYTIMELOG", id, "DELETE", `Bulk deleted time log ID: ${id}`);
+            }
+        });
+
+        return NextResponse.json({ message: `${ids.length} time logs deleted successfully` });
+    } catch (error) {
+        console.error("Error bulk deleting time logs:", error);
+        return NextResponse.json({ message: "Error deleting time logs", error: String(error) }, { status: 500 });
+    }
+}
+

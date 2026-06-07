@@ -34,7 +34,7 @@ export async function getTimesheets(filters = {}) {
             SELECT
                 COUNT(DISTINCT CASE WHEN blockType = 'VEHICLE' OR blockType IS NULL THEN vehicleId END) as uniqueVehicles,
                 COUNT(DISTINCT CASE WHEN operatorId IS NOT NULL THEN operatorId END) as uniqueOperators,
-                SUM(totalHours) as totalHours,
+                SUM(CASE WHEN blockType = 'OPERATOR' AND vehicleId IS NOT NULL THEN 0 ELSE totalHours END) as totalHours,
                 SUM(calculatedAmount) as totalAmount
             FROM \`timesheet_lines\`
             WHERE timesheetId = ?
@@ -152,10 +152,22 @@ export async function getTimesheetById(id) {
         project: ts.project_name ? { name: ts.project_name } : null,
         lines: sanitizedLines,
         isOutdated,
-        totalHours: sanitizedLines.reduce((s, l) => s + Number(l.totalHours || 0), 0),
-        totalRegularHours: sanitizedLines.reduce((s, l) => s + Number(l.regularHours || 0), 0),
-        totalOvertimeHours: sanitizedLines.reduce((s, l) => s + Number(l.overtimeHours || 0), 0),
-        totalHolidayHours: sanitizedLines.reduce((s, l) => s + Number(l.holidayHours || 0), 0),
+        totalHours: sanitizedLines.reduce((s, l) => {
+            if (l.blockType === "OPERATOR" && l.vehicleId) return s;
+            return s + Number(l.totalHours || 0);
+        }, 0),
+        totalRegularHours: sanitizedLines.reduce((s, l) => {
+            if (l.blockType === "OPERATOR" && l.vehicleId) return s;
+            return s + Number(l.regularHours || 0);
+        }, 0),
+        totalOvertimeHours: sanitizedLines.reduce((s, l) => {
+            if (l.blockType === "OPERATOR" && l.vehicleId) return s;
+            return s + Number(l.overtimeHours || 0);
+        }, 0),
+        totalHolidayHours: sanitizedLines.reduce((s, l) => {
+            if (l.blockType === "OPERATOR" && l.vehicleId) return s;
+            return s + Number(l.holidayHours || 0);
+        }, 0),
         totalAmount: sanitizedLines.reduce((s, l) => s + Number(l.calculatedAmount || 0), 0),
         companySettings,
     };

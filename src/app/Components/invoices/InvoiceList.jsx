@@ -65,6 +65,8 @@ export function InvoiceList() {
             );
             toast.success("Invoice deleted successfully. Linked timesheet unlocked.");
             queryClient.invalidateQueries({ queryKey: ["invoices"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["timesheets"], refetchType: "all" });
+            queryClient.invalidateQueries({ queryKey: ["uninvoiced-timesheets"], refetchType: "all" });
         },
         onError: (error) => {
             toast.error(error.message);

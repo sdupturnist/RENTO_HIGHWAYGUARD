@@ -787,7 +787,7 @@ function VehicleBlockFields({ blockIndex, form, vehicles, operators, workTypes, 
                             <FormControl><SelectTrigger><SelectValue placeholder="Select vehicle" /></SelectTrigger></FormControl>
                             <SelectContent>{vehicles.map(v => {
                                     const busy = busyVehicleIds?.has(v.id);
-                                    return <SelectItem key={v.id} value={v.id.toString()} className={busy ? "text-orange-600 dark:text-orange-400" : ""}>{busy ? "⚠ " : ""}{v.regNo} — {v.model?.name ?? ""}{busy ? " (Busy)" : ""}</SelectItem>;
+                                    return <SelectItem key={v.id} value={v.id.toString()} className={busy ? "text-orange-600 dark:text-orange-400" : ""}>{busy ? "⚠ " : ""}{v.vehicleCode} ({v.regNo || "No Reg"}) — {v.model?.name ?? ""}{busy ? " (Busy)" : ""}</SelectItem>;
                                 })}</SelectContent>
                         </Select>
                         <FormMessage />
@@ -1107,15 +1107,27 @@ function DetourBlockFields({ blockIndex, form, detourTemplates, vehicles, operat
 
                 <BillingCycleField blockIndex={blockIndex} form={form} watchBillingCycle={watchBillingCycle} />
 
-                <FormField control={form.control} name={`blocks.${blockIndex}.bundleBilling`} render={({ field }) => (
-                    <FormItem className="flex items-start space-x-3 space-y-0 pt-8">
-                        <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                        <div>
-                            <FormLabel>Bundle Billing</FormLabel>
-                            <FormDescription className="text-xs">Invoice as one bundled line item</FormDescription>
-                        </div>
-                    </FormItem>
-                )} />
+                <FormField control={form.control} name={`blocks.${blockIndex}.bundleBilling`} render={({ field }) => {
+                    const selectedTemplate = detourTemplates.find(t => t.id === templateId);
+                    const isBundleCostEnabled = !!selectedTemplate?.bundleCostEnabled;
+                    return (
+                        <FormItem className="flex items-start space-x-3 space-y-0 pt-8">
+                            <FormControl>
+                                <Checkbox 
+                                    checked={field.value} 
+                                    onCheckedChange={field.onChange} 
+                                    disabled={!isBundleCostEnabled}
+                                />
+                            </FormControl>
+                            <div>
+                                <FormLabel className={!isBundleCostEnabled ? "text-muted-foreground" : ""}>Bundle Billing</FormLabel>
+                                <FormDescription className="text-xs">
+                                    {!isBundleCostEnabled ? "Not enabled on template" : "Invoice as one bundled line item"}
+                                </FormDescription>
+                            </div>
+                        </FormItem>
+                    );
+                }} />
 
                 <AutoLogsField blockIndex={blockIndex} form={form} />
                 {enableAuto && <OvertimeField blockIndex={blockIndex} form={form} />}
@@ -1174,7 +1186,7 @@ function DetourChildSlot({ blockIndex, childIndex, form, vehicles, operators, ma
                                 <FormControl><SelectTrigger className="h-8"><SelectValue placeholder="Select vehicle" /></SelectTrigger></FormControl>
                                 <SelectContent>{vehicles.map(v => {
                                     const busy = busyVehicleIds?.has(v.id);
-                                    return <SelectItem key={v.id} value={v.id.toString()} className={busy ? "text-orange-600 dark:text-orange-400" : ""}>{busy ? "⚠ " : ""}{v.regNo}{busy ? " (Busy)" : ""}</SelectItem>;
+                                    return <SelectItem key={v.id} value={v.id.toString()} className={busy ? "text-orange-600 dark:text-orange-400" : ""}>{busy ? "⚠ " : ""}{v.vehicleCode} ({v.regNo || "No Reg"}){busy ? " (Busy)" : ""}</SelectItem>;
                                 })}</SelectContent>
                             </Select>
                         </FormItem>

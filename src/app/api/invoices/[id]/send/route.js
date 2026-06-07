@@ -93,7 +93,10 @@ export async function POST(_, { params }) {
                     customer: { companyName: fullTimesheet.customer_companyName },
                     project: { name: fullTimesheet.project_name },
                     lines: formattedLines,
-                    totalHours: formattedLines.reduce((sum, l) => sum + Number(l.totalHours || 0), 0),
+                    totalHours: formattedLines.reduce((sum, l) => {
+                        if (l.blockType === "OPERATOR" && l.vehicleId) return sum;
+                        return sum + Number(l.totalHours || 0);
+                    }, 0),
                     totalVehicles: new Set(formattedLines.map((l) => l.vehicleId)).size,
                     totalOperators: new Set(formattedLines.map((l) => l.operatorId).filter(Boolean)).size,
                     companySettings,

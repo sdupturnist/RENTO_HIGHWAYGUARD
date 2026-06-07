@@ -84,7 +84,46 @@ async function loadImageData(logoUrl) {
 }
 
 function applyViewMode(lines, mode) {
-    if (mode === "DETAILED") return lines.map(l => ({ ...l, _dateLabel: formatPDFDate(l.date, "dd MMM") }));
+    if (mode !== "GROUP_BY_RESOURCE" && mode !== "GROUP_BY_DETOUR" && mode !== "DETAILED") {
+        mode = "DETAILED";
+    }
+    if (mode === "DETAILED") {
+        const detailedMap = new Map();
+        const remainingLines = [];
+
+        for (const line of lines) {
+            const dVal = new Date(line.date);
+            const dateStr = !isNaN(dVal.getTime()) ? dVal.toISOString().slice(0, 10) : "";
+            const bt = line.blockType || "VEHICLE";
+
+            if (bt === "VEHICLE") {
+                const key = `${dateStr}-${line.vehicleId}`;
+                detailedMap.set(key, { ...line, _dateLabel: formatPDFDate(dVal, "dd MMM") });
+            } else {
+                remainingLines.push(line);
+            }
+        }
+
+        for (const line of remainingLines) {
+            const dVal = new Date(line.date);
+            const dateStr = !isNaN(dVal.getTime()) ? dVal.toISOString().slice(0, 10) : "";
+            const bt = line.blockType || "VEHICLE";
+
+            if (bt === "OPERATOR" && line.vehicleId) {
+                const key = `${dateStr}-${line.vehicleId}`;
+                if (detailedMap.has(key)) {
+                    const vehicleEntry = detailedMap.get(key);
+                    vehicleEntry.operator = line.operator || { name: line.resourceNameSnapshot, id: line.operatorId };
+                    vehicleEntry.operatorName = line.operatorName || line.resourceNameSnapshot;
+                    continue;
+                }
+            }
+            const uniqueKey = `OTHER-${line.id || Math.random()}`;
+            detailedMap.set(uniqueKey, { ...line, _dateLabel: formatPDFDate(dVal, "dd MMM") });
+        }
+
+        return Array.from(detailedMap.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
 
     const grouped = new Map();
     for (const line of lines) {
@@ -213,10 +252,7 @@ function formatPDFRow(line, activeViewMode) {
 const VIEW_MODE_LABELS = {
     DETAILED: "Detailed Logs",
     GROUP_BY_RESOURCE: "Resource Summary",
-    GROUP_BY_VEHICLE_TYPE: "Vehicle Type Summary",
-    GROUP_BY_OPERATOR: "Operator Logs",
     GROUP_BY_DETOUR: "Detour Service Summary",
-    BUNDLE_SUMMARY: "Bundle Summary Logs",
 };
 
 export async function generateTimesheetPDF(timesheet, viewModeOverride = null) {

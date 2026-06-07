@@ -46,6 +46,9 @@ export async function GET(request, props) {
 
         let totalHours = 0, totalRegularHours = 0, totalOvertimeHours = 0, totalHolidayHours = 0;
         for (const line of timesheet.lines) {
+            if (line.blockType === "OPERATOR" && line.vehicleId) {
+                continue;
+            }
             totalHours += Number(line.totalHours || 0);
             totalRegularHours += Number(line.regularHours || 0);
             totalOvertimeHours += Number(line.overtimeHours || 0);

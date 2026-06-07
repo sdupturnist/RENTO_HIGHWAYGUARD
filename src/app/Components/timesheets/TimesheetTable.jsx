@@ -1,4 +1,5 @@
 "use client";
+import { useQueryClient } from "@tanstack/react-query";
 import { truncateString } from "@/app/lib/utils";
 import { useState } from "react";
 import Link from "next/link";
@@ -16,6 +17,7 @@ import { usePermissions } from "@/app/Components/auth/PermissionsProvider";
 import { PaginationControls } from "@/app/Components/common/PaginationControls";
 export function TimesheetTable({ data }) {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [deleteId, setDeleteId] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [page, setPage] = useState(1);
@@ -34,6 +36,8 @@ export function TimesheetTable({ data }) {
             });
             if (res.ok) {
                 toast.success("Timesheet deleted successfully.");
+                queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+                queryClient.invalidateQueries({ queryKey: ["uninvoiced-timesheets"] });
                 router.refresh();
             }
             else {
@@ -163,6 +167,8 @@ export function TimesheetTable({ data }) {
                                                     method: "PATCH",
                                                     body: JSON.stringify({ status: "EXPORTED" })
                                                 });
+                                                queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+                                                queryClient.invalidateQueries({ queryKey: ["uninvoiced-timesheets"] });
                                                 router.refresh();
                                             }
                                             toast.dismiss(loadingToast);

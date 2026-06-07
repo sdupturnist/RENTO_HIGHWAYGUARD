@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Badge } from "@/app/Components/ui/badge";
 import { Button } from "@/app/Components/ui/button";
@@ -23,14 +24,51 @@ import { ActivityLogList } from "@/app/Components/common/ActivityLogList";
 const VIEW_MODES = [
     { value: "DETAILED", label: "Detailed" },
     { value: "GROUP_BY_RESOURCE", label: "Group by Resource" },
-    { value: "GROUP_BY_VEHICLE_TYPE", label: "Group by Vehicle Type" },
-    { value: "GROUP_BY_OPERATOR", label: "Group by Operator" },
     { value: "GROUP_BY_DETOUR", label: "Group by Detour" },
-    { value: "BUNDLE_SUMMARY", label: "Bundle Summary" },
 ];
 
 function applyViewMode(lines, mode) {
-    if (mode === "DETAILED") return lines.map(l => ({ ...l, _dateLabel: format(new Date(l.date), "dd MMM") }));
+    if (mode !== "GROUP_BY_RESOURCE" && mode !== "GROUP_BY_DETOUR" && mode !== "DETAILED") {
+        mode = "DETAILED";
+    }
+    if (mode === "DETAILED") {
+        const detailedMap = new Map();
+        const remainingLines = [];
+
+        for (const line of lines) {
+            const dVal = new Date(line.date);
+            const dateStr = !isNaN(dVal.getTime()) ? dVal.toISOString().slice(0, 10) : "";
+            const bt = line.blockType || "VEHICLE";
+
+            if (bt === "VEHICLE") {
+                const key = `${dateStr}-${line.vehicleId}`;
+                detailedMap.set(key, { ...line, _dateLabel: format(dVal, "dd MMM") });
+            } else {
+                remainingLines.push(line);
+            }
+        }
+
+        for (const line of remainingLines) {
+            const dVal = new Date(line.date);
+            const dateStr = !isNaN(dVal.getTime()) ? dVal.toISOString().slice(0, 10) : "";
+            const bt = line.blockType || "VEHICLE";
+
+            if (bt === "OPERATOR" && line.vehicleId) {
+                const key = `${dateStr}-${line.vehicleId}`;
+                if (detailedMap.has(key)) {
+                    const vehicleEntry = detailedMap.get(key);
+                    vehicleEntry.operator = line.operator || { name: line.resourceNameSnapshot, id: line.operatorId };
+                    // Set operatorName snapshot fallback
+                    vehicleEntry.operatorName = line.operatorName || line.resourceNameSnapshot;
+                    continue;
+                }
+            }
+            const uniqueKey = `OTHER-${line.id || Math.random()}`;
+            detailedMap.set(uniqueKey, { ...line, _dateLabel: format(dVal, "dd MMM") });
+        }
+
+        return Array.from(detailedMap.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
 
     const grouped = new Map();
     for (const line of lines) {
@@ -79,6 +117,7 @@ function applyViewMode(lines, mode) {
 
 export function TimesheetDetail({ timesheet }) {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [regenerating, setRegenerating] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -122,6 +161,8 @@ export function TimesheetDetail({ timesheet }) {
             });
             if (res.ok) {
                 toast.success("Regenerated", { description: "Timesheet updated with latest logs." });
+                queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+                queryClient.invalidateQueries({ queryKey: ["uninvoiced-timesheets"] });
                 router.refresh();
             }
             else {
@@ -145,6 +186,8 @@ export function TimesheetDetail({ timesheet }) {
             });
             if (res.ok) {
                 toast.success("Deleted", { description: "Timesheet deleted." });
+                queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+                queryClient.invalidateQueries({ queryKey: ["uninvoiced-timesheets"] });
                 router.push("/timesheets");
             }
             else {
@@ -178,6 +221,8 @@ export function TimesheetDetail({ timesheet }) {
             if (res.ok) {
                 toast.success("Timesheet Approved");
                 setShowApprovalDialog(false);
+                queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+                queryClient.invalidateQueries({ queryKey: ["uninvoiced-timesheets"] });
                 router.refresh();
             } else {
                 const err = await res.json();
@@ -202,6 +247,8 @@ export function TimesheetDetail({ timesheet }) {
             
             if (res.ok) {
                 toast.success("Approval Removed");
+                queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+                queryClient.invalidateQueries({ queryKey: ["uninvoiced-timesheets"] });
                 router.refresh();
             } else {
                 const err = await res.json();
@@ -226,6 +273,8 @@ export function TimesheetDetail({ timesheet }) {
             if (res.ok) {
                 toast.success("Notes saved");
                 setEditingNotes(false);
+                queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+                queryClient.invalidateQueries({ queryKey: ["uninvoiced-timesheets"] });
                 router.refresh();
             } else {
                 toast.error("Failed to save notes");
@@ -348,6 +397,8 @@ export function TimesheetDetail({ timesheet }) {
                             method: "PATCH",
                             body: JSON.stringify({ status: "EXPORTED" })
                         });
+                        queryClient.invalidateQueries({ queryKey: ["timesheets"] });
+                        queryClient.invalidateQueries({ queryKey: ["uninvoiced-timesheets"] });
                         router.refresh();
                     }
                 }}>

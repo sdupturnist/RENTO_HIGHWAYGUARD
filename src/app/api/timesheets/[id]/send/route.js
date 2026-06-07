@@ -39,7 +39,10 @@ export async function POST(_, props) {
 
         const buffer = await generateTimesheetPDFBuffer({
             ...timesheet,
-            totalHours: timesheet.lines.reduce((sum, l) => sum + Number(l.totalHours || 0), 0),
+            totalHours: timesheet.lines.reduce((sum, l) => {
+                if (l.blockType === "OPERATOR" && l.vehicleId) return sum;
+                return sum + Number(l.totalHours || 0);
+            }, 0),
             totalVehicles: new Set(timesheet.lines.map(l => l.vehicleId).filter(Boolean)).size,
             totalOperators: new Set(timesheet.lines.map(l => l.operatorId).filter(Boolean)).size,
             companySettings,

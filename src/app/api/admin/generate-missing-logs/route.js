@@ -44,6 +44,22 @@ export async function POST(request) {
                     continue;
                 }
 
+                let enableAutoTimeLogs = block.enableAutoTimeLogs;
+                let includeWeekendsForAutoLogs = block.includeWeekendsForAutoLogs;
+                let plannedOvertimeHours = block.plannedOvertimeHours;
+
+                if (block.detourBlockId) {
+                    const [[parentBlock]] = await tx.execute(
+                        "SELECT enableAutoTimeLogs, includeWeekendsForAutoLogs, plannedOvertimeHours FROM `assignment_blocks` WHERE id = ? LIMIT 1",
+                        [block.detourBlockId]
+                    );
+                    if (parentBlock) {
+                        enableAutoTimeLogs = parentBlock.enableAutoTimeLogs;
+                        includeWeekendsForAutoLogs = parentBlock.includeWeekendsForAutoLogs;
+                        plannedOvertimeHours = parentBlock.plannedOvertimeHours;
+                    }
+                }
+
                 const today = startOfDay(new Date());
                 let currentIterDate = startOfDay(new Date(block.startDate));
                 const blockEndDate = startOfDay(new Date(block.endDate));
@@ -70,7 +86,7 @@ export async function POST(request) {
                 }
 
                 while (currentIterDate <= targetEndDate) {
-                    if (!block.enableAutoTimeLogs || block.status === 'STOPPED') {
+                    if (!enableAutoTimeLogs || block.status === 'STOPPED') {
                         totalSkipped++;
                         currentIterDate = addDays(currentIterDate, 1);
                         continue;
@@ -88,7 +104,7 @@ export async function POST(request) {
 
                     const dayName = format(currentIterDate, "EEEE");
                     const isWknd = weekendDays.includes(dayName);
-                    const includeWeekends = block.includeWeekendsForAutoLogs ?? assignmentSettings.includeWeekendsForAutoLogs ?? false;
+                    const includeWeekends = includeWeekendsForAutoLogs ?? assignmentSettings.includeWeekendsForAutoLogs ?? false;
 
                     if (isWknd && !includeWeekends) {
                         totalSkipped++;
@@ -120,7 +136,7 @@ export async function POST(request) {
                             "Auto-generated backfill missing logs",
                         ]);
                     } else {
-                        const plannedOT = Number(block.plannedOvertimeHours || 0);
+                        const plannedOT = Number(plannedOvertimeHours || 0);
                         const workedHours = globalFullDayHours + plannedOT;
                         const regularHours = isWknd ? 0 : Math.min(workedHours, globalFullDayHours);
                         const overtimeHours = isWknd ? workedHours : Math.max(0, workedHours - globalFullDayHours);

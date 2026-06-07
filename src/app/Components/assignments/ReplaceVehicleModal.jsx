@@ -176,7 +176,7 @@ export function ReplaceVehicleModal({ assignmentId, block }) {
                                         <SelectContent>
                                             {vehicles.map((v) => (
                                                 <SelectItem key={v.id} value={v.id.toString()}>
-                                                    {v.regNo} - {v.model?.name}
+                                                    {v.vehicleCode} ({v.regNo || "No Reg"}) — {v.model?.name ?? ""}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
