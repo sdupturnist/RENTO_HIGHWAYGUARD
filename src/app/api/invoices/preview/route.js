@@ -42,8 +42,8 @@ export async function GET(request) {
         // Fetch Timesheet Lines
         const [lines] = await dbTenant(`
             SELECT l.*,
-                   v.vehicleCode, vt.name as vehicleTypeName, v.baseRentType,
-                   o.name as operatorName, o.operatorCode,
+                   v.vehicleCode, vt.name as vehicleTypeName, v.baseRentType, v.baseRentAmount as vehicleBaseRent,
+                   o.name as operatorName, o.operatorCode, o.hourlyRate as operatorHourlyRate,
                    mat.name as materialName,
                    lab.labourType as labourTypeName,
                    ab.bundleBilling, dst.name as detourTemplateName
@@ -67,6 +67,8 @@ export async function GET(request) {
         const items = [];
         let totalInvoiceAmount = 0;
         const groups = {};
+        const overtimeMultiplier = Number(timesheet.overtimeMultiplier || 1.5);
+        const holidayMultiplier = Number(timesheet.holidayMultiplier || 2.0);
 
         for (const line of lines) {
             const bt = line.blockType || "VEHICLE";
@@ -78,9 +80,8 @@ export async function GET(request) {
                 description = line.detourTemplateName || "Detour Service";
             } else if (bt === "VEHICLE" || !line.blockType) {
                 const vc = line.vehicleCode || line.resourceNameSnapshot || "N/A";
-                const op = line.operatorCode || "NO_OP";
-                key = `V-${vc}-${op}`;
-                description = `${line.vehicleTypeName || "Vehicle"} - ${vc}${line.operatorName ? ` (${line.operatorName})` : " (No Operator)"}`;
+                key = `V-${line.vehicleId || vc}`;
+                description = `${line.vehicleTypeName || "Vehicle"} - ${vc}`;
             } else if (bt === "OPERATOR") {
                 key = `OP-${line.operatorId}`;
                 description = `Operator: ${line.operatorName || line.resourceNameSnapshot || "N/A"}`;
@@ -100,10 +101,14 @@ export async function GET(request) {
                     description,
                     blockType: isBundled ? "BUNDLE" : bt,
                     baseRentType: line.baseRentType || null,
+                    rateSnapshot: Number(line.rateSnapshot || 0),
+                    vehicleBaseRent: Number(line.vehicleBaseRent || 0),
+                    operatorHourlyRate: Number(line.operatorHourlyRate || 0),
                     regularHours: 0, overtimeHours: 0, holidayHours: 0,
                     quantity: 0,
                     totalAmount: 0,
                     daysCount: 0,
+                    totalOtHours: 0,
                 };
             }
 
@@ -118,36 +123,139 @@ export async function GET(request) {
             if (totalHours > 0) {
                 g.daysCount += 1;
             }
+            if (bt === "VEHICLE" && line.baseRentType === "DAILY") {
+                g.totalOtHours += Math.max(0, totalHours - fullDayHours);
+            }
         }
 
         for (const key in groups) {
             const g = groups[key];
             const bt = g.blockType;
-            let quantity, unitPrice;
+
+            const fallbackRate = bt === "VEHICLE" ? g.vehicleBaseRent : g.operatorHourlyRate;
+            const basePrice = g.rateSnapshot > 0 ? g.rateSnapshot : fallbackRate;
 
             if (bt === "MATERIAL" || bt === "LABOUR") {
-                quantity = g.quantity || 1;
-                unitPrice = quantity > 0 ? g.totalAmount / quantity : g.totalAmount;
-            } else if (bt === "VEHICLE" && g.baseRentType === "DAILY") {
-                quantity = g.daysCount > 0 ? g.daysCount : 1;
-                unitPrice = quantity > 0 ? g.totalAmount / quantity : g.totalAmount;
-                g.description += ` (${parseFloat(quantity.toFixed(2))} Days)`;
-            } else {
-                const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
-                quantity = totalHours > 0 ? totalHours : 1;
-                unitPrice = totalHours > 0 ? g.totalAmount / totalHours : g.totalAmount;
-            }
+                const qty = g.quantity || 1;
+                const price = qty > 0 ? g.totalAmount / qty : g.totalAmount;
+                items.push({
+                    description: g.description,
+                    quantity: parseFloat(qty.toFixed(4)),
+                    unitPrice: parseFloat(price.toFixed(4)),
+                    total: g.totalAmount,
+                    regularHours: 0,
+                    overtimeHours: 0,
+                    holidayHours: 0,
+                });
+                totalInvoiceAmount += g.totalAmount;
+            } else if (bt === "VEHICLE") {
+                if (g.baseRentType === "DAILY") {
+                    // Vehicle Base Rent
+                    const baseQty = g.daysCount > 0 ? g.daysCount : 1;
+                    const baseTotal = baseQty * basePrice;
+                    items.push({
+                        description: `${g.description} (Dry Rent) (${parseFloat(baseQty.toFixed(2))} Days)`,
+                        quantity: parseFloat(baseQty.toFixed(4)),
+                        unitPrice: parseFloat(basePrice.toFixed(4)),
+                        total: baseTotal,
+                        regularHours: g.regularHours,
+                        overtimeHours: 0,
+                        holidayHours: 0,
+                    });
+                    totalInvoiceAmount += baseTotal;
 
-            items.push({
-                description: g.description,
-                quantity: parseFloat(quantity.toFixed(4)),
-                unitPrice: parseFloat(unitPrice.toFixed(4)),
-                total: g.totalAmount,
-                regularHours: g.regularHours,
-                overtimeHours: g.overtimeHours,
-                holidayHours: g.holidayHours,
-            });
-            totalInvoiceAmount += g.totalAmount;
+                    // Vehicle Overtime
+                    if (g.totalOtHours > 0) {
+                        const vHourlyRate = basePrice / fullDayHours;
+                        const otTotal = g.totalOtHours * vHourlyRate;
+                        items.push({
+                            description: `${g.description} (Overtime)`,
+                            quantity: parseFloat(g.totalOtHours.toFixed(4)),
+                            unitPrice: parseFloat(vHourlyRate.toFixed(4)),
+                            total: otTotal,
+                            regularHours: 0,
+                            overtimeHours: g.totalOtHours,
+                            holidayHours: 0,
+                        });
+                        totalInvoiceAmount += otTotal;
+                    }
+                } else {
+                    // HOURLY
+                    const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
+                    const qty = totalHours > 0 ? totalHours : 1;
+                    const total = qty * basePrice;
+                    items.push({
+                        description: g.description,
+                        quantity: parseFloat(qty.toFixed(4)),
+                        unitPrice: parseFloat(basePrice.toFixed(4)),
+                        total: total,
+                        regularHours: g.regularHours,
+                        overtimeHours: g.overtimeHours,
+                        holidayHours: g.holidayHours,
+                    });
+                    totalInvoiceAmount += total;
+                }
+            } else if (bt === "OPERATOR") {
+                // 1. Regular Hours
+                if (g.regularHours > 0) {
+                    const regTotal = g.regularHours * basePrice;
+                    items.push({
+                        description: `${g.description} (Normal Hours)`,
+                        quantity: parseFloat(g.regularHours.toFixed(4)),
+                        unitPrice: parseFloat(basePrice.toFixed(4)),
+                        total: regTotal,
+                        regularHours: g.regularHours,
+                        overtimeHours: 0,
+                        holidayHours: 0,
+                    });
+                    totalInvoiceAmount += regTotal;
+                }
+
+                // 2. Overtime Hours
+                if (g.overtimeHours > 0) {
+                    const otPrice = basePrice * overtimeMultiplier;
+                    const otTotal = g.overtimeHours * otPrice;
+                    items.push({
+                        description: `${g.description} (Overtime Hours)`,
+                        quantity: parseFloat(g.overtimeHours.toFixed(4)),
+                        unitPrice: parseFloat(otPrice.toFixed(4)),
+                        total: otTotal,
+                        regularHours: 0,
+                        overtimeHours: g.overtimeHours,
+                        holidayHours: 0,
+                    });
+                    totalInvoiceAmount += otTotal;
+                }
+
+                // 3. Holiday Hours
+                if (g.holidayHours > 0) {
+                    const holPrice = basePrice * holidayMultiplier;
+                    const holTotal = g.holidayHours * holPrice;
+                    items.push({
+                        description: `${g.description} (Holiday Hours)`,
+                        quantity: parseFloat(g.holidayHours.toFixed(4)),
+                        unitPrice: parseFloat(holPrice.toFixed(4)),
+                        total: holTotal,
+                        regularHours: 0,
+                        overtimeHours: 0,
+                        holidayHours: g.holidayHours,
+                    });
+                    totalInvoiceAmount += holTotal;
+                }
+            } else {
+                // Fallback
+                const qty = g.quantity || 1;
+                items.push({
+                    description: g.description,
+                    quantity: parseFloat(qty.toFixed(4)),
+                    unitPrice: parseFloat((g.totalAmount / qty).toFixed(4)),
+                    total: g.totalAmount,
+                    regularHours: g.regularHours,
+                    overtimeHours: g.overtimeHours,
+                    holidayHours: g.holidayHours,
+                });
+                totalInvoiceAmount += g.totalAmount;
+            }
         }
 
         const useVat = !!companySettings?.enableVat;
