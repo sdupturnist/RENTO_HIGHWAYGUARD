@@ -44,8 +44,12 @@ export function InvoiceForm({ mode = "create", initialData = null, defaultTimesh
     const [pendingValues, setPendingValues] = useState(null);
     const { currencySymbol } = useSettings();
 
-    const [customerId, setCustomerId] = useState("");
-    const [projectId, setProjectId] = useState("");
+    const [customerId, setCustomerId] = useState(
+        () => mode === "edit" && initialData ? String(initialData.customerId || "") : ""
+    );
+    const [projectId, setProjectId] = useState(
+        () => mode === "edit" && initialData ? String(initialData.projectId || "") : ""
+    );
 
     // LPO file state
     const [lpoFile, setLpoFile] = useState(null);
@@ -60,12 +64,22 @@ export function InvoiceForm({ mode = "create", initialData = null, defaultTimesh
     const [signatureDate, setSignatureDate] = useState(null);
 
     // Items and loading state
-    const [items, setItems] = useState([]);
+    const [items, setItems] = useState(
+        () => mode === "edit" && initialData ? (initialData.items || []) : []
+    );
     const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
     const form = useForm({
         resolver: zodResolver(invoiceSchema),
-        defaultValues: {
+        defaultValues: mode === "edit" && initialData ? {
+            timesheetId: String(initialData.timesheetId || ""),
+            date: initialData.date ? new Date(initialData.date) : new Date(),
+            dueDate: initialData.dueDate ? new Date(initialData.dueDate) : null,
+            notes: initialData.notes || "",
+            lpoNumber: initialData.lpoNumber || "",
+            adjustmentAmount: initialData.adjustmentAmount || 0,
+            adjustmentNote: initialData.adjustmentNote || "",
+        } : {
             timesheetId: "",
             date: new Date(),
             dueDate: null,
@@ -193,31 +207,18 @@ export function InvoiceForm({ mode = "create", initialData = null, defaultTimesh
         }
     }, [defaultTimesheetId, timesheets, mode, form]);
 
-    // Initialize Edit Mode values
+    // Initialize Edit Mode attachment/signature state (these can stay in useEffect as they don't affect Select rendering)
     useEffect(() => {
         if (mode === "edit" && initialData) {
-            form.reset({
-                timesheetId: String(initialData.timesheetId || ""),
-                date: initialData.date ? new Date(initialData.date) : new Date(),
-                dueDate: initialData.dueDate ? new Date(initialData.dueDate) : null,
-                notes: initialData.notes || "",
-                lpoNumber: initialData.lpoNumber || "",
-                adjustmentAmount: initialData.adjustmentAmount || 0,
-                adjustmentNote: initialData.adjustmentNote || "",
-            });
-            setCustomerId(String(initialData.customerId || ""));
-            setProjectId(String(initialData.projectId || ""));
-            setItems(initialData.items || []);
-
             setCurrentLpoPath(initialData.lpoAttachmentPath || null);
             setCurrentLpoName(initialData.lpoAttachmentName || null);
-
             setCurrentAttachmentPath(initialData.attachmentPath || null);
             setCurrentAttachmentName(initialData.attachmentName || null);
             setIsSignedTimesheet(!!initialData.isSignedTimesheet);
             setSignatureDate(initialData.signatureDate ? new Date(initialData.signatureDate) : null);
         }
-    }, [mode, initialData, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Dynamic Options lists supporting Edit mode override
     const displayCustomers = mode === "edit" && initialData?.customer
