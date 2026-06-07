@@ -212,10 +212,10 @@ function formatPDFRow(line, activeViewMode) {
 
 const VIEW_MODE_LABELS = {
     DETAILED: "Detailed Logs",
-    GROUP_BY_RESOURCE: "Logs Grouped by Resource",
-    GROUP_BY_VEHICLE_TYPE: "Logs Grouped by Vehicle Type",
-    GROUP_BY_OPERATOR: "Logs Grouped by Operator",
-    GROUP_BY_DETOUR: "Logs Grouped by Detour Service",
+    GROUP_BY_RESOURCE: "Resource Summary",
+    GROUP_BY_VEHICLE_TYPE: "Vehicle Type Summary",
+    GROUP_BY_OPERATOR: "Operator Logs",
+    GROUP_BY_DETOUR: "Detour Service Summary",
     BUNDLE_SUMMARY: "Bundle Summary Logs",
 };
 
@@ -296,8 +296,12 @@ export async function generateTimesheetPDF(timesheet, viewModeOverride = null) {
     ].filter(Boolean);
     customerLines.forEach((line, idx) => doc.text(line, 14, partiesStartY + 12 + idx * 5));
     doc.text(timesheet.project?.name || "-", 110, partiesStartY + 6);
+    const projectLines = [
+        timesheet.lpoNumber ? `LPO Ref: ${timesheet.lpoNumber}` : null
+    ].filter(Boolean);
+    projectLines.forEach((line, idx) => doc.text(line, 110, partiesStartY + 12 + idx * 5));
     const customerBlockBottom = partiesStartY + 12 + customerLines.length * 5;
-    const projectBlockBottom = partiesStartY + 12;
+    const projectBlockBottom = partiesStartY + 12 + projectLines.length * 5;
     const summaryStartY = Math.max(customerBlockBottom, projectBlockBottom) + 10;
     // SUMMARY
     doc.setFont("helvetica", "bold");
@@ -437,8 +441,12 @@ export async function generateTimesheetPDFBuffer(timesheet) {
     ].filter(Boolean);
     customerLines2.forEach((line, idx) => doc.text(line, 14, partiesStartY + 12 + idx * 5));
     doc.text(timesheet.project?.name || "-", 110, partiesStartY + 6);
+    const projectLines2 = [
+        timesheet.lpoNumber ? `LPO Ref: ${timesheet.lpoNumber}` : null
+    ].filter(Boolean);
+    projectLines2.forEach((line, idx) => doc.text(line, 110, partiesStartY + 12 + idx * 5));
     const customerBlockBottom = partiesStartY + 12 + customerLines2.length * 5;
-    const projectBlockBottom = partiesStartY + 12;
+    const projectBlockBottom = partiesStartY + 12 + projectLines2.length * 5;
     const summaryStartY = Math.max(customerBlockBottom, projectBlockBottom) + 10;
     doc.setFont("helvetica", "bold");
     doc.text("Summary", 14, summaryStartY);

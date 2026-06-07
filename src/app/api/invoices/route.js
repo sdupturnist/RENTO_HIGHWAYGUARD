@@ -48,7 +48,12 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { timesheetId, date, dueDate, reference, notes, applyVat, lpoNumber, lpoAttachmentPath, lpoAttachmentName } = body;
+        const {
+            timesheetId, date, dueDate, reference, notes, applyVat,
+            lpoNumber, lpoAttachmentPath, lpoAttachmentName,
+            adjustmentAmount, adjustmentNote,
+            attachmentPath, attachmentName, isSignedTimesheet, signatureDate
+        } = body;
 
         if (!timesheetId) return NextResponse.json({ error: "timesheetId is required" }, { status: 400 });
         if (!date || isNaN(new Date(date).getTime())) return NextResponse.json({ error: "Valid invoice date is required" }, { status: 400 });
@@ -81,110 +86,129 @@ export async function POST(request) {
             return NextResponse.json({ error: "Timesheet must be approved to be invoiced" }, { status: 400 });
         }
 
-        // 2. Fetch Timesheet Lines with all resource types
-        const [lines] = await dbTenant(`
-            SELECT l.*,
-                   v.vehicleCode, vt.name as vehicleTypeName, v.baseRentType,
-                   o.name as operatorName, o.operatorCode,
-                   mat.name as materialName,
-                   lab.labourType as labourTypeName,
-                   ab.bundleBilling, dst.name as detourTemplateName
-            FROM \`timesheet_lines\` l
-            LEFT JOIN \`vehicles\` v ON l.vehicleId = v.id
-            LEFT JOIN \`vehicle_types\` vt ON v.typeId = vt.id
-            LEFT JOIN \`operators\` o ON l.operatorId = o.id
-            LEFT JOIN \`materials\` mat ON mat.id = l.materialId
-            LEFT JOIN \`labours\` lab ON lab.id = l.labourTypeId
-            LEFT JOIN \`assignment_blocks\` ab ON ab.id = l.detourBlockId
-            LEFT JOIN \`detour_service_templates\` dst ON dst.id = ab.detourTemplateId
-            WHERE l.timesheetId = ?
-            ORDER BY l.date ASC
-        `, [timesheetId]);
-
-        // Fetch Company Settings (needed for fullDayHours in daily vehicle pricing calculations)
+        // Fetch Company Settings
         const [settingsRows] = await dbTenant("SELECT enableVat, vatPercentage, fullDayHours FROM `company_settings` LIMIT 1");
         const companySettings = settingsRows[0];
         const fullDayHours = Number(companySettings?.fullDayHours || 8);
 
-        const invoiceItemsData = [];
+        let invoiceItemsData = [];
         let totalInvoiceAmount = 0;
-        const groups = {};
 
-        for (const line of lines) {
-            const bt = line.blockType || "VEHICLE";
-            const isBundled = line.detourBlockId && line.bundleBilling;
+        if (body.items && Array.isArray(body.items) && body.items.length > 0) {
+            for (const item of body.items) {
+                const qty = Number(item.quantity || 0);
+                const price = Number(item.unitPrice || 0);
+                const total = qty * price;
+                invoiceItemsData.push({
+                    description: item.description,
+                    quantity: qty,
+                    unitPrice: price,
+                    total: total,
+                    regularHours: Number(item.regularHours || 0),
+                    overtimeHours: Number(item.overtimeHours || 0),
+                    holidayHours: Number(item.holidayHours || 0),
+                });
+                totalInvoiceAmount += total;
+            }
+        } else {
+            // 2. Fetch Timesheet Lines with all resource types
+            const [lines] = await dbTenant(`
+                SELECT l.*,
+                       v.vehicleCode, vt.name as vehicleTypeName, v.baseRentType,
+                       o.name as operatorName, o.operatorCode,
+                       mat.name as materialName,
+                       lab.labourType as labourTypeName,
+                       ab.bundleBilling, dst.name as detourTemplateName
+                FROM \`timesheet_lines\` l
+                LEFT JOIN \`vehicles\` v ON l.vehicleId = v.id
+                LEFT JOIN \`vehicle_types\` vt ON v.typeId = vt.id
+                LEFT JOIN \`operators\` o ON l.operatorId = o.id
+                LEFT JOIN \`materials\` mat ON mat.id = l.materialId
+                LEFT JOIN \`labours\` lab ON lab.id = l.labourTypeId
+                LEFT JOIN \`assignment_blocks\` ab ON ab.id = l.detourBlockId
+                LEFT JOIN \`detour_service_templates\` dst ON dst.id = ab.detourTemplateId
+                WHERE l.timesheetId = ?
+                ORDER BY l.date ASC
+            `, [timesheetId]);
 
-            let key, description;
-            if (isBundled) {
-                key = `BUNDLE-${line.detourBlockId}`;
-                description = line.detourTemplateName || "Detour Service";
-            } else if (bt === "VEHICLE" || !line.blockType) {
-                const vc = line.vehicleCode || line.resourceNameSnapshot || "N/A";
-                const op = line.operatorCode || "NO_OP";
-                key = `V-${vc}-${op}`;
-                description = `${line.vehicleTypeName || "Vehicle"} - ${vc}${line.operatorName ? ` (${line.operatorName})` : " (No Operator)"}`;
-            } else if (bt === "OPERATOR") {
-                key = `OP-${line.operatorId}`;
-                description = `Operator: ${line.operatorName || line.resourceNameSnapshot || "N/A"}`;
-            } else if (bt === "MATERIAL") {
-                key = `MAT-${line.materialId}`;
-                description = `Material: ${line.materialName || line.resourceNameSnapshot || "N/A"}`;
-            } else if (bt === "LABOUR") {
-                key = `LAB-${line.labourTypeId}`;
-                description = `Labour: ${line.labourTypeName || line.resourceNameSnapshot || "N/A"}`;
-            } else {
-                key = `OTHER-${line.id}`;
-                description = line.resourceNameSnapshot || "Unknown";
+            const groups = {};
+
+            for (const line of lines) {
+                const bt = line.blockType || "VEHICLE";
+                const isBundled = line.detourBlockId && line.bundleBilling;
+
+                let key, description;
+                if (isBundled) {
+                    key = `BUNDLE-${line.detourBlockId}`;
+                    description = line.detourTemplateName || "Detour Service";
+                } else if (bt === "VEHICLE" || !line.blockType) {
+                    const vc = line.vehicleCode || line.resourceNameSnapshot || "N/A";
+                    const op = line.operatorCode || "NO_OP";
+                    key = `V-${vc}-${op}`;
+                    description = `${line.vehicleTypeName || "Vehicle"} - ${vc}${line.operatorName ? ` (${line.operatorName})` : " (No Operator)"}`;
+                } else if (bt === "OPERATOR") {
+                    key = `OP-${line.operatorId}`;
+                    description = `Operator: ${line.operatorName || line.resourceNameSnapshot || "N/A"}`;
+                } else if (bt === "MATERIAL") {
+                    key = `MAT-${line.materialId}`;
+                    description = `Material: ${line.materialName || line.resourceNameSnapshot || "N/A"}`;
+                } else if (bt === "LABOUR") {
+                    key = `LAB-${line.labourTypeId}`;
+                    description = `Labour: ${line.labourTypeName || line.resourceNameSnapshot || "N/A"}`;
+                } else {
+                    key = `OTHER-${line.id}`;
+                    description = line.resourceNameSnapshot || "Unknown";
+                }
+
+                if (!groups[key]) {
+                    groups[key] = {
+                        description,
+                        blockType: isBundled ? "BUNDLE" : bt,
+                        baseRentType: line.baseRentType || null,
+                        regularHours: 0, overtimeHours: 0, holidayHours: 0,
+                        quantity: 0,
+                        totalAmount: 0,
+                    };
+                }
+
+                const g = groups[key];
+                g.regularHours += Number(line.regularHours || 0);
+                g.overtimeHours += Number(line.overtimeHours || 0);
+                g.holidayHours += Number(line.holidayHours || 0);
+                g.quantity += Number(line.quantity || 0);
+                g.totalAmount += Number(line.calculatedAmount || 0);
             }
 
-            if (!groups[key]) {
-                groups[key] = {
-                    description,
-                    blockType: isBundled ? "BUNDLE" : bt,
-                    baseRentType: line.baseRentType || null,
-                    regularHours: 0, overtimeHours: 0, holidayHours: 0,
-                    quantity: 0,
-                    totalAmount: 0,
-                };
+            for (const key in groups) {
+                const g = groups[key];
+                const bt = g.blockType;
+                let quantity, unitPrice;
+
+                if (bt === "MATERIAL" || bt === "LABOUR") {
+                    quantity = g.quantity || 1;
+                    unitPrice = quantity > 0 ? g.totalAmount / quantity : g.totalAmount;
+                } else if (bt === "VEHICLE" && g.baseRentType === "DAILY") {
+                    const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
+                    quantity = totalHours / fullDayHours;
+                    unitPrice = quantity > 0 ? g.totalAmount / quantity : g.totalAmount;
+                    g.description += ` (${parseFloat(quantity.toFixed(2))} Days)`;
+                } else {
+                    const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
+                    quantity = totalHours > 0 ? totalHours : 1;
+                    unitPrice = totalHours > 0 ? g.totalAmount / totalHours : g.totalAmount;
+                }
+
+                invoiceItemsData.push({
+                    description: g.description,
+                    quantity: parseFloat(quantity.toFixed(4)),
+                    unitPrice: parseFloat(unitPrice.toFixed(4)),
+                    total: g.totalAmount,
+                    regularHours: g.regularHours,
+                    overtimeHours: g.overtimeHours,
+                    holidayHours: g.holidayHours,
+                });
+                totalInvoiceAmount += g.totalAmount;
             }
-
-            const g = groups[key];
-            g.regularHours += Number(line.regularHours || 0);
-            g.overtimeHours += Number(line.overtimeHours || 0);
-            g.holidayHours += Number(line.holidayHours || 0);
-            g.quantity += Number(line.quantity || 0);
-            g.totalAmount += Number(line.calculatedAmount || 0);
-        }
-
-        for (const key in groups) {
-            const g = groups[key];
-            const bt = g.blockType;
-            let quantity, unitPrice;
-
-            if (bt === "MATERIAL" || bt === "LABOUR") {
-                quantity = g.quantity || 1;
-                unitPrice = quantity > 0 ? g.totalAmount / quantity : g.totalAmount;
-            } else if (bt === "VEHICLE" && g.baseRentType === "DAILY") {
-                const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
-                quantity = totalHours / fullDayHours;
-                unitPrice = quantity > 0 ? g.totalAmount / quantity : g.totalAmount;
-                g.description += ` (${parseFloat(quantity.toFixed(2))} Days)`;
-            } else {
-                const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
-                quantity = totalHours > 0 ? totalHours : 1;
-                unitPrice = totalHours > 0 ? g.totalAmount / totalHours : g.totalAmount;
-            }
-
-            invoiceItemsData.push({
-                description: g.description,
-                quantity: parseFloat(quantity.toFixed(4)),
-                unitPrice: parseFloat(unitPrice.toFixed(4)),
-                total: g.totalAmount,
-                regularHours: g.regularHours,
-                overtimeHours: g.overtimeHours,
-                holidayHours: g.holidayHours,
-            });
-            totalInvoiceAmount += g.totalAmount;
         }
 
         // 3. VAT logic
@@ -192,7 +216,7 @@ export async function POST(request) {
         const vatPercentage = useVat ? (Number(companySettings?.vatPercentage) || 0) : 0;
         const subtotal = totalInvoiceAmount;
         const vatAmount = useVat ? (subtotal * vatPercentage / 100) : 0;
-        const grandTotal = subtotal + vatAmount;
+        const grandTotal = subtotal + vatAmount + Number(adjustmentAmount || 0);
 
         const { withTenantTransaction } = await import("@/app/lib/db");
         const invoiceId = await withTenantTransaction(async (tx) => {
@@ -217,8 +241,10 @@ export async function POST(request) {
                  subtotal, vatEnabled, vatPercentage, vatAmount, grandTotal, totalAmount,
                  periodStart, periodEnd, status,
                  lpoNumber, lpoAttachmentPath, lpoAttachmentName,
+                 adjustmentAmount, adjustmentNote,
+                 attachmentPath, attachmentName, isSignedTimesheet, signatureDate,
                  createdAt, updatedAt)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
             `, [
                 invoiceNumber, new Date(date), dueDate ? new Date(dueDate) : null, reference || null, notes || null,
                 timesheet.customerId, timesheet.projectId, timesheetId,
@@ -227,6 +253,8 @@ export async function POST(request) {
                 lpoNumber !== undefined ? (lpoNumber || null) : (timesheet.lpoNumber || null),
                 lpoAttachmentPath !== undefined ? (lpoAttachmentPath || null) : (timesheet.lpoAttachmentPath || null),
                 lpoAttachmentName !== undefined ? (lpoAttachmentName || null) : (timesheet.lpoAttachmentName || null),
+                Number(adjustmentAmount || 0), adjustmentNote || null,
+                attachmentPath || null, attachmentName || null, isSignedTimesheet ? 1 : 0, signatureDate ? new Date(signatureDate) : null,
             ]);
 
             const newInvoiceId = invResult.insertId;

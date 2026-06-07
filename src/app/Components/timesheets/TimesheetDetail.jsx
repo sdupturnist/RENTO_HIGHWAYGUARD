@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/app/Components/ui/ca
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/Components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/Components/ui/select";
 import { toast } from "sonner";
-import { AlertTriangle, Download, RefreshCw, Trash2, ArrowLeft, Send, CheckCircle, Pencil } from "lucide-react";
+import { AlertTriangle, Download, RefreshCw, Trash2, ArrowLeft, Send, CheckCircle, Pencil, FileText, Paperclip, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/app/Components/ui/alert";
 import Link from "next/link";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, } from "@/app/Components/ui/alert-dialog";
@@ -276,7 +276,17 @@ export function TimesheetDetail({ timesheet }) {
                     <div className="flex items-center gap-2 text-muted-foreground mt-1 flex-wrap">
                         {timesheet.isInternal
                             ? <Badge variant="secondary" className="bg-slate-100 text-slate-700">Internal</Badge>
-                            : <span>{timesheet.customer?.companyName ?? "—"}</span>
+                            : (
+                                <>
+                                    <span>{timesheet.customer?.companyName ?? "—"}</span>
+                                    {timesheet.project?.name && (
+                                        <>
+                                            <span>•</span>
+                                            <span className="font-medium text-foreground">{timesheet.project.name}</span>
+                                        </>
+                                    )}
+                                </>
+                            )
                         }
                         <span>•</span>
                         <span>{format(new Date(timesheet.periodStart), "dd MMM yyyy")} - {format(new Date(timesheet.periodEnd), "dd MMM yyyy")}</span>
@@ -397,43 +407,91 @@ export function TimesheetDetail({ timesheet }) {
             </Card>
         </div>
 
-        <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/60 dark:border-slate-800/60">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-sm font-medium">Notes</CardTitle>
-                {!editingNotes && !timesheet.approvedAt && timesheet.status !== "INVOICED" && (
-                    <PermissionGate module="Timesheet" action="Edit">
-                        <Button variant="ghost" size="sm" onClick={() => setEditingNotes(true)}>
-                            <Pencil className="h-4 w-4 mr-1" /> {notesText ? "Edit" : "Add Notes"}
-                        </Button>
-                    </PermissionGate>
-                )}
-            </CardHeader>
-            <CardContent>
-                {editingNotes ? (
-                    <div className="space-y-3">
-                        <Textarea
-                            value={notesText}
-                            onChange={(e) => setNotesText(e.target.value)}
-                            placeholder="Add notes for this timesheet (will appear in exported PDF)..."
-                            rows={4}
-                            className="resize-none"
-                        />
-                        <div className="flex gap-2">
-                            <Button size="sm" onClick={handleSaveNotes} disabled={savingNotes}>
-                                {savingNotes ? "Saving..." : "Save Notes"}
+        <div className="grid gap-4 md:grid-cols-2">
+            <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/60 dark:border-slate-800/60">
+                <CardHeader className="flex flex-row items-center justify-between pb-3">
+                    <CardTitle className="text-sm font-medium">Notes</CardTitle>
+                    {!editingNotes && !timesheet.approvedAt && timesheet.status !== "INVOICED" && (
+                        <PermissionGate module="Timesheet" action="Edit">
+                            <Button variant="ghost" size="sm" onClick={() => setEditingNotes(true)}>
+                                <Pencil className="h-4 w-4 mr-1" /> {notesText ? "Edit" : "Add Notes"}
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => { setEditingNotes(false); setNotesText(timesheet.notes || ""); }}>
-                                Cancel
-                            </Button>
+                        </PermissionGate>
+                    )}
+                </CardHeader>
+                <CardContent>
+                    {editingNotes ? (
+                        <div className="space-y-3">
+                            <Textarea
+                                value={notesText}
+                                onChange={(e) => setNotesText(e.target.value)}
+                                placeholder="Add notes for this timesheet (will appear in exported PDF)..."
+                                rows={4}
+                                className="resize-none"
+                            />
+                            <div className="flex gap-2">
+                                <Button size="sm" onClick={handleSaveNotes} disabled={savingNotes}>
+                                    {savingNotes ? "Saving..." : "Save Notes"}
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => { setEditingNotes(false); setNotesText(timesheet.notes || ""); }}>
+                                    Cancel
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                ) : notesText ? (
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{notesText}</p>
-                ) : (
-                    <p className="text-sm text-muted-foreground italic">No notes added.</p>
-                )}
-            </CardContent>
-        </Card>
+                    ) : notesText ? (
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{notesText}</p>
+                    ) : (
+                        <p className="text-sm text-muted-foreground italic">No notes added.</p>
+                    )}
+                </CardContent>
+            </Card>
+
+            {timesheet.lpoNumber || timesheet.lpoAttachmentPath ? (
+                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/60 dark:border-slate-800/60">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-slate-400" />
+                            LPO Reference
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <div className="space-y-1">
+                            <span className="text-xs text-muted-foreground block">LPO Number</span>
+                            <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                {timesheet.lpoNumber || "—"}
+                            </span>
+                        </div>
+                        {timesheet.lpoAttachmentPath && (
+                            <div className="space-y-1">
+                                <span className="text-xs text-muted-foreground block">LPO Document</span>
+                                <a
+                                    href={timesheet.lpoAttachmentPath}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium mt-0.5"
+                                >
+                                    <Paperclip className="h-3.5 w-3.5 shrink-0" />
+                                    {timesheet.lpoAttachmentName || "View LPO Document"}
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                </a>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            ) : (
+                <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/60 dark:border-slate-800/60 opacity-50">
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2 text-slate-400">
+                            <FileText className="h-4 w-4" />
+                            LPO Reference
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6 flex items-center justify-center text-slate-400 text-sm italic">
+                        No LPO reference provided.
+                    </CardContent>
+                </Card>
+            )}
+        </div>
 
         <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/60 dark:border-slate-800/60">
             <CardHeader className="flex flex-row items-center justify-between">

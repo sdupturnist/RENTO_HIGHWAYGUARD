@@ -1,8 +1,177 @@
 import { NextResponse } from "next/server";
 import { dbTenant } from "@/app/lib/db";
 import { z } from "zod";
-import { getSession } from "@/app/lib/auth";
+import { getSession, verifySession } from "@/app/lib/auth";
+import { verifySessionPermission } from "@/app/lib/permissions";
 import { differenceInDays, max, min } from "date-fns";
+
+export async function GET(request) {
+    const session = await verifySession();
+    const canView = session ? await verifySessionPermission(session, "Invoices", "View") : false;
+    const canEdit = session ? await verifySessionPermission(session, "Invoices", "Edit") : false;
+    if (!session || (!canView && !canEdit)) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    try {
+        const { searchParams } = new URL(request.url);
+        const timesheetId = searchParams.get("timesheetId");
+        if (!timesheetId) {
+            return NextResponse.json({ error: "timesheetId is required" }, { status: 400 });
+        }
+
+        // Fetch Timesheet
+        const [timesheetRows] = await dbTenant(`
+            SELECT t.*, 
+                   c.companyName as customer_companyName, 
+                   p.name as project_name,
+                   p.lpoNumber as project_lpoNumber,
+                   p.lpoAttachmentPath as project_lpoAttachmentPath,
+                   p.lpoAttachmentName as project_lpoAttachmentName
+            FROM \`timesheets\` t
+            LEFT JOIN \`customers\` c ON t.customerId = c.id
+            LEFT JOIN \`projects\` p ON p.id = t.projectId
+            WHERE t.id = ?
+        `, [timesheetId]);
+        const timesheet = timesheetRows[0];
+
+        if (!timesheet) {
+            return NextResponse.json({ error: "Timesheet not found" }, { status: 404 });
+        }
+
+        // Fetch Timesheet Lines
+        const [lines] = await dbTenant(`
+            SELECT l.*,
+                   v.vehicleCode, vt.name as vehicleTypeName, v.baseRentType,
+                   o.name as operatorName, o.operatorCode,
+                   mat.name as materialName,
+                   lab.labourType as labourTypeName,
+                   ab.bundleBilling, dst.name as detourTemplateName
+            FROM \`timesheet_lines\` l
+            LEFT JOIN \`vehicles\` v ON l.vehicleId = v.id
+            LEFT JOIN \`vehicle_types\` vt ON v.typeId = vt.id
+            LEFT JOIN \`operators\` o ON l.operatorId = o.id
+            LEFT JOIN \`materials\` mat ON mat.id = l.materialId
+            LEFT JOIN \`labours\` lab ON lab.id = l.labourTypeId
+            LEFT JOIN \`assignment_blocks\` ab ON ab.id = l.detourBlockId
+            LEFT JOIN \`detour_service_templates\` dst ON dst.id = ab.detourTemplateId
+            WHERE l.timesheetId = ?
+            ORDER BY l.date ASC
+        `, [timesheetId]);
+
+        // Fetch Company Settings
+        const [settingsRows] = await dbTenant("SELECT enableVat, vatPercentage, fullDayHours FROM `company_settings` LIMIT 1");
+        const companySettings = settingsRows[0];
+        const fullDayHours = Number(companySettings?.fullDayHours || 8);
+
+        const items = [];
+        let totalInvoiceAmount = 0;
+        const groups = {};
+
+        for (const line of lines) {
+            const bt = line.blockType || "VEHICLE";
+            const isBundled = line.detourBlockId && line.bundleBilling;
+
+            let key, description;
+            if (isBundled) {
+                key = `BUNDLE-${line.detourBlockId}`;
+                description = line.detourTemplateName || "Detour Service";
+            } else if (bt === "VEHICLE" || !line.blockType) {
+                const vc = line.vehicleCode || line.resourceNameSnapshot || "N/A";
+                const op = line.operatorCode || "NO_OP";
+                key = `V-${vc}-${op}`;
+                description = `${line.vehicleTypeName || "Vehicle"} - ${vc}${line.operatorName ? ` (${line.operatorName})` : " (No Operator)"}`;
+            } else if (bt === "OPERATOR") {
+                key = `OP-${line.operatorId}`;
+                description = `Operator: ${line.operatorName || line.resourceNameSnapshot || "N/A"}`;
+            } else if (bt === "MATERIAL") {
+                key = `MAT-${line.materialId}`;
+                description = `Material: ${line.materialName || line.resourceNameSnapshot || "N/A"}`;
+            } else if (bt === "LABOUR") {
+                key = `LAB-${line.labourTypeId}`;
+                description = `Labour: ${line.labourTypeName || line.resourceNameSnapshot || "N/A"}`;
+            } else {
+                key = `OTHER-${line.id}`;
+                description = line.resourceNameSnapshot || "Unknown";
+            }
+
+            if (!groups[key]) {
+                groups[key] = {
+                    description,
+                    blockType: isBundled ? "BUNDLE" : bt,
+                    baseRentType: line.baseRentType || null,
+                    regularHours: 0, overtimeHours: 0, holidayHours: 0,
+                    quantity: 0,
+                    totalAmount: 0,
+                };
+            }
+
+            const g = groups[key];
+            g.regularHours += Number(line.regularHours || 0);
+            g.overtimeHours += Number(line.overtimeHours || 0);
+            g.holidayHours += Number(line.holidayHours || 0);
+            g.quantity += Number(line.quantity || 0);
+            g.totalAmount += Number(line.calculatedAmount || 0);
+        }
+
+        for (const key in groups) {
+            const g = groups[key];
+            const bt = g.blockType;
+            let quantity, unitPrice;
+
+            if (bt === "MATERIAL" || bt === "LABOUR") {
+                quantity = g.quantity || 1;
+                unitPrice = quantity > 0 ? g.totalAmount / quantity : g.totalAmount;
+            } else if (bt === "VEHICLE" && g.baseRentType === "DAILY") {
+                const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
+                quantity = totalHours / fullDayHours;
+                unitPrice = quantity > 0 ? g.totalAmount / quantity : g.totalAmount;
+                g.description += ` (${parseFloat(quantity.toFixed(2))} Days)`;
+            } else {
+                const totalHours = g.regularHours + g.overtimeHours + g.holidayHours;
+                quantity = totalHours > 0 ? totalHours : 1;
+                unitPrice = totalHours > 0 ? g.totalAmount / totalHours : g.totalAmount;
+            }
+
+            items.push({
+                description: g.description,
+                quantity: parseFloat(quantity.toFixed(4)),
+                unitPrice: parseFloat(unitPrice.toFixed(4)),
+                total: g.totalAmount,
+                regularHours: g.regularHours,
+                overtimeHours: g.overtimeHours,
+                holidayHours: g.holidayHours,
+            });
+            totalInvoiceAmount += g.totalAmount;
+        }
+
+        const useVat = !!companySettings?.enableVat;
+        const vatPercentage = useVat ? (Number(companySettings?.vatPercentage) || 0) : 0;
+        const subtotal = totalInvoiceAmount;
+        const vatAmount = useVat ? (subtotal * vatPercentage / 100) : 0;
+        const grandTotal = subtotal + vatAmount;
+
+        const lpoNumber = timesheet.lpoNumber || timesheet.project_lpoNumber || null;
+        const lpoAttachmentPath = timesheet.lpoAttachmentPath || timesheet.project_lpoAttachmentPath || null;
+        const lpoAttachmentName = timesheet.lpoAttachmentName || timesheet.project_lpoAttachmentName || null;
+
+        return NextResponse.json({
+            items,
+            subtotal: parseFloat(subtotal.toFixed(4)),
+            vatEnabled: useVat,
+            vatPercentage: vatPercentage,
+            vatAmount: parseFloat(vatAmount.toFixed(4)),
+            grandTotal: parseFloat(grandTotal.toFixed(4)),
+            totalAmount: parseFloat(grandTotal.toFixed(4)),
+            lpoNumber,
+            lpoAttachmentPath,
+            lpoAttachmentName,
+        });
+    } catch (error) {
+        console.error("Failed to generate preview from timesheet:", error);
+        return NextResponse.json({ error: "Failed to generate preview from timesheet" }, { status: 500 });
+    }
+}
 
 const previewSchema = z.object({
     customerId: z.coerce.number(),
@@ -10,6 +179,7 @@ const previewSchema = z.object({
     startDate: z.string(),
     endDate: z.string(),
 });
+
 
 export async function POST(request) {
     const session = await getSession();

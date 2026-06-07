@@ -2,13 +2,12 @@ import { verifySession } from "@/app/lib/auth";
 import { dbTenant, dbQuery } from "@/app/lib/db";
 import { notFound, redirect } from "next/navigation";
 import { Button } from "@/app/Components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Edit } from "lucide-react";
 import Link from "next/link";
 import { InvoiceTemplate } from "@/app/Components/invoices/InvoiceTemplate";
 import { InvoiceActions } from "@/app/Components/invoices/InvoiceActions";
 import { InvoiceSendButton } from "@/app/Components/invoices/InvoiceSendButton";
-import { InvoiceAdjustment } from "@/app/Components/invoices/InvoiceAdjustment";
-import { InvoiceAttachment } from "@/app/Components/invoices/InvoiceAttachment";
+import { InvoiceReadOnlyDetails } from "@/app/Components/invoices/InvoiceReadOnlyDetails";
 import { ActivityLogList } from "@/app/Components/common/ActivityLogList";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/Components/ui/card";
 import { verifySessionPermission } from "@/app/lib/permissions";
@@ -23,6 +22,8 @@ export default async function InvoiceViewPage({ params }) {
     if (!canView) {
         return <Forbidden module="invoices" action="view" />;
     }
+
+    const canEdit = await verifySessionPermission(session, "Invoices", "Edit");
 
     const { id: paramId } = await params;
     const id = parseInt(paramId);
@@ -64,6 +65,13 @@ export default async function InvoiceViewPage({ params }) {
                     <h2 className="text-3xl font-bold tracking-tight">Invoice Details</h2>
                 </div>
                 <div className="flex items-center gap-2">
+                    {canEdit && (
+                        <Button asChild variant="outline" size="sm">
+                            <Link href={`/invoices/${invoice.id}/edit`} className="flex items-center gap-2">
+                                <Edit className="h-4 w-4" /> Edit Invoice
+                            </Link>
+                        </Button>
+                    )}
                     <InvoiceSendButton invoiceId={invoice.id}/>
                     <InvoiceActions invoiceId={invoice.id}/>
                 </div>
@@ -74,25 +82,9 @@ export default async function InvoiceViewPage({ params }) {
                     <InvoiceTemplate invoice={invoice} settings={settings} companySettings={companySettings} branding={branding}/>
                 </div>
                 <div className="w-full print:hidden space-y-4">
-                    <InvoiceAdjustment
-                        invoiceId={invoice.id}
-                        initialAmount={Number(invoice.adjustmentAmount || 0)}
-                        initialNote={invoice.adjustmentNote || ""}
-                        currency={companySettings?.currency || "AED"}
-                    />
-                    <InvoiceAttachment
-                        invoiceId={invoice.id}
-                        initial={{
-                            attachmentPath: iRow.attachmentPath || null,
-                            attachmentName: iRow.attachmentName || null,
-                            isSignedTimesheet: !!(iRow.isSignedTimesheet),
-                            signatureDate: iRow.signatureDate || null,
-                            lpoNumber: iRow.lpoNumber || null,
-                            lpoAttachmentPath: iRow.lpoAttachmentPath || null,
-                            lpoAttachmentName: iRow.lpoAttachmentName || null,
-                        }}
-                    />
-                    <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/60 dark:border-slate-800/60">
+                    <InvoiceReadOnlyDetails invoice={invoice} />
+                    
+                    <Card className="bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-200/60 dark:border-slate-800/60 rounded-2xl">
                         <CardHeader>
                             <CardTitle className="text-sm font-medium">Activity Log</CardTitle>
                         </CardHeader>

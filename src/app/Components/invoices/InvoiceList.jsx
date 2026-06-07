@@ -2,7 +2,7 @@
 import { truncateString } from "@/app/lib/utils";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Eye, Trash2, Search } from "lucide-react";
+import { Eye, Trash2, Search, Pencil } from "lucide-react";
 import { Button } from "@/app/Components/ui/button";
 import { Input } from "@/app/Components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, } from "@/app/Components/ui/card";
@@ -25,6 +25,7 @@ export function InvoiceList() {
     const { can, loading: permsLoading } = usePermissions();
     const { currencySymbol } = useSettings();
     const canView = can("Invoices", "View");
+    const canEdit = can("Invoices", "Edit");
     const canDelete = can("Invoices", "Delete");
 
     // Refetch when tab regains focus (catches navigating back from create/detail pages)
@@ -169,6 +170,11 @@ export function InvoiceList() {
                                                 {canView && (<Button variant="ghost" size="icon" asChild>
                                                         <Link href={`/invoices/${invoice.id}`}>
                                                             <Eye className="h-4 w-4"/>
+                                                        </Link>
+                                                    </Button>)}
+                                                {canEdit && (<Button variant="ghost" size="icon" asChild>
+                                                        <Link href={`/invoices/${invoice.id}/edit`}>
+                                                            <Pencil className="h-4 w-4"/>
                                                         </Link>
                                                     </Button>)}
                                                 {canDelete && (<Button variant="ghost" size="icon" onClick={() => setInvoiceToDelete(invoice.id)} className="text-red-500 hover:text-red-700 hover:bg-red-50">

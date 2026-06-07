@@ -182,3 +182,133 @@ export async function PATCH(request, { params }) {
         return NextResponse.json({ error: error.message || "Failed to update invoice" }, { status: 500 });
     }
 }
+
+export async function PUT(request, { params }) {
+    const { id: paramId } = await params;
+    const session = await verifySession();
+    const canEdit = session ? await verifySessionPermission(session, "Invoices", "Edit") : false;
+    if (!session || !canEdit) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const id = parseInt(paramId);
+    if (isNaN(id)) {
+        return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+    }
+
+    try {
+        const body = await request.json().catch(() => ({}));
+        const {
+            date, dueDate, notes,
+            lpoNumber, lpoAttachmentPath, lpoAttachmentName,
+            attachmentPath, attachmentName, isSignedTimesheet, signatureDate,
+            adjustmentAmount, adjustmentNote,
+            items
+        } = body;
+
+        const [invoiceRows] = await dbTenant("SELECT * FROM `invoices` WHERE id = ? LIMIT 1", [id]);
+        const invoice = invoiceRows?.[0];
+        if (!invoice) {
+            return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+        }
+
+        // Fetch company settings to verify VAT configuration
+        const [settingsRows] = await dbTenant("SELECT enableVat, vatPercentage FROM `company_settings` LIMIT 1");
+        const companySettings = settingsRows?.[0];
+        // Keep invoice's own vatEnabled status or get it from company settings
+        const enableVat = invoice.vatEnabled === 1;
+        const vatPercentage = Number(invoice.vatPercentage || companySettings?.vatPercentage || 0);
+
+        const updatedInvoice = await withTenantTransaction(async (tx) => {
+            let subtotal = Number(invoice.subtotal);
+
+            if (items && Array.isArray(items)) {
+                // Delete existing items
+                await tx.execute("DELETE FROM `invoice_items` WHERE invoiceId = ?", [id]);
+
+                // Insert new/updated items
+                subtotal = 0;
+                for (const item of items) {
+                    const qty = Number(item.quantity || 0);
+                    const price = Number(item.unitPrice || 0);
+                    const total = qty * price;
+                    subtotal += total;
+
+                    await tx.execute(`
+                        INSERT INTO \`invoice_items\` 
+                        (invoiceId, description, quantity, unitPrice, total, regularHours, overtimeHours, holidayHours)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    `, [
+                        id,
+                        item.description,
+                        qty,
+                        price,
+                        total,
+                        Number(item.regularHours || 0),
+                        Number(item.overtimeHours || 0),
+                        Number(item.holidayHours || 0)
+                    ]);
+                }
+            }
+
+            const vatAmount = enableVat ? (subtotal * vatPercentage / 100) : 0;
+            const adjAmount = Number(adjustmentAmount !== undefined ? adjustmentAmount : invoice.adjustmentAmount || 0);
+            const grandTotal = subtotal + vatAmount + adjAmount;
+
+            await tx.execute(`
+                UPDATE \`invoices\` SET
+                    date = ?,
+                    dueDate = ?,
+                    notes = ?,
+                    subtotal = ?,
+                    vatEnabled = ?,
+                    vatPercentage = ?,
+                    vatAmount = ?,
+                    adjustmentAmount = ?,
+                    adjustmentNote = ?,
+                    grandTotal = ?,
+                    totalAmount = ?,
+                    lpoNumber = ?,
+                    lpoAttachmentPath = ?,
+                    lpoAttachmentName = ?,
+                    attachmentPath = ?,
+                    attachmentName = ?,
+                    isSignedTimesheet = ?,
+                    signatureDate = ?,
+                    updatedAt = NOW()
+                WHERE id = ?
+            `, [
+                date ? new Date(date) : (invoice.date ? new Date(invoice.date) : null),
+                dueDate ? new Date(dueDate) : null,
+                notes !== undefined ? notes : invoice.notes,
+                subtotal,
+                enableVat ? 1 : 0,
+                vatPercentage,
+                vatAmount,
+                adjAmount,
+                adjustmentNote !== undefined ? adjustmentNote : invoice.adjustmentNote,
+                grandTotal,
+                grandTotal,
+                lpoNumber !== undefined ? (lpoNumber || null) : (invoice.lpoNumber || null),
+                lpoAttachmentPath !== undefined ? (lpoAttachmentPath || null) : (invoice.lpoAttachmentPath || null),
+                lpoAttachmentName !== undefined ? (lpoAttachmentName || null) : (invoice.lpoAttachmentName || null),
+                attachmentPath !== undefined ? (attachmentPath || null) : (invoice.attachmentPath || null),
+                attachmentName !== undefined ? (attachmentName || null) : (invoice.attachmentName || null),
+                isSignedTimesheet !== undefined ? (isSignedTimesheet ? 1 : 0) : (invoice.isSignedTimesheet ?? 0),
+                signatureDate ? new Date(signatureDate) : (invoice.signatureDate ? new Date(invoice.signatureDate) : null),
+                id
+            ]);
+
+            const [updatedRows] = await tx.execute("SELECT * FROM `invoices` WHERE id = ? LIMIT 1", [id]);
+            return updatedRows[0];
+        });
+
+        await logActivity("INVOICE", id, "UPDATE", `Invoice ${invoice.invoiceNumber} details and items updated.`);
+
+        return NextResponse.json(updatedInvoice);
+    }
+    catch (error) {
+        console.error("Failed to update invoice via PUT:", error);
+        return NextResponse.json({ error: error.message || "Failed to update invoice" }, { status: 500 });
+    }
+}
+

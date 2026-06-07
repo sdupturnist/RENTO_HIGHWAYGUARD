@@ -60,14 +60,29 @@ export async function POST(request, props) {
 
         const linesToCreate = aggregateLogsIntoLines(logs, { fullDayHours, overtimeMultiplier, holidayMultiplier });
 
+        // Fetch project LPO to carry forward to timesheet during regeneration
+        let projectLpo = { lpoNumber: null, lpoAttachmentPath: null, lpoAttachmentName: null };
+        if (!isInternal && timesheet.projectId) {
+            const [[proj]] = await dbTenant(
+                "SELECT lpoNumber, lpoAttachmentPath, lpoAttachmentName FROM `projects` WHERE id = ? LIMIT 1",
+                [timesheet.projectId]
+            );
+            if (proj) projectLpo = proj;
+        }
+
         await withTenantTransaction(async (tx) => {
             await tx.execute("DELETE FROM `timesheet_lines` WHERE timesheetId = ?", [id]);
             await tx.execute(`
                 UPDATE \`timesheets\` SET
                     standardRateMultiplier = ?, overtimeMultiplier = ?, holidayMultiplier = ?,
+                    lpoNumber = ?, lpoAttachmentPath = ?, lpoAttachmentName = ?,
                     generatedBy = ?, generatedAt = NOW(), updatedAt = NOW()
                 WHERE id = ?
-            `, [1.0, overtimeMultiplier, holidayMultiplier, Number(session.userId), id]);
+            `, [
+                1.0, overtimeMultiplier, holidayMultiplier,
+                projectLpo.lpoNumber || null, projectLpo.lpoAttachmentPath || null, projectLpo.lpoAttachmentName || null,
+                Number(session.userId), id
+            ]);
 
             await insertTimesheetLines(tx, id, linesToCreate);
         });

@@ -70,14 +70,11 @@ const REQUIRED_PERMISSIONS = [
 ];
 
 async function ensureAllPermissionsExist() {
-    const [existingRows] = await dbTenant("SELECT COUNT(*) as count FROM `permissions`");
-    if (!existingRows[0]?.count || existingRows[0].count < REQUIRED_PERMISSIONS.length) {
-        for (const perm of REQUIRED_PERMISSIONS) {
-            await dbTenant(
-                "INSERT IGNORE INTO `permissions` (module, action) VALUES (?, ?)",
-                [perm.module, perm.action]
-            );
-        }
+    for (const perm of REQUIRED_PERMISSIONS) {
+        await dbTenant(
+            "INSERT IGNORE INTO `permissions` (module, action) VALUES (?, ?)",
+            [perm.module, perm.action]
+        );
     }
 }
 

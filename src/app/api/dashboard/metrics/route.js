@@ -11,11 +11,16 @@ export async function GET() {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
 
+        const endOfToday = new Date();
+        endOfToday.setHours(23, 59, 59, 999);
+
         const thirtyDaysFromNow = new Date();
         thirtyDaysFromNow.setDate(today.getDate() + 30);
+        thirtyDaysFromNow.setHours(23, 59, 59, 999);
 
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        endOfMonth.setHours(23, 59, 59, 999);
 
         // Formats a date to local MySQL standard datetime string, avoiding timezone/UTC distortions
         const fmt = (d) => {
@@ -56,14 +61,12 @@ export async function GET() {
                 [fmt(thirtyDaysFromNow), fmt(startOfDay)]
              ),
 
-            // Vehicles assigned in current month
+            // Assignments in current month
             dbTenant(
-                `SELECT COUNT(DISTINCT ab.vehicleId) as cnt
-                 FROM \`assignment_blocks\` ab
-                 JOIN \`assignments\` a ON a.id = ab.assignmentId
-                 WHERE ab.status != 'STOPPED'
-                   AND a.status = 'ACTIVE'
-                   AND ab.startDate <= ? AND ab.endDate >= ?`,
+                `SELECT COUNT(DISTINCT a.id) as cnt
+                 FROM \`assignments\` a
+                 WHERE a.status = 'ACTIVE'
+                   AND a.startDate <= ? AND a.endDate >= ?`,
                 [fmt(endOfMonth), fmt(startOfMonth)]
             ),
 
@@ -86,11 +89,11 @@ export async function GET() {
             dbTenant(
                 `SELECT COUNT(*) as cnt FROM \`assignments\`
                  WHERE status = 'ACTIVE' AND startDate <= ? AND endDate >= ?`,
-                [fmt(today), fmt(startOfDay)]
+                [fmt(endOfToday), fmt(startOfDay)]
             ),
 
-            // Pending (DRAFT) timesheets
-            dbTenant(`SELECT COUNT(*) as cnt FROM \`timesheets\` WHERE status = 'DRAFT'`, []),
+            // Pending (DRAFT/EXPORTED and unapproved) timesheets
+            dbTenant(`SELECT COUNT(*) as cnt FROM \`timesheets\` WHERE status IN ('DRAFT', 'EXPORTED') AND approvedAt IS NULL`, []),
 
             // Vehicles with assignments (for utilization graph + snapshot) - LEFT JOIN so unassigned active fleet is represented
             dbTenant(

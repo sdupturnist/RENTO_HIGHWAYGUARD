@@ -6,6 +6,7 @@ import { DashboardGraphs } from "@/app/Components/dashboard/DashboardGraphs";
 import { VehicleAssignmentSnapshot } from "@/app/Components/dashboard/VehicleAssignmentSnapshot";
 import { QuickActions } from "@/app/Components/dashboard/QuickActions";
 import { ExpiryOverview } from "@/app/Components/dashboard/ExpiryOverview";
+import { ApprovedUninvoicedTimesheets } from "@/app/Components/dashboard/ApprovedUninvoicedTimesheets";
 import { useQuery } from "@tanstack/react-query";
 
 export default function DashboardPage() {
@@ -19,10 +20,7 @@ export default function DashboardPage() {
             const json = await res.json();
             return json.data;
         },
-        staleTime: 5 * 60 * 1000,     // 5 minutes — data treated as fresh
-        gcTime: 10 * 60 * 1000,        // 10 minutes — keep in memory
-        refetchOnMount: false,          // Don't refetch when component remounts
-        refetchOnWindowFocus: false,    // Don't refetch on window focus
+        staleTime: 0,
     });
 
     useEffect(() => {
@@ -61,6 +59,8 @@ export default function DashboardPage() {
                 </div>
                 <QuickActions />
             </section>
+
+            <ApprovedUninvoicedTimesheets />
 
             <ExpiryOverview />
 
