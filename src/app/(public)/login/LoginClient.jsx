@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Lock, Mail, Loader2, Truck, Clock, ArrowRight, Wallet, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/app/Components/ui/button";
 import { Input } from "@/app/Components/ui/input";
@@ -11,6 +11,8 @@ import Link from "next/link";
 
 export default function LoginClient({ branding }) {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const isPasswordChanged = searchParams.get("changed") === "password";
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -134,6 +136,12 @@ export default function LoginClient({ branding }) {
                     <Card className="border-none shadow-none bg-transparent">
                         <CardContent className="p-0">
                             <form onSubmit={handleLogin} className="space-y-6">
+                                {isPasswordChanged && (
+                                    <div className="p-4 text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg border border-emerald-100 dark:border-emerald-900/50 animate-in fade-in slide-in-from-top-1">
+                                        Password changed successfully. Please sign in with your new password.
+                                    </div>
+                                )}
+
                                 {error && (
                                     <div className="p-4 text-sm font-medium text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-900/50 animate-in fade-in slide-in-from-top-1">
                                         {error}

@@ -42,8 +42,9 @@ export function ChangePasswordForm() {
                 }),
             });
             if (res.ok) {
-                toast.success("Password updated successfully");
-                form.reset();
+                toast.success("Password updated successfully. Signing out...");
+                await fetch("/api/auth/logout", { method: "POST" });
+                window.location.href = "/login?changed=password";
             }
             else {
                 const err = await res.json();

@@ -66,6 +66,11 @@ export const useAppStore = create((set, get) => ({
         if (res) set({ companySettings: res.data || res });
     },
 
+    refreshExpiry: async () => {
+        const res = await fetch("/api/expiry").then(res => res.json()).catch(() => null);
+        if (res) set({ expiry: res.data || res });
+    },
+
     clearStore: () => {
         set({
             brands: [],

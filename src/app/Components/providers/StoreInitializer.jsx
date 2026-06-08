@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 export default function StoreInitializer() {
     const initialize = useAppStore((state) => state.initialize);
+    const refreshExpiry = useAppStore((state) => state.refreshExpiry);
     const pathname = usePathname();
 
     useEffect(() => {
@@ -13,6 +14,11 @@ export default function StoreInitializer() {
         // We don't depend on pathname here to prevent refetching on route change.
         initialize();
     }, [initialize]);
+
+    useEffect(() => {
+        // Refresh expiry alerts/notifications on route transitions
+        refreshExpiry();
+    }, [pathname, refreshExpiry]);
 
     return null;
 }
