@@ -1,6 +1,6 @@
 "use client";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/app/Components/ui/card";
-import { FileText, Calendar, Clock, FileSpreadsheet, Receipt, Truck, TruckIcon, Users, Wrench, Banknote, Lock, Package, HardHat, TrendingUp, Construction, BarChart3, DollarSign } from "lucide-react";
+import { FileText, Calendar, Clock, FileSpreadsheet, Receipt, Truck, TruckIcon, Users, Wrench, Banknote, Lock, Package, HardHat, Construction, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/app/lib/utils";
 
@@ -86,21 +86,7 @@ const reports = [
         description: "Operational and miscellaneous expenses",
         icon: Banknote,
         href: "/reports/expenses",
-        category: "finance",
-    },
-    {
-        title: "Profitability Report",
-        description: "Billed vs estimated cost margin per timesheet",
-        icon: TrendingUp,
-        href: "/reports/profitability",
-        category: "finance",
-    },
-    {
-        title: "Revenue Report",
-        description: "Monthly invoice revenue with paid vs outstanding breakdown",
-        icon: DollarSign,
-        href: "/reports/revenue",
-        category: "finance",
+        category: "operations",
     },
     // Resources
     {
