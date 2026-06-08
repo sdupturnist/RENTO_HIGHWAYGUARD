@@ -1,6 +1,6 @@
 "use client";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/app/Components/ui/card";
-import { FileText, Calendar, Clock, FileSpreadsheet, Receipt, Truck, TruckIcon, Users, Wrench, Banknote, Lock, Package, HardHat, Construction, BarChart3 } from "lucide-react";
+import { FileText, Calendar, Clock, FileSpreadsheet, Receipt, Truck, TruckIcon, Users, Wrench, Banknote, Lock, Package, HardHat, Construction, BarChart3, FolderOpen } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/app/lib/utils";
 
@@ -18,6 +18,13 @@ const reports = [
         description: "Overview of all assignments",
         icon: Calendar,
         href: "/reports/assignments",
+        category: "operations",
+    },
+    {
+        title: "Project Report",
+        description: "Full project breakdown — assignments, timesheets, invoices and expenses",
+        icon: FolderOpen,
+        href: "/reports/project",
         category: "operations",
     },
     {
