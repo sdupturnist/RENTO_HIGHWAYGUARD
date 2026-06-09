@@ -23,6 +23,7 @@ export async function POST(request) {
         const assignmentSettings = assignSettingsRows?.[0] || {};
 
         const globalFullDayHours = Number(companySettings.fullDayHours || 8);
+        const overtimeStartsAfter = Number(companySettings.overtimeStartsAfter ?? globalFullDayHours);
         const weekendDays = companySettings.weekendDays || [];
 
         const [aRows] = await dbTenant("SELECT * FROM `assignments` WHERE id = ?", [parseInt(assignmentId)]);
@@ -36,6 +37,22 @@ export async function POST(request) {
         let totalSkipped = 0;
 
         await withTenantTransaction(async (tx) => {
+            let fullDayLimit = globalFullDayHours;
+            let otLimit = overtimeStartsAfter;
+
+            if (assignment.projectId) {
+                const [projRows] = await tx.execute(
+                    "SELECT fullDayHours, overtimeStartsAfter FROM `projects` WHERE id = ? LIMIT 1",
+                    [assignment.projectId]
+                );
+                const proj = projRows?.[0];
+                if (proj) {
+                    if (proj.fullDayHours !== null) fullDayLimit = Number(proj.fullDayHours);
+                    if (proj.overtimeStartsAfter !== null) otLimit = Number(proj.overtimeStartsAfter);
+                    else if (proj.fullDayHours !== null) otLimit = Number(proj.fullDayHours);
+                }
+            }
+
             for (const block of blocks) {
                 const blockType = block.blockType || "VEHICLE";
 
@@ -137,9 +154,10 @@ export async function POST(request) {
                         ]);
                     } else {
                         const plannedOT = Number(plannedOvertimeHours || 0);
-                        const workedHours = globalFullDayHours + plannedOT;
-                        const regularHours = isWknd ? 0 : Math.min(workedHours, globalFullDayHours);
-                        const overtimeHours = isWknd ? workedHours : Math.max(0, workedHours - globalFullDayHours);
+                        const workedHours = fullDayLimit + plannedOT;
+                        const limit = blockType === "OPERATOR" ? otLimit : fullDayLimit;
+                        const regularHours = isWknd ? 0 : Math.min(workedHours, limit);
+                        const overtimeHours = isWknd ? workedHours : Math.max(0, workedHours - limit);
                         const workType = blockType === "OPERATOR" ? (block.workType || "Full Day") : "Full Day";
 
                         await tx.execute(`

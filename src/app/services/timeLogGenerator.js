@@ -17,6 +17,7 @@ export async function generateDailyTimeLogs(params = new Date()) {
     const assignmentSettings = assignSettingsRows?.[0] || {};
 
     const globalFullDayHours = Number(companySettings.fullDayHours || 8);
+    const overtimeStartsAfter = Number(companySettings.overtimeStartsAfter ?? globalFullDayHours);
     const weekendDays = companySettings.weekendDays || [];
     const dayName = format(targetDate, "EEEE");
     const isWknd = weekendDays.includes(dayName);
@@ -41,6 +42,22 @@ export async function generateDailyTimeLogs(params = new Date()) {
 
     for (const assignment of (activeAssignments || [])) {
         await withTenantTransaction(async (tx) => {
+            let fullDayLimit = globalFullDayHours;
+            let otLimit = overtimeStartsAfter;
+
+            if (assignment.projectId) {
+                const [projRows] = await tx.execute(
+                    "SELECT fullDayHours, overtimeStartsAfter FROM `projects` WHERE id = ? LIMIT 1",
+                    [assignment.projectId]
+                );
+                const proj = projRows?.[0];
+                if (proj) {
+                    if (proj.fullDayHours !== null) fullDayLimit = Number(proj.fullDayHours);
+                    if (proj.overtimeStartsAfter !== null) otLimit = Number(proj.overtimeStartsAfter);
+                    else if (proj.fullDayHours !== null) otLimit = Number(proj.fullDayHours);
+                }
+            }
+
             const [blocks] = await tx.execute(`
                 SELECT b.* FROM \`assignment_blocks\` b
                 WHERE b.assignmentId = ?
@@ -97,9 +114,9 @@ export async function generateDailyTimeLogs(params = new Date()) {
                     operatorId = block.operatorId || null;
                     workType = "Full Day";
                     const plannedOT = Number(plannedOvertimeHours || 0);
-                    workedHours = globalFullDayHours + plannedOT;
-                    regularHours = isWknd ? 0 : Math.min(workedHours, globalFullDayHours);
-                    overtimeHours = isWknd ? workedHours : Math.max(0, workedHours - globalFullDayHours);
+                    workedHours = fullDayLimit + plannedOT;
+                    regularHours = isWknd ? 0 : Math.min(workedHours, fullDayLimit);
+                    overtimeHours = isWknd ? workedHours : Math.max(0, workedHours - fullDayLimit);
                     if (block.vehicleId) {
                         const [vRows] = await tx.execute(
                             `SELECT regNo, baseRentAmount FROM \`vehicles\` WHERE id = ? LIMIT 1`,
@@ -112,9 +129,9 @@ export async function generateDailyTimeLogs(params = new Date()) {
                     operatorId = block.operatorId || null;
                     workType = block.workType || "Full Day";
                     const plannedOT = Number(plannedOvertimeHours || 0);
-                    workedHours = globalFullDayHours + plannedOT;
-                    regularHours = isWknd ? 0 : Math.min(workedHours, globalFullDayHours);
-                    overtimeHours = isWknd ? workedHours : Math.max(0, workedHours - globalFullDayHours);
+                    workedHours = fullDayLimit + plannedOT;
+                    regularHours = isWknd ? 0 : Math.min(workedHours, otLimit);
+                    overtimeHours = isWknd ? workedHours : Math.max(0, workedHours - otLimit);
                     if (block.operatorId) {
                         const [oRows] = await tx.execute(
                             `SELECT name, hourlyRate FROM \`operators\` WHERE id = ? LIMIT 1`,

@@ -71,8 +71,9 @@ export function buildDTLQuery({ isInternal, customerId, projectId, periodStart, 
  * Aggregate daily_time_log rows into grouped timesheet line entries (one per resource per day).
  * Used by: generate/route.js, regenerate/route.js
  */
-export function aggregateLogsIntoLines(logs, { fullDayHours, overtimeMultiplier, holidayMultiplier }) {
+export function aggregateLogsIntoLines(logs, { fullDayHours, overtimeStartsAfter, overtimeMultiplier, holidayMultiplier }) {
     const groupedLines = new Map();
+    const otStarts = overtimeStartsAfter ?? fullDayHours;
 
     for (const log of logs) {
         const blockType = log.blockType || "VEHICLE";
@@ -152,14 +153,21 @@ export function aggregateLogsIntoLines(logs, { fullDayHours, overtimeMultiplier,
             }
 
             const operatorEntry = groupedLines.get(operatorKey);
-            operatorEntry.regularHours += logRegular;
-            operatorEntry.overtimeHours += logOvertime;
-            operatorEntry.holidayHours += logHoliday;
+            let opRegular = 0, opOvertime = 0, opHoliday = 0;
+            if (log.isHoliday) opHoliday = worked;
+            else if (log.isWeekend) opOvertime = worked;
+            else {
+                opRegular = Math.min(worked, otStarts);
+                opOvertime = Math.max(0, worked - otStarts);
+            }
+            operatorEntry.regularHours += opRegular;
+            operatorEntry.overtimeHours += opOvertime;
+            operatorEntry.holidayHours += opHoliday;
 
             const opRate = Number(log.hourlyRate || 0);
-            operatorEntry.calculatedAmount += logRegular * opRate
-                + logOvertime * opRate * overtimeMultiplier
-                + logHoliday * opRate * holidayMultiplier;
+            operatorEntry.calculatedAmount += opRegular * opRate
+                + opOvertime * opRate * overtimeMultiplier
+                + opHoliday * opRate * holidayMultiplier;
 
         } else {
             // Process normally (VEHICLE without operator, OPERATOR, MATERIAL, LABOUR)
@@ -207,8 +215,9 @@ export function aggregateLogsIntoLines(logs, { fullDayHours, overtimeMultiplier,
                 if (log.isHoliday) logHoliday = worked;
                 else if (log.isWeekend) logOvertime = worked;
                 else {
-                    logRegular = Math.min(worked, fullDayHours);
-                    logOvertime = Math.max(0, worked - fullDayHours);
+                    const limit = blockType === "OPERATOR" ? otStarts : fullDayHours;
+                    logRegular = Math.min(worked, limit);
+                    logOvertime = Math.max(0, worked - limit);
                 }
                 entry.regularHours += logRegular;
                 entry.overtimeHours += logOvertime;

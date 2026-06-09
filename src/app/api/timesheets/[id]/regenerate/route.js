@@ -29,9 +29,19 @@ export async function POST(request, props) {
 
         const [settingsRows] = await dbTenant("SELECT * FROM `company_settings` LIMIT 1");
         const companySettings = settingsRows?.[0] || {};
-        const fullDayHours = Number(companySettings.fullDayHours || 8);
+        let fullDayHours = Number(companySettings.fullDayHours || 8);
+        let overtimeStartsAfter = Number(companySettings.overtimeStartsAfter ?? fullDayHours);
         const overtimeMultiplier = Number(companySettings.overtimeMultiplier || 1.5);
         const holidayMultiplier = Number(companySettings.holidayMultiplier || 2.0);
+
+        if (timesheet.projectId) {
+            const [[proj]] = await dbTenant("SELECT fullDayHours, overtimeStartsAfter FROM `projects` WHERE id = ? LIMIT 1", [timesheet.projectId]);
+            if (proj) {
+                if (proj.fullDayHours !== null) fullDayHours = Number(proj.fullDayHours);
+                if (proj.overtimeStartsAfter !== null) overtimeStartsAfter = Number(proj.overtimeStartsAfter);
+                else if (proj.fullDayHours !== null) overtimeStartsAfter = Number(proj.fullDayHours);
+            }
+        }
 
         const isInternal = !!timesheet.isInternal;
 
@@ -61,7 +71,7 @@ export async function POST(request, props) {
         const [logs] = await dbTenant(logQuery, logParams);
         if (!logs || logs.length === 0) return NextResponse.json({ error: "No time logs found for the period anymore." }, { status: 404 });
 
-        const linesToCreate = aggregateLogsIntoLines(logs, { fullDayHours, overtimeMultiplier, holidayMultiplier });
+        const linesToCreate = aggregateLogsIntoLines(logs, { fullDayHours, overtimeStartsAfter, overtimeMultiplier, holidayMultiplier });
 
         // Fetch project LPO to carry forward to timesheet during regeneration
         let projectLpo = { lpoNumber: null, lpoAttachmentPath: null, lpoAttachmentName: null };

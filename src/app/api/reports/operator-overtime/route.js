@@ -31,9 +31,10 @@ export async function GET(request) {
         const startDateStr = `${rawDateFrom} 00:00:00`;
         const endDateStr = `${rawDateTo} 23:59:59.999`;
 
-        const [settingsRows] = await dbTenant("SELECT fullDayHours FROM `company_settings` LIMIT 1");
+        const [settingsRows] = await dbTenant("SELECT fullDayHours, overtimeStartsAfter FROM `company_settings` LIMIT 1");
         const companySettings = settingsRows?.[0];
         const fullDayHours = Number(companySettings?.fullDayHours || 8);
+        const overtimeStartsAfter = Number(companySettings?.overtimeStartsAfter ?? fullDayHours);
 
         let whereClause = "WHERE 1=1";
         const params = [];
@@ -55,18 +56,46 @@ export async function GET(request) {
         if (operatorIds.length > 0) {
             const placeholders = operatorIds.map(() => "?").join(",");
             const [otRows] = await dbTenant(`
-                SELECT operatorId,
-                       SUM(workedHours) as totalWorkedHours,
-                       SUM(overtimeHours) as overtimeHours,
-                       SUM(isWeekend) as weekendDays,
-                       SUM(isHoliday) as holidayDays
-                FROM \`daily_time_logs\`
-                WHERE operatorId IN (${placeholders})
-                  AND date >= ? AND date <= ?
-                GROUP BY operatorId
+                SELECT dtl.operatorId, dtl.workedHours, dtl.isWeekend, dtl.isHoliday,
+                       p.fullDayHours as proj_fullDayHours, p.overtimeStartsAfter as proj_overtimeStartsAfter
+                FROM \`daily_time_logs\` dtl
+                LEFT JOIN \`projects\` p ON p.id = dtl.projectId
+                WHERE dtl.operatorId IN (${placeholders})
+                  AND dtl.date >= ? AND dtl.date <= ?
             `, [...operatorIds, startDateStr, endDateStr]);
             for (const row of otRows) {
-                otStats[row.operatorId] = row;
+                const opId = row.operatorId;
+                const worked = Number(row.workedHours || 0);
+                
+                // Resolve limit: use project overrides if specified, otherwise fall back to global settings
+                let limit = overtimeStartsAfter;
+                if (row.proj_overtimeStartsAfter !== null) {
+                    limit = Number(row.proj_overtimeStartsAfter);
+                } else if (row.proj_fullDayHours !== null) {
+                    limit = Number(row.proj_fullDayHours);
+                }
+
+                let opRegular = 0, opOvertime = 0, opHoliday = 0;
+                
+                if (row.isHoliday) opHoliday = worked;
+                else if (row.isWeekend) opOvertime = worked;
+                else {
+                    opRegular = Math.min(worked, limit);
+                    opOvertime = Math.max(0, worked - limit);
+                }
+                
+                if (!otStats[opId]) {
+                    otStats[opId] = {
+                        totalWorkedHours: 0,
+                        overtimeHours: 0,
+                        weekendDays: 0,
+                        holidayDays: 0
+                    };
+                }
+                otStats[opId].totalWorkedHours += worked;
+                otStats[opId].overtimeHours += opOvertime;
+                if (row.isWeekend) otStats[opId].weekendDays += 1;
+                if (row.isHoliday) otStats[opId].holidayDays += 1;
             }
         }
 

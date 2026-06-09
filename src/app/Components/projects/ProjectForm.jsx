@@ -21,6 +21,8 @@ const projectSchema = z.object({
     customerId: z.string().min(1, "Client is required"),
     status: z.enum(["ACTIVE", "INACTIVE", "COMPLETED"]).optional(),
     lpoNumber: z.string().optional().nullable().or(z.literal("")),
+    fullDayHours: z.string().optional().nullable().or(z.literal("")),
+    overtimeStartsAfter: z.string().optional().nullable().or(z.literal("")),
 });
 
 export function ProjectForm({ initialData }) {
@@ -41,6 +43,8 @@ export function ProjectForm({ initialData }) {
             status: initialData.status || "ACTIVE",
             location: initialData.location || "",
             lpoNumber: initialData.lpoNumber || "",
+            fullDayHours: initialData.fullDayHours !== null && initialData.fullDayHours !== undefined ? String(initialData.fullDayHours) : "",
+            overtimeStartsAfter: initialData.overtimeStartsAfter !== null && initialData.overtimeStartsAfter !== undefined ? String(initialData.overtimeStartsAfter) : "",
         } : {
             name: "",
             location: "",
@@ -48,6 +52,8 @@ export function ProjectForm({ initialData }) {
             customerId: "",
             status: "ACTIVE",
             lpoNumber: "",
+            fullDayHours: "",
+            overtimeStartsAfter: "",
         },
     });
 
@@ -105,6 +111,8 @@ export function ProjectForm({ initialData }) {
                     lpoNumber: data.lpoNumber || null,
                     lpoAttachmentPath,
                     lpoAttachmentName,
+                    fullDayHours: data.fullDayHours && data.fullDayHours.trim() !== "" ? Number(data.fullDayHours) : null,
+                    overtimeStartsAfter: data.overtimeStartsAfter && data.overtimeStartsAfter.trim() !== "" ? Number(data.overtimeStartsAfter) : null,
                 }),
             });
 
@@ -217,6 +225,28 @@ export function ProjectForm({ initialData }) {
                                     </SelectContent>
                                 </Select>
                                 <FormDescription>Determines default invoice generation cycle.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+
+                        <FormField control={form.control} name="fullDayHours" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Standard Full Day Override (Hours)</FormLabel>
+                                <FormControl>
+                                    <Input {...field} type="number" step="0.5" placeholder="e.g. 8 (Leave empty for default)" />
+                                </FormControl>
+                                <FormDescription>Overrides the company default working hours per day.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+
+                        <FormField control={form.control} name="overtimeStartsAfter" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Overtime Starts After Override (Hours)</FormLabel>
+                                <FormControl>
+                                    <Input {...field} type="number" step="0.5" placeholder="e.g. 10 (Leave empty for default)" />
+                                </FormControl>
+                                <FormDescription>Overrides the hours after which operator overtime rates apply.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                         )} />

@@ -126,8 +126,8 @@ export async function PATCH(request, props) {
         if (!rows?.[0]) return NextResponse.json({ error: "Timesheet not found" }, { status: 404 });
         const freshTimesheet = rows[0];
 
-        if (freshTimesheet.status === "INVOICED" && action !== "unapprove") {
-            return NextResponse.json({ error: "Cannot modify invoiced timesheet." }, { status: 403 });
+        if (freshTimesheet.status === "INVOICED") {
+            return NextResponse.json({ error: "Cannot modify or unapprove an invoiced timesheet. You must delete the invoice first." }, { status: 403 });
         }
         if (freshTimesheet.approvedAt && action !== "unapprove" && status !== "EXPORTED") {
             return NextResponse.json({ error: "Cannot modify approved timesheet." }, { status: 403 });

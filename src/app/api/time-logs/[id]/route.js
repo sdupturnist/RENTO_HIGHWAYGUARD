@@ -106,15 +106,27 @@ export async function PUT(request, { params }) {
 
             // Recalculate hour breakdown whenever workedHours, isWeekend, or isHoliday changes
             if (data.workedHours !== undefined || data.isWeekend !== undefined || data.isHoliday !== undefined) {
-                const [csRows] = await dbTenant("SELECT fullDayHours FROM `company_settings` LIMIT 1");
-                const fullDayHours = Number(csRows?.[0]?.fullDayHours || 8);
+                const [csRows] = await dbTenant("SELECT fullDayHours, overtimeStartsAfter FROM `company_settings` LIMIT 1");
+                let fullDayHours = Number(csRows?.[0]?.fullDayHours || 8);
+                let overtimeStartsAfter = Number(csRows?.[0]?.overtimeStartsAfter ?? fullDayHours);
+
+                if (existingLog.projectId) {
+                    const [[proj]] = await dbTenant("SELECT fullDayHours, overtimeStartsAfter FROM `projects` WHERE id = ? LIMIT 1", [existingLog.projectId]);
+                    if (proj) {
+                        if (proj.fullDayHours !== null) fullDayHours = Number(proj.fullDayHours);
+                        if (proj.overtimeStartsAfter !== null) overtimeStartsAfter = Number(proj.overtimeStartsAfter);
+                        else if (proj.fullDayHours !== null) overtimeStartsAfter = Number(proj.fullDayHours);
+                    }
+                }
+
                 if (isHoliday) {
                     regularHours = 0; overtimeHours = 0; holidayHours = worked;
                 } else if (isWeekend) {
                     regularHours = 0; overtimeHours = worked; holidayHours = 0;
                 } else {
-                    regularHours = Math.min(worked, fullDayHours);
-                    overtimeHours = Math.max(0, worked - fullDayHours);
+                    const limit = blockType === "OPERATOR" ? overtimeStartsAfter : fullDayHours;
+                    regularHours = Math.min(worked, limit);
+                    overtimeHours = Math.max(0, worked - limit);
                     holidayHours = 0;
                 }
             }

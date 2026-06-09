@@ -248,16 +248,27 @@ export async function POST(request) {
             if (workedHours > 24)
                 return NextResponse.json({ message: "Worked hours cannot exceed 24" }, { status: 400 });
 
-            const [csRows] = await dbTenant("SELECT fullDayHours FROM `company_settings` LIMIT 1");
-            const fullDayHours = Number(csRows?.[0]?.fullDayHours || 8);
+            const [csRows] = await dbTenant("SELECT fullDayHours, overtimeStartsAfter FROM `company_settings` LIMIT 1");
+            let fullDayHours = Number(csRows?.[0]?.fullDayHours || 8);
+            let overtimeStartsAfter = Number(csRows?.[0]?.overtimeStartsAfter ?? fullDayHours);
+
+            if (assignment.projectId) {
+                const [[proj]] = await dbTenant("SELECT fullDayHours, overtimeStartsAfter FROM `projects` WHERE id = ? LIMIT 1", [assignment.projectId]);
+                if (proj) {
+                    if (proj.fullDayHours !== null) fullDayHours = Number(proj.fullDayHours);
+                    if (proj.overtimeStartsAfter !== null) overtimeStartsAfter = Number(proj.overtimeStartsAfter);
+                    else if (proj.fullDayHours !== null) overtimeStartsAfter = Number(proj.fullDayHours);
+                }
+            }
 
             if (data.isHoliday) {
                 holidayHours = workedHours;
             } else if (data.isWeekend) {
                 overtimeHours = workedHours;
             } else {
-                regularHours = Math.min(workedHours, fullDayHours);
-                overtimeHours = Math.max(0, workedHours - fullDayHours);
+                const limit = blockType === "OPERATOR" ? overtimeStartsAfter : fullDayHours;
+                regularHours = Math.min(workedHours, limit);
+                overtimeHours = Math.max(0, workedHours - limit);
             }
         }
 

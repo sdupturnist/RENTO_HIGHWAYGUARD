@@ -16,6 +16,8 @@ const updateProjectSchema = z.object({
     lpoNumber: z.string().optional().nullable(),
     lpoAttachmentPath: z.string().optional().nullable(),
     lpoAttachmentName: z.string().optional().nullable(),
+    fullDayHours: z.coerce.number().min(0).max(24).optional().nullable(),
+    overtimeStartsAfter: z.coerce.number().min(0).max(24).optional().nullable(),
 });
 
 export async function GET(request, { params }) {
@@ -58,10 +60,13 @@ export async function PUT(request, { params }) {
 
         await dbTenant(`
             UPDATE \`projects\` SET name = ?, location = ?, billingCycle = ?, customerId = ?, status = ?,
-                lpoNumber = ?, lpoAttachmentPath = ?, lpoAttachmentName = ?, updatedAt = NOW()
+                lpoNumber = ?, lpoAttachmentPath = ?, lpoAttachmentName = ?, 
+                fullDayHours = ?, overtimeStartsAfter = ?, updatedAt = NOW()
             WHERE id = ?
         `, [data.name, data.location || null, data.billingCycle, data.customerId, data.status || null,
-            data.lpoNumber || null, data.lpoAttachmentPath || null, data.lpoAttachmentName || null, id]);
+            data.lpoNumber || null, data.lpoAttachmentPath || null, data.lpoAttachmentName || null,
+            data.fullDayHours !== undefined ? data.fullDayHours : null,
+            data.overtimeStartsAfter !== undefined ? data.overtimeStartsAfter : null, id]);
 
         const [rows] = await dbTenant(`SELECT * FROM \`projects\` WHERE id = ? LIMIT 1`, [id]);
         await logActivity("PROJECT", id, "UPDATE", `Project ${data.name} updated`);
@@ -123,6 +128,8 @@ export async function PATCH(request, { params }) {
         if (data.lpoNumber !== undefined) { fields.push("lpoNumber = ?"); values.push(data.lpoNumber || null); }
         if (data.lpoAttachmentPath !== undefined) { fields.push("lpoAttachmentPath = ?"); values.push(data.lpoAttachmentPath || null); }
         if (data.lpoAttachmentName !== undefined) { fields.push("lpoAttachmentName = ?"); values.push(data.lpoAttachmentName || null); }
+        if (data.fullDayHours !== undefined) { fields.push("fullDayHours = ?"); values.push(data.fullDayHours); }
+        if (data.overtimeStartsAfter !== undefined) { fields.push("overtimeStartsAfter = ?"); values.push(data.overtimeStartsAfter); }
         fields.push("updatedAt = NOW()");
 
         await dbTenant(`UPDATE \`projects\` SET ${fields.join(", ")} WHERE id = ?`, [...values, id]);

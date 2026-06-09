@@ -89,9 +89,19 @@ export async function POST(request) {
         // 2. Fetch Settings
         const [settingsRows] = await dbTenant("SELECT * FROM `company_settings` LIMIT 1");
         const companySettings = settingsRows?.[0] || {};
-        const fullDayHours = Number(companySettings.fullDayHours || 8);
+        let fullDayHours = Number(companySettings.fullDayHours || 8);
+        let overtimeStartsAfter = Number(companySettings.overtimeStartsAfter ?? fullDayHours);
         const overtimeMultiplier = Number(companySettings.overtimeMultiplier || 1.5);
         const holidayMultiplier = Number(companySettings.holidayMultiplier || 2.0);
+
+        if (projectId) {
+            const [[proj]] = await dbTenant("SELECT fullDayHours, overtimeStartsAfter FROM `projects` WHERE id = ? LIMIT 1", [projectId]);
+            if (proj) {
+                if (proj.fullDayHours !== null) fullDayHours = Number(proj.fullDayHours);
+                if (proj.overtimeStartsAfter !== null) overtimeStartsAfter = Number(proj.overtimeStartsAfter);
+                else if (proj.fullDayHours !== null) overtimeStartsAfter = Number(proj.fullDayHours);
+            }
+        }
 
         // 3. Fetch Daily Logs — filtered by selected assignmentIds
         const { sql: logQuery, params: logParams } = buildDTLQuery({
@@ -106,7 +116,7 @@ export async function POST(request) {
         if (!logs || logs.length === 0) return NextResponse.json({ error: "No time logs found for selected assignments in this period" }, { status: 404 });
 
         // 4. Aggregation — one line per resource per day (Detailed mode)
-        const linesToCreate = aggregateLogsIntoLines(logs, { fullDayHours, overtimeMultiplier, holidayMultiplier });
+        const linesToCreate = aggregateLogsIntoLines(logs, { fullDayHours, overtimeStartsAfter, overtimeMultiplier, holidayMultiplier });
 
         // Fetch project LPO to carry forward to timesheet
         let projectLpo = { lpoNumber: null, lpoAttachmentPath: null, lpoAttachmentName: null };

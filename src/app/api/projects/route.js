@@ -15,6 +15,8 @@ const createProjectSchema = z.object({
     lpoNumber: z.string().optional().nullable(),
     lpoAttachmentPath: z.string().optional().nullable(),
     lpoAttachmentName: z.string().optional().nullable(),
+    fullDayHours: z.coerce.number().min(0).max(24).optional().nullable(),
+    overtimeStartsAfter: z.coerce.number().min(0).max(24).optional().nullable(),
 });
 
 export async function GET(request) {
@@ -90,10 +92,12 @@ export async function POST(request) {
             });
 
             const [result] = await tx.execute(
-                `INSERT INTO \`projects\` (projectCode, name, location, billingCycle, customerId, status, lpoNumber, lpoAttachmentPath, lpoAttachmentName, createdAt, updatedAt)
-                 VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?, NOW(), NOW())`,
+                `INSERT INTO \`projects\` (projectCode, name, location, billingCycle, customerId, status, lpoNumber, lpoAttachmentPath, lpoAttachmentName, fullDayHours, overtimeStartsAfter, createdAt, updatedAt)
+                 VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?, ?, NOW(), NOW())`,
                 [code, data.name, data.location || null, data.billingCycle, data.customerId,
-                 data.lpoNumber || null, data.lpoAttachmentPath || null, data.lpoAttachmentName || null]
+                 data.lpoNumber || null, data.lpoAttachmentPath || null, data.lpoAttachmentName || null,
+                 data.fullDayHours !== undefined ? data.fullDayHours : null,
+                 data.overtimeStartsAfter !== undefined ? data.overtimeStartsAfter : null]
             );
             return result.insertId;
         });
