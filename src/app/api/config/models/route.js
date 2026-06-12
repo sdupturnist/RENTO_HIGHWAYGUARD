@@ -12,10 +12,11 @@ export async function GET(req) {
         const brandId = searchParams.get("brandId");
 
         let query = `
-            SELECT m.*, b.name as brand_name,
+            SELECT m.*, b.name as brand_name, t.name as type_name,
                    (SELECT COUNT(*) FROM \`vehicles\` v WHERE v.modelId = m.id) as vehicles_count
             FROM \`vehicle_models\` m
             LEFT JOIN \`vehicle_brands\` b ON b.id = m.brandId
+            LEFT JOIN \`vehicle_types\` t ON t.id = b.typeId
         `;
         const params = [];
         if (brandId) {
@@ -28,7 +29,7 @@ export async function GET(req) {
 
         const formattedModels = (models || []).map(m => ({
             ...m,
-            brand: m.brandId ? { id: m.brandId, name: m.brand_name } : null,
+            brand: m.brandId ? { id: m.brandId, name: m.brand_name, type: m.type_name ? { name: m.type_name } : null } : null,
             _count: { vehicles: m.vehicles_count }
         }));
 

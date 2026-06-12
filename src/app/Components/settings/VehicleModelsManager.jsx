@@ -14,10 +14,12 @@ import { Label } from "@/app/Components/ui/label";
 export function VehicleModelsManager() {
     const [brands, setBrands] = useState([]);
     const [models, setModels] = useState([]);
+    const [types, setTypes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [editingModel, setEditingModel] = useState(null);
     // Create State
     const [newModel, setNewModel] = useState("");
+    const [selectedType, setSelectedType] = useState("");
     const [selectedBrand, setSelectedBrand] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [open, setOpen] = useState(false);
@@ -29,6 +31,11 @@ export function VehicleModelsManager() {
         const res = await fetch("/api/config/brands");
         if (res.ok)
             setBrands(await res.json());
+    };
+    const fetchTypes = async () => {
+        const res = await fetch("/api/config/vehicle-types");
+        if (res.ok)
+            setTypes(await res.json());
     };
     const fetchModels = async () => {
         setLoading(true);
@@ -45,8 +52,15 @@ export function VehicleModelsManager() {
             setLoading(false);
         }
     };
-    useEffect(() => { fetchBrands(); }, []);
+    useEffect(() => {
+        fetchBrands();
+        fetchTypes();
+    }, []);
     useEffect(() => { fetchModels(); }, [filterBrand]);
+
+    const filteredBrandsForSelect = selectedType
+        ? brands.filter(b => Number(b.typeId || b.type?.id) === Number(selectedType))
+        : [];
     const handleSubmit = async () => {
         if (!newModel || !selectedBrand) {
             toast.error("Name and Brand are required");
@@ -109,6 +123,10 @@ export function VehicleModelsManager() {
     const openEdit = (model) => {
         setEditingModel(model);
         setNewModel(model.name);
+        const modelBrand = brands.find(b => b.id === Number(model.brandId || model.brand?.id));
+        if (modelBrand) {
+            setSelectedType(String(modelBrand.typeId || modelBrand.type?.id || ""));
+        }
         setSelectedBrand(String(model.brandId || model.brand?.id || ""));
         setOpen(true);
     };
@@ -117,24 +135,31 @@ export function VehicleModelsManager() {
                 <div className="flex items-center space-x-2">
                     <h3 className="text-lg font-medium">Models</h3>
                     <Select value={filterBrand} onValueChange={setFilterBrand}>
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-[220px]">
                             <SelectValue placeholder="Filter by Brand"/>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="ALL">All Brands</SelectItem>
-                            {brands.map(b => (<SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>))}
+                            {brands.map(b => (
+                                <SelectItem key={b.id} value={String(b.id)}>
+                                    {b.name} {b.type?.name ? `(${b.type.name})` : ""}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
 
                 <Dialog open={open} onOpenChange={(val) => {
             setOpen(val);
-            if (val)
+            if (val) {
                 fetchBrands();
+                fetchTypes();
+            }
             if (!val) {
                 setEditingModel(null);
                 setNewModel("");
                 setSelectedBrand("");
+                setSelectedType("");
             }
         }}>
                     <DialogTrigger asChild>
@@ -144,11 +169,23 @@ export function VehicleModelsManager() {
                         <DialogHeader><DialogTitle>{editingModel ? "Edit Vehicle Model" : "Add Vehicle Model"}</DialogTitle></DialogHeader>
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
-                                <Label>Brand</Label>
-                                <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-                                    <SelectTrigger><SelectValue placeholder="Select Brand"/></SelectTrigger>
+                                <Label>Vehicle Type</Label>
+                                <Select value={selectedType} onValueChange={(val) => {
+                setSelectedType(val);
+                setSelectedBrand(""); // Reset brand when type changes
+            }}>
+                                    <SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger>
                                     <SelectContent>
-                                        {brands.map(b => (<SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>))}
+                                        {types.map(t => (<SelectItem key={t.id} value={String(t.id)}>{t.name}</SelectItem>))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Brand</Label>
+                                <Select value={selectedBrand} onValueChange={setSelectedBrand} disabled={!selectedType}>
+                                    <SelectTrigger><SelectValue placeholder={selectedType ? "Select Brand" : "Select Type First"}/></SelectTrigger>
+                                    <SelectContent>
+                                        {filteredBrandsForSelect.map(b => (<SelectItem key={b.id} value={String(b.id)}>{b.name}</SelectItem>))}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -176,7 +213,9 @@ export function VehicleModelsManager() {
                     <TableBody>
                         {loading ? (<TableRow><TableCell colSpan={3} className="text-center h-24"><Loader2 className="h-6 w-6 animate-spin mx-auto"/></TableCell></TableRow>) : models.length === 0 ? (<TableRow><TableCell colSpan={3} className="text-center h-24 text-muted-foreground">No models found.</TableCell></TableRow>) : (models.map((model) => (<TableRow key={model.id}>
                                     <TableCell title={model.name}>{truncateString(model.name, 20)}</TableCell>
-                                    <TableCell title={model.brand?.name}>{truncateString(model.brand?.name, 20)}</TableCell>
+                                    <TableCell title={`${model.brand?.name || ""}${model.brand?.type?.name ? ` (${model.brand.type.name})` : ""}`}>
+                                        {truncateString(`${model.brand?.name || ""}${model.brand?.type?.name ? ` (${model.brand.type.name})` : ""}`, 30)}
+                                    </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
                                             <Button variant="ghost" size="icon" onClick={() => openEdit(model)}>
